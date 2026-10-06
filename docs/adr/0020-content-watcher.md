@@ -33,9 +33,17 @@ and the app writes through temp files, renames, moves and link rewrites across m
   via `AsyncLocalStorage`) it is the mutation's own refresh and reports nothing.
 - `DocumentRegistry.refresh()` returns `ContentChanges` (documents added/changed/removed by id,
   with `previousPath` for moves; folders added/removed). These feed SSE in P12-03.
-- Read routes keep their per-request refresh for now, but through `ContentSync`, so a change they
-  discover is reported rather than silently absorbed. P12-02 replaces per-request scans with
-  watcher-driven incremental refreshes while the watcher is healthy (KI-9).
+- Since P12-02, watcher refreshes reconcile only the event paths. Directory events scan that
+  subtree; missing or unsafe ancestors invalidate the cached subtree. Other files retain their
+  metadata, while duplicate-id ownership is resolved globally in code-point path order. Explicit
+  file events re-read bytes even if size and modification time did not change; content hashes
+  identify those edits. SQLite documents, tags, aliases, links and search update together.
+  If duplicate ownership changes, cached paths that need rereading are validated against disk
+  again, including their ancestors, so replaced symlinks cannot import outside content.
+- Read routes use `ContentSync.ensureFresh()`: while watching is healthy they wait for any running
+  app mutation and use the current index without a filesystem scan. External changes appear after
+  the debounce interval. Disabled or failed watching restores full reconciliation on reads.
+  Startup, rebuilds, app mutations and a document lookup retry still perform full scans.
 - `WATCH_MODE=native|poll|off` (default `native`). `poll` is for network shares and mounts without
   file events; `off` relies on per-request scans only. A watcher error is logged and never stops
   the app; reads keep re-scanning, so correctness never depends on events.
@@ -58,4 +66,8 @@ and the app writes through temp files, renames, moves and link rewrites across m
 - An external edit to another file made during an app mutation is absorbed by that mutation's
   refresh and not reported. Data stays safe: saves are still revision-checked (§28), and the
   frontend will compare revisions (P12-04).
-- Each flush still walks the tree until P12-02 makes refreshes path-targeted.
+- A failed event refresh also marks the watcher unhealthy, so a lost batch cannot leave reads
+  permanently stale. Revision checks still read actual file bytes before saving; their correctness
+  does not depend on the watcher or its debounce interval.
+- Targeted refreshes avoid unrelated filesystem reads, but resolving duplicate ids still traverses
+  cached metadata. Storage usage accounting separately visits attachment folders.

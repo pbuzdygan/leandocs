@@ -19,6 +19,7 @@ export interface SyncLogger {
  */
 export class ContentSync {
   private readonly listeners = new Set<ContentChangeListener>();
+  private watcherActive: () => boolean = () => false;
 
   constructor(
     private readonly registry: DocumentRegistry,
@@ -32,9 +33,27 @@ export class ContentSync {
     return () => this.listeners.delete(listener);
   }
 
-  async refresh(): Promise<ContentChanges> {
-    if (this.lock.held()) return this.registry.refresh();
-    const changes = await this.lock.run(() => this.registry.refresh());
+  setWatcherActive(active: () => boolean): void {
+    this.watcherActive = active;
+  }
+
+  /** Healthy watchers own reconciliation; reads wait for mutations without rescanning disk. */
+  async ensureFresh(): Promise<void> {
+    if (!this.watcherActive()) {
+      await this.refresh();
+    } else if (!this.lock.held()) {
+      const changes = await this.lock.run(async () => {
+        // Recheck after a queued mutation: watcher failure must immediately restore the fallback.
+        if (!this.watcherActive()) return this.registry.refresh();
+        return undefined;
+      });
+      if (changes && hasChanges(changes)) this.report(changes);
+    }
+  }
+
+  async refresh(paths?: readonly string[]): Promise<ContentChanges> {
+    if (this.lock.held()) return this.registry.refresh(paths);
+    const changes = await this.lock.run(() => this.registry.refresh(paths));
     if (hasChanges(changes)) this.report(changes);
     return changes;
   }

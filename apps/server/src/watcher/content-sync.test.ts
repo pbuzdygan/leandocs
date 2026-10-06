@@ -18,6 +18,40 @@ async function setup() {
 }
 
 describe('ContentSync', () => {
+  it('uses the index while watching is healthy and resumes scanning when watching fails', async () => {
+    const { root, registry, sync, listener } = await setup();
+    let active = true;
+    sync.setWatcherActive(() => active);
+    const refresh = vi.spyOn(registry, 'refresh');
+    await writeFile(path.join(root, 'External.md'), '# External\n');
+    await sync.ensureFresh();
+    expect(refresh).not.toHaveBeenCalled();
+    active = false;
+    await sync.ensureFresh();
+    expect(refresh).toHaveBeenCalledExactlyOnceWith(undefined);
+    expect(listener).toHaveBeenCalledOnce();
+    expect(registry.findByPath('External.md')).toBeDefined();
+  });
+
+  it('waits for mutations on healthy reads and does not reacquire a lock it already owns', async () => {
+    const { root, registry, lock, sync } = await setup();
+    sync.setWatcherActive(() => true);
+    let release!: () => void;
+    const mutation = lock.run(async () => {
+      await sync.ensureFresh();
+      await writeFile(path.join(root, 'Mine.md'), '# Mine\n');
+      await new Promise<void>((resolve) => (release = resolve));
+      await registry.refresh();
+    });
+    const done = vi.fn();
+    const read = sync.ensureFresh().then(done);
+    await vi.waitFor(() => expect(release).toBeDefined());
+    expect(done).not.toHaveBeenCalled();
+    release();
+    await Promise.all([mutation, read]);
+    expect(registry.findByPath('Mine.md')).toBeDefined();
+  });
+
   it('reports changes made outside the app', async () => {
     const { root, sync, listener } = await setup();
     await writeFile(path.join(root, 'External.md'), '# External\n');
@@ -27,6 +61,24 @@ describe('ContentSync', () => {
     expect(changes.documents).toMatchObject([{ kind: 'added', path: 'External.md' }]);
     expect(listener).toHaveBeenCalledOnce();
     expect(listener).toHaveBeenCalledWith(changes);
+  });
+
+  it('rechecks watcher health after a queued read acquires the lock and reports outside it', async () => {
+    const { root, registry, lock, sync } = await setup();
+    let active = true;
+    let release!: () => void;
+    sync.setWatcherActive(() => active);
+    const reportedWhileHeld: boolean[] = [];
+    sync.onChange(() => reportedWhileHeld.push(lock.held()));
+    const mutation = lock.run(() => new Promise<void>((resolve) => (release = resolve)));
+    const read = sync.ensureFresh();
+    await vi.waitFor(() => expect(release).toBeDefined());
+    await writeFile(path.join(root, 'External.md'), '# External\n');
+    active = false;
+    release();
+    await Promise.all([mutation, read]);
+    expect(registry.findByPath('External.md')).toBeDefined();
+    expect(reportedWhileHeld).toEqual([false]);
   });
 
   it('does not report the app’s own writes, even when a later refresh runs', async () => {

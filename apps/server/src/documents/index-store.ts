@@ -41,6 +41,7 @@ export interface StoredDocument {
   mtimeMs: number;
   size: number;
   frontmatterId: unknown;
+  contentHash: string;
   frontmatterError: string | undefined;
 }
 
@@ -63,6 +64,7 @@ interface LinkRow {
 }
 
 interface DocumentRow {
+  content_hash: string;
   id: string;
   id_source: 'frontmatter' | 'provisional';
   path: string;
@@ -123,7 +125,7 @@ export class IndexStore {
   documents(): StoredDocument[] {
     const rows = this.db
       .prepare<[], DocumentRow>(
-        `SELECT id, id_source, path, title, mtime_ms, size, frontmatter_id, frontmatter_error,
+        `SELECT id, id_source, path, title, mtime_ms, size, content_hash, frontmatter_id, frontmatter_error,
            (SELECT json_group_array(alias) FROM document_aliases a WHERE a.document_key = d.key)
              AS aliases
          FROM documents d`,
@@ -137,6 +139,7 @@ export class IndexStore {
       aliases: JSON.parse(row.aliases) as string[],
       mtimeMs: row.mtime_ms,
       size: row.size,
+      contentHash: row.content_hash,
       frontmatterId: row.frontmatter_id === null ? undefined : JSON.parse(row.frontmatter_id),
       frontmatterError: row.frontmatter_error ?? undefined,
     }));

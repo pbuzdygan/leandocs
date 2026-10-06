@@ -260,6 +260,20 @@ See `AGENTS.md` §6 and PROJECT_SPEC §56–58.
 
 `MAX_UPLOAD_SIZE` sets the per-file size limit in bytes (default 52428800; positive integer, maximum 1073741824). Both editors support upload, paste and drop. See [attachments](attachments.md) and [ADR-0008](adr/0008-attachment-upload-and-serving.md).
 
+## External document changes
+
+`WATCH_MODE=native` (default) indexes changed Markdown paths after a 250 ms quiet period, with a
+maximum two-second debounce during a stream of events. Folder events reconcile their subtree.
+Healthy-watcher tree, search, tag and link reads use that index without rescanning documentation.
+Use `WATCH_MODE=poll` for mounts without reliable native events; polling adds up to one second
+before the debounce. `WATCH_MODE=off` and watcher failures restore full reconciliation on reads.
+Save conflicts always compare actual file bytes, including edits not yet processed by the watcher.
+
+API tests that write files directly and require immediate discovery use the authenticated fixture's
+default `WATCH_MODE=off`. Pass `true` as its second argument to test configured watching and wait
+for the resulting index update. Startup, explicit rebuilds and app content mutations still reconcile
+the whole tree. See [ADR-0020](adr/0020-content-watcher.md).
+
 ## Optional local two-factor authentication
 
 With `AUTH_MODE=local`, open **Settings › Security**, enter the current password, and scan the QR

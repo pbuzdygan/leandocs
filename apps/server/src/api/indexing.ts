@@ -28,7 +28,7 @@ export const indexingRoutes: FastifyPluginAsync<IndexingRoutesOptions> = async (
   const status = async (): Promise<IndexStatusResponse> => {
     // While a rebuild runs, the registry queue is busy; report the last known state instead of
     // waiting for it.
-    if (!running) await sync.refresh();
+    if (!running) await sync.ensureFresh();
     const tags = registry.store.db.prepare('SELECT count(*) FROM tags').pluck().get() as number;
     return {
       documents: registry.list().length,

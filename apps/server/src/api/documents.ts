@@ -35,8 +35,8 @@ export const documentRoutes: FastifyPluginAsync<DocumentRoutesOptions> = async (
   const { registry, sync, service } = options;
 
   app.get('/tree', async (): Promise<TreeResponse> => {
-    // Cheap: only changed files are re-read; external edits found here are reported too (P12-01).
-    await sync.refresh();
+    // Healthy watchers maintain the index; otherwise reconcile and report external edits here.
+    await sync.ensureFresh();
     return { root: registry.tree() };
   });
 
@@ -51,7 +51,7 @@ export const documentRoutes: FastifyPluginAsync<DocumentRoutesOptions> = async (
       },
     },
     async (request): Promise<RecentDocumentsResponse> => {
-      await sync.refresh();
+      await sync.ensureFresh();
       const items = [...registry.list()]
         .sort((a, b) => b.mtimeMs - a.mtimeMs)
         .slice(0, request.query.limit ?? 10)
@@ -163,7 +163,7 @@ export const documentRoutes: FastifyPluginAsync<DocumentRoutesOptions> = async (
   );
 
   app.get('/tags', async (): Promise<TagsResponse> => {
-    await sync.refresh();
+    await sync.ensureFresh();
     return { items: registry.store.tags() };
   });
 

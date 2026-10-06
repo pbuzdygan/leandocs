@@ -65,6 +65,8 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### Improvements
 
+- Changes made outside the app are indexed without rescanning every documentation folder, keeping browsing responsive in large collections.
+
 - Repeated sign-in attempts are now limited even when they come from different addresses, with a clear wait time before retrying. The form clears your password after each submission.
 
 - Browser protections now block injected scripts and embedding the app in other pages, while keeping diagrams, editing and attachments working.

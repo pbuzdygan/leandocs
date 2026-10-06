@@ -199,7 +199,7 @@ export async function buildApp(
 
   await app.register(attachmentRoutes, {
     prefix: API_BASE_PATH,
-    attachments: new AttachmentService(contentDir, registry, lock, config.maxUploadSize),
+    attachments: new AttachmentService(contentDir, registry, lock, config.maxUploadSize, sync),
     limit: config.maxUploadSize,
   });
   await app.register(healthRoutes, { prefix: API_BASE_PATH });
@@ -272,6 +272,7 @@ export async function buildApp(
     });
     await watcher.start();
   }
+  sync.setWatcherActive(() => watcher?.active ?? false);
 
   return app;
 }

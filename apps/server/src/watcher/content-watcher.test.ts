@@ -49,12 +49,13 @@ const allDocuments = (reports: ContentChanges[]) => reports.flatMap((r) => r.doc
 
 describe('ContentWatcher', () => {
   it('detects documents created, edited and deleted outside the app', async () => {
-    const { root, reports, watcher } = await started();
+    const { root, reports, watcher, refresh } = await started();
     expect(watcher.active).toBe(true);
 
     await writeFile(path.join(root, 'Runbook.md'), '# Runbook\n');
     await vi.waitFor(() => expect(allDocuments(reports)).toHaveLength(1), { timeout: 5000 });
     expect(allDocuments(reports)[0]).toMatchObject({ kind: 'added', path: 'Runbook.md' });
+    expect(refresh).toHaveBeenCalledWith(['Runbook.md']);
 
     await writeFile(path.join(root, 'Runbook.md'), '# Runbook, edited in VS Code\n');
     await vi.waitFor(() => expect(allDocuments(reports)).toHaveLength(2), { timeout: 5000 });
@@ -141,6 +142,16 @@ describe('ContentWatcher', () => {
       () => expect(allDocuments(reports)).toMatchObject([{ kind: 'added', path: 'Polled.md' }]),
       { timeout: 5000 },
     );
+  });
+
+  it('degrades to request-time scanning after an event refresh fails', async () => {
+    const { root, sync, refresh, watcher, registry } = await started();
+    sync.setWatcherActive(() => watcher.active);
+    refresh.mockRejectedValueOnce(new Error('temporary read failure'));
+    await writeFile(path.join(root, 'Retry.md'), '# Retry\n');
+    await vi.waitFor(() => expect(watcher.active).toBe(false), { timeout: 5000 });
+    await sync.ensureFresh();
+    expect(registry.findByPath('Retry.md')).toBeDefined();
   });
 
   it('stops reporting after close', async () => {

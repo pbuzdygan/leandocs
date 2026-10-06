@@ -3,8 +3,13 @@ import type { AppConfig } from '../config/config.js';
 import type { SetupStatus, SessionResponse } from '@leandocs/shared';
 
 /** Content API tests use real setup/login/session cookies, without weakening production auth. */
-export async function buildApp(config: AppConfig) {
-  const app = await originalBuildApp(config);
+export async function buildApp(config: AppConfig, watchContent = false) {
+  // Legacy content tests write files and immediately read; explicitly test the off-mode fallback.
+  // Watcher integration tests opt in and wait for eventual index updates, as production clients do.
+  const app = await originalBuildApp({
+    ...config,
+    watchMode: watchContent ? config.watchMode : 'off',
+  });
   try {
     const status = (await app.inject('/api/v1/auth/setup')).json<SetupStatus>();
     if (status.required)

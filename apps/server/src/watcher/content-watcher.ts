@@ -157,12 +157,13 @@ export class ContentWatcher {
     this.flushing = this.flushing.then(async () => {
       if (this.closed) return;
       try {
-        const changes = await this.sync.refresh();
+        const changes = await this.sync.refresh(paths);
         this.options.logger.debug(
           { paths: paths.slice(0, 20), events: paths.length, documents: changes.documents.length },
           'File events processed',
         );
       } catch (error) {
+        this.healthy = false;
         this.options.logger.error({ err: error }, 'Refresh after file events failed');
       }
     });

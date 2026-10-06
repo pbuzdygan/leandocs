@@ -17,7 +17,7 @@ import { documentStem } from '../filesystem/file-name.js';
 import { parseFile, toIsoTimestamp, updateFileFrontmatter } from './frontmatter.js';
 import { IndexStore, type IndexRecord } from './index-store.js';
 import { revisionOf } from './revision.js';
-import { scanContent, type ScannedFile } from './scanner.js';
+import { containsPath, scanContent, scanContentPaths, type ScannedFile } from './scanner.js';
 
 /**
  * Document registry backed by the SQLite index (P8-02, PROJECT_SPEC §62). Lookups are served from
@@ -94,6 +94,7 @@ interface CacheEntry {
   size: number;
   meta: FileMeta | undefined;
   readError?: string;
+  contentHash?: string;
 }
 
 // Ids end up in URLs (UI_SPEC §127), so only URL-safe ids are accepted.
@@ -159,11 +160,12 @@ export class DocumentRegistry {
   }
 
   /**
-   * Re-syncs with the filesystem and returns what changed. Only files whose mtime/size changed are
-   * re-read, so calling this often is cheap. Calls are serialised.
+   * Re-syncs the whole tree, or only event paths/subtrees when supplied. Calls are serialised.
+   * Explicit file events are re-read even if a writer preserved mtime and size.
    */
-  refresh(): Promise<ContentChanges> {
-    return this.enqueue(() => this.doRefresh());
+  refresh(paths?: readonly string[]): Promise<ContentChanges> {
+    const requested = paths ? [...paths] : undefined;
+    return this.enqueue(() => this.doRefresh(undefined, requested));
   }
 
   /**
@@ -202,7 +204,12 @@ export class DocumentRegistry {
       this.indexed.set(row.path, { id: row.id, idSource: row.idSource });
       // A file still waiting for an id (e.g. ASSIGN_MISSING_IDS was off) must be read again.
       if (!this.needsId(meta))
-        this.cache.set(row.path, { mtimeMs: row.mtimeMs, size: row.size, meta });
+        this.cache.set(row.path, {
+          mtimeMs: row.mtimeMs,
+          size: row.size,
+          meta,
+          contentHash: row.contentHash,
+        });
     }
   }
 
@@ -242,15 +249,26 @@ export class DocumentRegistry {
 
   private async doRefresh(
     onProgress?: (done: number, total: number) => void,
+    paths?: readonly string[],
   ): Promise<ContentChanges> {
-    const scan = await scanContent(this.contentDir);
-    const issues: ScanIssue[] = [];
-    const nextCache = new Map<string, CacheEntry>();
+    const partial = paths ? await scanContentPaths(this.contentDir, paths) : undefined;
+    const scan = partial ?? (await scanContent(this.contentDir));
+    const roots = partial?.roots ?? [''];
+    const affected = (candidate: string) => roots.some((root) => containsPath(root, candidate));
+    const issues: ScanIssue[] = this.currentIssues.filter(
+      (issue) => issue.code === 'ID_ASSIGNMENT_FAILED' && !affected(issue.path),
+    );
+    const nextCache = new Map([...this.cache].filter(([relative]) => !affected(relative)));
     const fresh = new Map<string, FileContent>();
 
     for (const file of scan.files) {
       let cached = this.cache.get(file.path);
-      if (!cached || cached.mtimeMs !== file.mtimeMs || cached.size !== file.size) {
+      if (
+        !cached ||
+        cached.mtimeMs !== file.mtimeMs ||
+        cached.size !== file.size ||
+        paths?.includes(file.path)
+      ) {
         let read = await this.readFile(file);
         if (read.entry.meta && this.needsId(read.entry.meta)) {
           read = await this.assignId(file, read, issues);
@@ -263,8 +281,10 @@ export class DocumentRegistry {
     }
 
     const byId = new Map<string, DocumentEntry>();
-    for (const file of scan.files) {
-      const cached = nextCache.get(file.path);
+    // Global code-point order keeps duplicate-id ownership deterministic without reading other files.
+    for (const relativePath of [...nextCache.keys()].sort()) {
+      const file = { path: relativePath };
+      const cached = nextCache.get(relativePath);
       if (!cached) continue;
       if (cached.readError || !cached.meta) {
         issues.push({
@@ -314,10 +334,13 @@ export class DocumentRegistry {
 
     await this.syncIndex(byId, fresh);
     for (const issue of issues) this.options.logger.warn({ issue }, 'Content scan issue');
-    const changes = diffContent(this.byId, byId, this.folderPaths, scan.folders);
+    const folders = [
+      ...new Set([...this.folderPaths.filter((folder) => !affected(folder)), ...scan.folders]),
+    ].sort();
+    const changes = diffContent(this.byId, byId, this.folderPaths, folders, this.cache, nextCache);
     this.cache = nextCache;
     this.byId = byId;
-    this.folderPaths = scan.folders;
+    this.folderPaths = folders;
     this.currentIssues = issues;
     return changes;
   }
@@ -359,16 +382,10 @@ export class DocumentRegistry {
   }
 
   private async statFile(relativePath: string): Promise<ScannedFile | undefined> {
-    const absolutePath = path.join(this.contentDir, relativePath);
-    const info = await stat(absolutePath).catch(() => undefined);
-    if (!info) return undefined;
-    return {
-      path: relativePath,
-      absolutePath,
-      mtimeMs: info.mtimeMs,
-      size: info.size,
-      birthtimeMs: info.birthtimeMs,
-    };
+    // A cached duplicate may have changed outside this event batch. Validate every ancestor again
+    // before rereading it; never follow a file or directory symlink while reassigning its index id.
+    const scan = await scanContentPaths(this.contentDir, [relativePath]);
+    return scan.files.find((file) => file.path === relativePath);
   }
 
   private async readFile(
@@ -441,6 +458,8 @@ function diffContent(
   after: Map<string, DocumentEntry>,
   foldersBefore: string[],
   foldersAfter: string[],
+  cacheBefore: Map<string, CacheEntry>,
+  cacheAfter: Map<string, CacheEntry>,
 ): ContentChanges {
   const documents: DocumentChange[] = [];
   for (const [id, entry] of after) {
@@ -451,6 +470,7 @@ function diffContent(
       previous.path !== entry.path ||
       previous.mtimeMs !== entry.mtimeMs ||
       previous.size !== entry.size ||
+      cacheBefore.get(previous.path)?.contentHash !== cacheAfter.get(entry.path)?.contentHash ||
       previous.title !== entry.title ||
       previous.aliases.join('\n') !== entry.aliases.join('\n')
     ) {
@@ -497,7 +517,7 @@ function analyse(
   const tree = parseMarkdown(parsed.body);
   const folder = path.posix.dirname(relativePath);
   return {
-    entry: { mtimeMs, size, meta },
+    entry: { mtimeMs, size, meta, contentHash: revisionOf(bytes) },
     content: {
       path: relativePath,
       filename,

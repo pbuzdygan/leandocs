@@ -15,14 +15,14 @@ export const pinRoutes: FastifyPluginAsync<{
   pins: PinService;
 }> = async (app, { sync, pins }) => {
   app.get('/pins', async (): Promise<PinsResponse> => {
-    await sync.refresh();
+    await sync.ensureFresh();
     return { items: pins.list() };
   });
   app.put<{ Params: { id: string } }>(
     '/pins/:id',
     { schema: { params: idParams } },
     async (request, reply) => {
-      await sync.refresh();
+      await sync.ensureFresh();
       pins.pin(request.params.id);
       return reply.status(204).send();
     },

@@ -26,8 +26,8 @@ export const searchRoutes: FastifyPluginAsync<SearchRoutesOptions> = async (app,
       },
     },
     async (request): Promise<SearchResponse> => {
-      // Same freshness rule as the tree: pick up changed files before answering.
-      await sync.refresh();
+      // Like the tree, use watcher updates or scan on demand when watching is unavailable.
+      await sync.ensureFresh();
       return {
         query: request.query.q,
         results: search.search(request.query.q, request.query.limit),

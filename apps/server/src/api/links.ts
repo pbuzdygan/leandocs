@@ -22,7 +22,7 @@ export const linkRoutes: FastifyPluginAsync<{
     '/documents/:id/links',
     { schema: { params: idParams } },
     async (request): Promise<OutgoingLinksResponse> => {
-      await sync.refresh();
+      await sync.ensureFresh();
       return { items: links.outgoing(request.params.id) };
     },
   );
@@ -31,13 +31,13 @@ export const linkRoutes: FastifyPluginAsync<{
     '/documents/:id/backlinks',
     { schema: { params: idParams } },
     async (request): Promise<BacklinksResponse> => {
-      await sync.refresh();
+      await sync.ensureFresh();
       return { items: links.backlinks(request.params.id) };
     },
   );
 
   app.get('/links/broken', async (): Promise<BrokenLinksResponse> => {
-    await sync.refresh();
+    await sync.ensureFresh();
     return { items: links.broken() };
   });
 };

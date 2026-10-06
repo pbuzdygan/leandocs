@@ -10,6 +10,7 @@ import { assetsDirFor } from '../filesystem/file-name.js';
 import type { MutationLock } from '../filesystem/lock.js';
 import { resolveExistingDirectory, resolveInsideRoot } from '../filesystem/safe-path.js';
 import { attachmentName, ATTACHMENT_TYPES, validateAttachment } from './validation.js';
+import type { ContentSync } from '../watcher/content-sync.js';
 
 export class AttachmentService {
   constructor(
@@ -17,13 +18,14 @@ export class AttachmentService {
     private readonly registry: DocumentRegistry,
     private readonly lock: MutationLock,
     private readonly limit: number,
+    private readonly sync: ContentSync,
   ) {}
 
   upload(id: string, originalName: string, mime: string, bytes: Buffer): Promise<AttachmentDto> {
     return this.lock.run(async () => {
       const name = attachmentName(originalName);
       await validateAttachment(name, mime, bytes, this.limit);
-      const { folder, relative } = await this.directory(id, true);
+      const { folder, relative } = await this.directory(id, true, true);
       for (let attempt = 0; attempt < 8; attempt++) {
         const candidate =
           attempt === 0
@@ -90,7 +92,7 @@ export class AttachmentService {
 
   delete(id: string, name: string): Promise<void> {
     return this.lock.run(async () => {
-      const { folder } = await this.directory(id, false);
+      const { folder } = await this.directory(id, false, true);
       const target = this.target(folder, name);
       const info = await lstat(target).catch(() => undefined);
       if (!info?.isFile() || info.isSymbolicLink())
@@ -108,8 +110,11 @@ export class AttachmentService {
   private async directory(
     id: string,
     create: boolean,
+    mutation = false,
   ): Promise<{ folder: string; relative: string }> {
-    await this.registry.refresh();
+    // Writes reconcile under their existing lock so externally moved documents use the new path.
+    if (mutation) await this.registry.refresh();
+    else await this.sync.ensureFresh();
     const entry = this.registry.get(id);
     if (!entry) throw new AppError(404, 'DOCUMENT_NOT_FOUND', 'Document not found');
     await resolveExistingDirectory(

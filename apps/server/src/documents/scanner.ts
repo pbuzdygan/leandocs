@@ -1,9 +1,13 @@
 import type { Dirent } from 'node:fs';
-import { readdir, stat } from 'node:fs/promises';
+import { lstat, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { AppError } from '../errors.js';
 import { ASSETS_SUFFIX, isDocumentFileName } from '../filesystem/file-name.js';
-import { toRelativePath } from '../filesystem/safe-path.js';
+import {
+  normalizeRelativePath,
+  resolveInsideRoot,
+  toRelativePath,
+} from '../filesystem/safe-path.js';
 
 /**
  * Walks the content directory (PROJECT_SPEC §11–13).
@@ -56,6 +60,76 @@ export async function scanContent(contentDir: string): Promise<ScanResult> {
   result.folders.sort();
   result.files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   return result;
+}
+
+/** Reconcile event paths against disk; missing/unsafe ancestors invalidate their whole subtree. */
+export async function scanContentPaths(
+  contentDir: string,
+  paths: readonly string[],
+): Promise<ScanResult & { roots: string[] }> {
+  const result: ScanResult & { roots: string[] } = { folders: [], files: [], roots: [] };
+  const requested = [...new Set(paths.map(normalizeRelativePath))].sort();
+  for (const requestedPath of requested) {
+    if (result.roots.some((root) => containsPath(root, requestedPath))) continue;
+    if (requestedPath === '') return { ...(await scanContent(contentDir)), roots: [''] };
+    const segments = requestedPath.split('/');
+    let relative = '';
+    for (let index = 0; index < segments.length; index++) {
+      const name = segments[index]!;
+      const parent = relative;
+      relative = parent ? `${parent}/${name}` : name;
+      const absolute = resolveInsideRoot(contentDir, relative);
+      const info = await lstat(absolute).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return undefined;
+        throw error;
+      });
+      const last = index === segments.length - 1;
+      if (
+        !info ||
+        info.isSymbolicLink() ||
+        isHiddenEntry(name, parent, info.isDirectory()) ||
+        (!last && !info.isDirectory())
+      ) {
+        result.roots.push(relative);
+        break;
+      }
+      if (info.isDirectory()) {
+        result.folders.push(relative);
+        if (last) {
+          result.roots.push(relative);
+          await walk(contentDir, absolute, result);
+        }
+      } else if (last) {
+        result.roots.push(relative);
+        if (info.isFile() && isDocumentFileName(name))
+          result.files.push({
+            path: relative,
+            absolutePath: absolute,
+            mtimeMs: info.mtimeMs,
+            size: info.size,
+            birthtimeMs: info.birthtimeMs,
+          });
+      }
+    }
+  }
+  result.roots = result.roots.filter(
+    (root, index, all) =>
+      !all.some(
+        (other, otherIndex) =>
+          otherIndex !== index &&
+          containsPath(other, root) &&
+          (other !== root || otherIndex < index),
+      ),
+  );
+  result.folders = [...new Set(result.folders)].sort();
+  result.files = [...new Map(result.files.map((file) => [file.path, file])).values()].sort(
+    (a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0),
+  );
+  return result;
+}
+
+export function containsPath(root: string, candidate: string): boolean {
+  return root === '' || root === candidate || candidate.startsWith(`${root}/`);
 }
 
 async function walk(root: string, dir: string, result: ScanResult): Promise<void> {
