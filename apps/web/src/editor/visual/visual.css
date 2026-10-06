@@ -1,0 +1,258 @@
+.visual-editor {
+  position: relative;
+}
+.visual-toolbar,
+.visual-bubble {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 40px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+}
+.visual-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  overflow-x: auto;
+}
+.visual-toolbar button,
+.visual-bubble button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 32px;
+  min-width: 32px;
+  padding: var(--space-1);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font: inherit;
+}
+.visual-toolbar button:hover,
+.visual-bubble button:hover {
+  background: var(--bg-subtle);
+  color: var(--accent);
+}
+.visual-bubble {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  z-index: 30;
+  padding: 0 var(--space-1);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+.visual-slash {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: var(--space-1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+.visual-slash button {
+  text-align: left;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.visual-slash button:hover,
+.visual-slash .is-active {
+  background: var(--bg-selected);
+  color: var(--accent);
+}
+.visual-content .ProseMirror {
+  min-height: 320px;
+  padding-top: var(--space-4);
+  outline: none;
+}
+.visual-content .ProseMirror:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.visual-content .ProseMirror-selectednode {
+  outline: 2px solid var(--accent);
+}
+.visual-content .visual-opaque {
+  padding: var(--space-4);
+  border: 1px dashed var(--border-strong);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.visual-content table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.visual-content td,
+.visual-content th {
+  min-width: 80px;
+  border: 1px solid var(--border-default);
+  padding: var(--space-2);
+}
+.visual-content li[data-checked] {
+  list-style: none;
+}
+.visual-content li[data-checked] {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.visual-content [data-task-toggle] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+@media (max-width: 767px) {
+  .doc-edit-actions {
+    flex-wrap: wrap;
+  }
+}
+
+.visual-toolbar button:nth-child(4),
+.visual-toolbar button:nth-child(8),
+.visual-toolbar button:nth-child(12) {
+  border-right: 1px solid var(--border-default);
+  margin-right: var(--space-2);
+  border-radius: 0;
+}
+
+.visual-content pre:not(.visual-opaque) {
+  padding: var(--space-4);
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* Contextual tools for the block at the caret: table, code block, callout (P6-09…P6-11). */
+.visual-toolbar:has(.visual-toolbar__context) {
+  flex-wrap: wrap;
+}
+
+/* Second toolbar row, so the block tools are never scrolled out of sight. */
+.visual-toolbar__context {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.visual-toolbar .visual-toolbar__text {
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-meta);
+  white-space: nowrap;
+}
+
+.visual-toolbar button:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+  background: transparent;
+}
+
+.visual-toolbar__context select {
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--font-size-meta);
+}
+
+/* Code blocks show their language like in View (labels come from the language list). */
+.visual-content pre.visual-code {
+  position: relative;
+  padding-top: calc(var(--space-4) + 24px);
+}
+
+.visual-content pre.visual-code::before {
+  content: attr(data-language-label);
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 28px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--code-border);
+  color: var(--code-muted);
+  font-size: var(--font-size-meta);
+  line-height: 28px;
+  pointer-events: none;
+}
+
+.visual-content pre.visual-code[data-language='']::before {
+  content: 'Plain text';
+}
+
+/* Editable callouts: the title is a label, the body is normal editable content. */
+.visual-content .callout {
+  margin: var(--space-4) 0;
+}
+
+.visual-content .callout__title {
+  user-select: none;
+}
+
+.visual-content .callout__body > :first-child {
+  margin-top: 0;
+}
+
+.visual-content .callout__body > :last-child {
+  margin-bottom: 0;
+}
+
+/* `[[` link picker (P9-06) */
+.visual-wiki {
+  min-width: 260px;
+}
+
+.visual-wiki button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: auto;
+  padding: var(--space-1) var(--space-3);
+}
+
+.visual-wiki__path {
+  color: var(--text-muted);
+  font-size: var(--font-size-meta);
+}
+
+/* Wiki links inside the editor: an inline chip, broken ones like in View (UI_SPEC §76). */
+.visual-content .wiki-link {
+  color: var(--accent);
+  border-bottom: 1px solid var(--accent-soft);
+  cursor: default;
+}
+
+.visual-content .wiki-link.broken-link {
+  color: var(--text-muted);
+  border-bottom: 1px dashed var(--text-muted);
+}

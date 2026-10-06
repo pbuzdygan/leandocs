@@ -1,0 +1,44 @@
+.attachments {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-default);
+  color: var(--text-muted);
+  font-size: var(--font-size-ui);
+}
+.attachments summary {
+  cursor: pointer;
+}
+.attachments ul {
+  list-style: none;
+  padding: 0;
+}
+.attachments li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+  flex-wrap: wrap;
+}
+.attachments .attachment-name {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.upload-status {
+  padding: 0.5rem;
+  color: var(--text-muted);
+}
+.file-drop-surface {
+  position: relative;
+}
+.file-drop-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--bg-selected);
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  pointer-events: none;
+  opacity: 0.92;
+}

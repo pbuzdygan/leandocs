@@ -1,0 +1,125 @@
+import { csrfRequest } from './csrf-request';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { expect, test, type Page } from '@playwright/test';
+
+/** Owner feedback 2026-10-02 on the visual editor (P6-06…P6-12, P4-12). */
+
+const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
+
+async function createDocument(page: Page, name: string, body: string): Promise<string> {
+  const response = await csrfRequest(page.request).post('/api/v1/documents', {
+    data: { name, content: body },
+  });
+  expect(response.ok()).toBe(true);
+  return ((await response.json()) as { id: string }).id;
+}
+
+async function openVisual(page: Page, id: string) {
+  await page.addInitScript(() =>
+    localStorage.setItem('leandocs.editor.mode', JSON.stringify('visual')),
+  );
+  await page.goto(`/doc/${id}/edit`);
+  const editor = page.locator('[aria-label="Visual document"]');
+  await expect(editor).toBeVisible();
+  return editor;
+}
+
+/** Puts the caret at the end of the document and starts a new paragraph. */
+async function newParagraphAtEnd(page: Page) {
+  await page.locator('[aria-label="Visual document"] > *').last().click();
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.press('Enter');
+}
+
+async function slash(page: Page, item: string) {
+  await page.keyboard.type('/');
+  await page.getByRole('menuitem', { name: item, exact: true }).click();
+}
+
+async function saveAndRead(page: Page, file: string): Promise<string> {
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(page).not.toHaveURL(/\/edit$/);
+  return readFileSync(path.join(content, file), 'utf8');
+}
+
+test('long documents: slash menu opens at the caret and Done stays reachable', async ({ page }) => {
+  const paragraphs = Array.from({ length: 80 }, (_, i) => `Paragraph ${i + 1}.`).join('\n\n');
+  const id = await createDocument(page, 'Long Feedback', `${paragraphs}\n`);
+  await openVisual(page, id);
+  await newParagraphAtEnd(page);
+  await page.keyboard.type('/');
+  const menu = page.getByRole('menu', { name: 'Insert block' });
+  await expect(menu).toBeVisible();
+  const box = (await menu.boundingBox())!;
+  const viewport = page.viewportSize()!;
+  // Fully on screen, near the bottom where the caret is, not at the top of the editor.
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+  expect(box.y + box.height).toBeGreaterThan(viewport.height / 2);
+  await page.keyboard.press('Escape');
+  // The editing bar is still on screen after scrolling to the end.
+  const done = page.getByRole('button', { name: 'Done', exact: true });
+  await expect(done).toBeInViewport();
+});
+
+test('callouts are editable and saved as directives', async ({ page }) => {
+  const id = await createDocument(page, 'Callout Feedback', 'Intro.\n');
+  await openVisual(page, id);
+  await newParagraphAtEnd(page);
+  await slash(page, 'Callout');
+  await page.keyboard.type('Back up first.');
+  await page.getByLabel('Callout type').selectOption('warning');
+  await expect(page.locator('.visual-content .callout--warning')).toContainText('Back up first.');
+  const saved = await saveAndRead(page, 'Callout Feedback.md');
+  expect(saved).toContain(':::warning\nBack up first.\n:::');
+});
+
+test('tables grow by rows and columns from the toolbar', async ({ page }) => {
+  const id = await createDocument(page, 'Table Feedback', 'Intro.\n');
+  await openVisual(page, id);
+  await newParagraphAtEnd(page);
+  await slash(page, 'Table');
+  await page.locator('.visual-content td').first().click();
+  await page.getByRole('button', { name: 'Row below' }).click();
+  await page.getByRole('button', { name: 'Column right' }).click();
+  await expect(page.locator('.visual-content tr')).toHaveCount(4);
+  await page.getByRole('button', { name: 'Delete column' }).click();
+  await page.getByRole('button', { name: 'Delete row' }).click();
+  const saved = await saveAndRead(page, 'Table Feedback.md');
+  const rows = saved.split('\n').filter((line) => line.startsWith('|'));
+  expect(rows).toHaveLength(4); // header, delimiter, 2 body rows
+  expect(rows[0]!.split('|').length - 2).toBe(3);
+});
+
+test('code blocks get a language and are left with Enter twice', async ({ page }) => {
+  const id = await createDocument(page, 'Code Feedback', 'Intro.\n');
+  await openVisual(page, id);
+  await newParagraphAtEnd(page);
+  await slash(page, 'Code block');
+  await page.getByLabel('Code language').selectOption('yaml');
+  await page.locator('.visual-content pre.code-block').click();
+  await page.keyboard.type('services:\n  web: nginx');
+  await expect(page.locator('.visual-content pre.code-block .hljs-attr').first()).toBeVisible();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('After the code.');
+  const saved = await saveAndRead(page, 'Code Feedback.md');
+  expect(saved).toContain('```yaml\nservices:\n  web: nginx\n```\n\nAfter the code.');
+});
+
+test('Contents lists H1 and nested headings; full width is the default', async ({ page }) => {
+  const id = await createDocument(
+    page,
+    'Contents Feedback',
+    '# Overview\n\ntext\n\n## Hardware\n\ntext\n\n# Network\n\ntext\n',
+  );
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto(`/doc/${id}`);
+  const toc = page.getByRole('navigation', { name: 'Table of contents' });
+  await expect(toc.getByRole('link')).toHaveText(['Overview', 'Hardware', 'Network']);
+  const article = page.locator('article.doc');
+  expect((await article.boundingBox())!.width).toBeGreaterThan(900);
+  await page.getByRole('button', { name: 'Use reading width' }).click();
+  expect((await article.boundingBox())!.width).toBeLessThanOrEqual(900);
+});

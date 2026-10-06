@@ -1,0 +1,423 @@
+/* Rendered Markdown — UI_SPEC §9, §25, §50–58, §147–148. Tokens only. */
+
+.markdown {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  color: var(--text-primary);
+  overflow-wrap: break-word;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 1.6em 0 0.6em;
+  line-height: 1.3;
+  scroll-margin-top: var(--space-6);
+}
+
+.markdown h1 {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.markdown h2 {
+  font-size: 24px;
+  font-weight: 650;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.markdown h3 {
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote,
+.markdown .table-wrap,
+.markdown .code-block,
+.markdown .callout,
+.markdown .mermaid,
+.markdown details {
+  margin: 0 0 var(--space-4);
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: var(--space-6);
+}
+
+.markdown li + li {
+  margin-top: var(--space-1);
+}
+
+.markdown li > ul,
+.markdown li > ol {
+  margin: var(--space-1) 0 0;
+}
+
+.markdown .contains-task-list {
+  padding-left: var(--space-1);
+  list-style: none;
+}
+
+.markdown .task-list-item input {
+  /* Read-only checkboxes: a custom, clearly readable look instead of the greyed-out default. */
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 15px;
+  height: 15px;
+  margin: 0 var(--space-2) 0 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  vertical-align: -2px;
+}
+
+.markdown .task-list-item input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.markdown .task-list-item input:checked::before {
+  content: '';
+  width: 8px;
+  height: 4px;
+  margin-top: -2px;
+  border-left: 2px solid var(--bg-surface);
+  border-bottom: 2px solid var(--bg-surface);
+  transform: rotate(-45deg);
+}
+
+/* Links (UI_SPEC §51): accent, underline on hover, no purple visited */
+.markdown a,
+.markdown a:visited {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.markdown a:hover {
+  text-decoration: underline;
+}
+
+/* Broken links (UI_SPEC §76) */
+.markdown .broken-link {
+  color: var(--text-muted);
+  text-decoration: underline dashed;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.markdown blockquote {
+  padding: 0 var(--space-4);
+  border-left: 3px solid var(--border-strong);
+  color: var(--text-secondary);
+}
+
+.markdown hr {
+  height: 1px;
+  margin: var(--space-8) 0;
+  border: 0;
+  background: var(--border-default);
+}
+
+/* Inline code (UI_SPEC §53) */
+.markdown :not(pre) > code {
+  padding: 1px 4px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  font-size: 0.875em;
+}
+
+.markdown kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8em;
+}
+
+/* Tables (UI_SPEC §54): light, no zebra, scroll when wide (§148) */
+.markdown .table-wrap {
+  overflow-x: auto;
+}
+
+.markdown table {
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.markdown th,
+.markdown td {
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown th {
+  background: var(--bg-app);
+  font-weight: 600;
+}
+
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+/* Code blocks (UI_SPEC §52) */
+.code-block {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--code-bg);
+  color: var(--code-text);
+}
+
+.code-block__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0 var(--space-2) 0 var(--space-4);
+  border-bottom: 1px solid var(--code-border);
+}
+
+.code-block__lang {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  color: var(--code-muted);
+}
+
+.code-block__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 24px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--code-muted);
+  font-size: var(--font-size-meta);
+  cursor: pointer;
+}
+
+.code-block__copy:hover {
+  background: var(--code-border);
+  color: var(--code-text);
+}
+
+.code-block__pre {
+  margin: 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.code-block__pre code {
+  font-family: var(--font-mono);
+  white-space: pre;
+}
+
+.code-block .hljs-comment,
+.code-block .hljs-quote,
+.code-block .hljs-meta {
+  color: var(--code-muted);
+}
+
+.code-block .hljs-keyword,
+.code-block .hljs-selector-tag,
+.code-block .hljs-built_in,
+.code-block .hljs-literal,
+.code-block .hljs-type {
+  color: var(--code-keyword);
+}
+
+.code-block .hljs-string,
+.code-block .hljs-regexp,
+.code-block .hljs-addition {
+  color: var(--code-string);
+}
+
+.code-block .hljs-number,
+.code-block .hljs-symbol,
+.code-block .hljs-bullet {
+  color: var(--code-number);
+}
+
+.code-block .hljs-title,
+.code-block .hljs-section,
+.code-block .hljs-name {
+  color: var(--code-title);
+}
+
+.code-block .hljs-attr,
+.code-block .hljs-attribute,
+.code-block .hljs-variable,
+.code-block .hljs-template-variable,
+.code-block .hljs-deletion {
+  color: var(--code-attr);
+}
+
+/* Callouts (UI_SPEC §55): coloured left border, neutral background */
+.callout {
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--text-muted);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--bg-app);
+}
+
+.callout > :last-child {
+  margin-bottom: 0;
+}
+
+.callout__title {
+  margin-bottom: var(--space-1) !important;
+  font-size: var(--font-size-ui);
+  font-weight: 600;
+}
+
+.callout--info {
+  border-left-color: var(--info);
+}
+
+.callout--info .callout__title {
+  color: var(--info);
+}
+
+.callout--tip {
+  border-left-color: var(--success);
+}
+
+.callout--tip .callout__title {
+  color: var(--success);
+}
+
+.callout--warning {
+  border-left-color: var(--warning);
+}
+
+.callout--warning .callout__title {
+  color: var(--warning);
+}
+
+.callout--danger {
+  border-left-color: var(--danger);
+}
+
+.callout--danger .callout__title {
+  color: var(--danger);
+}
+
+/* Mermaid (UI_SPEC §56) */
+.mermaid {
+  margin-left: 0;
+  margin-right: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.mermaid__svg {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.mermaid__svg svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid__loading {
+  color: var(--text-muted);
+  font-size: var(--font-size-sidebar);
+}
+
+.mermaid__error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--danger);
+  font-size: var(--font-size-sidebar);
+}
+
+.mermaid__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-meta);
+}
+
+.mermaid__source {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+/* Source view (read-only, UI_SPEC §40–41) */
+.source-view {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.source-view .hljs-section {
+  color: var(--source-heading);
+  font-weight: 600;
+}
+
+.source-view .hljs-link,
+.source-view .hljs-symbol,
+.source-view .hljs-string {
+  color: var(--source-link);
+}
+
+.source-view .hljs-code {
+  color: var(--source-code);
+}
+
+.source-view .hljs-strong {
+  font-weight: 700;
+}
+
+.source-view .hljs-emphasis {
+  font-style: italic;
+}
+
+.source-view .hljs-bullet,
+.source-view .hljs-quote,
+.source-view .hljs-meta {
+  color: var(--source-meta);
+}

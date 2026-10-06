@@ -1,0 +1,168 @@
+/* Source editor — UI_SPEC §39–41: white surface, light gutter, subtle colours, mono 13–14 px. */
+.source-editor {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+.source-editor:focus-within {
+  border-color: var(--border-strong);
+}
+
+.source-editor .cm-editor {
+  font-size: 14px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.source-editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.source-editor .cm-scroller {
+  font-family: var(--font-mono);
+  line-height: 1.6;
+  min-height: 60vh;
+}
+
+.source-editor .cm-content {
+  padding: var(--space-4) 0;
+  caret-color: var(--accent);
+}
+
+.source-editor .cm-line {
+  padding: 0 var(--space-5);
+}
+
+.source-editor .cm-gutters {
+  border-right: 1px solid var(--border-default);
+  background: var(--bg-app);
+  color: var(--text-disabled);
+}
+
+.source-editor .cm-activeLineGutter {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+}
+
+.source-editor .cm-cursor {
+  border-left-color: var(--accent);
+}
+
+.source-editor .cm-selectionBackground,
+.source-editor .cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: var(--accent-soft) !important;
+}
+
+.source-editor .cm-selectionMatch {
+  background: var(--bg-selected);
+}
+
+.source-editor .cm-matchingBracket {
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.source-editor .cm-placeholder {
+  color: var(--text-disabled);
+}
+
+/* Search & replace panel (top, sticky while scrolling) */
+.source-editor .cm-panels {
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sidebar);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.source-editor .cm-panel.cm-search {
+  padding: var(--space-2) var(--space-3);
+}
+
+.source-editor .cm-panel.cm-search input,
+.source-editor .cm-panel.cm-search button {
+  font: inherit;
+}
+
+.source-editor .cm-textfield {
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.source-editor .cm-button {
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  background-image: none;
+}
+
+.source-editor .cm-searchMatch {
+  background: var(--accent-soft);
+}
+
+.source-editor .cm-searchMatch-selected {
+  background: var(--bg-selected);
+  outline: 1px solid var(--accent);
+}
+
+/* Markdown colouring */
+.source-editor .cm-md-heading {
+  color: var(--source-heading);
+  font-weight: 600;
+}
+
+.source-editor .cm-md-link {
+  color: var(--source-link);
+}
+
+.source-editor .cm-md-code {
+  color: var(--source-code);
+}
+
+.source-editor .cm-md-strong {
+  font-weight: 700;
+}
+
+.source-editor .cm-md-emphasis {
+  font-style: italic;
+}
+
+.source-editor .cm-md-strike {
+  text-decoration: line-through;
+}
+
+.source-editor .cm-md-quote,
+.source-editor .cm-md-mark {
+  color: var(--source-meta);
+}
+
+.source-editor .cm-code-keyword {
+  color: var(--source-heading);
+}
+
+.source-editor .cm-code-string {
+  color: var(--success);
+}
+
+.source-editor .cm-code-number {
+  color: var(--warning);
+}
+
+.source-editor .cm-code-comment {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.source-editor .cm-code-attr {
+  color: var(--source-code);
+}

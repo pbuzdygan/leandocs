@@ -1,0 +1,14 @@
+coverage
+data
+dist
+docs/archive
+pnpm-lock.yaml
+.e2e*-data
+test-results
+test_results
+playwright-report
+branding/preview.html
+branding/**/*.svg
+.cache
+tmp
+temp
