@@ -204,6 +204,13 @@ Before the first commit, inspect `git status --short --untracked-files=all` and
 Ignore rules do not remove files already tracked by Git. Brand exports, sample
 documents and `pnpm-lock.yaml` are intentional repository assets.
 
+The attachment and editor-feedback browser tests use `e2e/document-fixture.ts`
+to create documents and move them to trash during teardown, including after failed
+assertions. This lets retries and repeated runs reuse their fixed filenames.
+Keep file reads and save assertions inside the test, before teardown. These tests
+also wait for editor readiness and attachment deletion responses; a modal can hide
+background elements from accessibility locators before a mutation has finished.
+
 Fresh installations open `/setup` to create the administrator, confirm the actual content folder
 and finish setup. Use a username with 1–64 ASCII letters/digits/dots/underscores/hyphens (starting
 with a letter or digit) and a password with at least 15 characters, up to 1024 UTF-8 bytes.

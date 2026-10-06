@@ -2,7 +2,7 @@
 import { csrfRequest } from './csrf-request';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './document-fixture';
 
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aSf8AAAAASUVORK5CYII=',
@@ -21,12 +21,12 @@ async function pasteImage(page: Page, selector: string) {
 }
 
 for (const mode of ['Visual', 'Source'] as const) {
-  test(`E2E-03: ${mode} paste, drop, upload, render and delete attachments`, async ({ page }) => {
+  test(`E2E-03: ${mode} paste, drop, upload, render and delete attachments`, async ({
+    page,
+    createDocument,
+  }) => {
     const name = `Attachments ${mode}`;
-    const response = await csrfRequest(page.request).post('/api/v1/documents', {
-      data: { name, content: 'Tail.' },
-    });
-    const { id } = (await response.json()) as { id: string };
+    const id = await createDocument(name, 'Tail.');
     await page.goto(`/doc/${id}/edit`);
     await page.getByRole('tab', { name: mode, exact: true }).click();
     const selector = mode === 'Visual' ? '[aria-label="Visual document"]' : '.cm-content';
@@ -91,10 +91,41 @@ for (const mode of ['Visual', 'Source'] as const) {
       .locator('li')
       .filter({ hasText: 'notes.txt' });
     await row.getByRole('button', { name: 'Delete', exact: true }).click();
-    await page
-      .getByRole('dialog', { name: 'Delete attachment?' })
-      .getByRole('button', { name: 'Delete permanently' })
-      .click();
+    const dialog = page.getByRole('dialog', { name: 'Delete attachment?' });
+    let releaseDelete: () => void = () => undefined;
+    let deleteStarted: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      releaseDelete = resolve;
+    });
+    const started = new Promise<void>((resolve) => {
+      deleteStarted = resolve;
+    });
+    await page.route(`**/documents/${id}/attachments/notes.txt`, async (route) => {
+      if (route.request().method() === 'DELETE') {
+        deleteStarted();
+        await gate;
+      }
+      await route.continue();
+    });
+    const deleted = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'DELETE' &&
+        response.url().endsWith(`/documents/${id}/attachments/notes.txt`),
+    );
+    await dialog.getByRole('button', { name: 'Delete permanently' }).click();
+    try {
+      await started;
+      await expect(dialog).toBeVisible();
+      // Hold the request to reproduce a slow CI runner: a hidden background row is not deletion.
+      expect(
+        (await page.request.get(`/api/v1/documents/${id}/attachments/notes.txt`)).status(),
+      ).toBe(200);
+    } finally {
+      releaseDelete();
+    }
+    expect((await deleted).status()).toBe(204);
+    // While the modal is open, accessible locators cannot see the background attachment row.
+    await expect(dialog).toBeHidden();
     await expect(row).toHaveCount(0);
     expect((await page.request.get(`/api/v1/documents/${id}/attachments/notes.txt`)).status()).toBe(
       404,
@@ -109,11 +140,9 @@ for (const mode of ['Visual', 'Source'] as const) {
 for (const mode of ['Visual', 'Source'] as const) {
   test(`${mode} pending uploads keep their insertion position when the user types, and invalid files show errors`, async ({
     page,
+    createDocument,
   }) => {
-    const response = await csrfRequest(page.request).post('/api/v1/documents', {
-      data: { name: `Async Attachments ${mode}`, content: 'Before. After.' },
-    });
-    const { id } = (await response.json()) as { id: string };
+    const id = await createDocument(`Async Attachments ${mode}`, 'Before. After.');
     await page.goto(`/doc/${id}/edit`);
     await page.getByRole('tab', { name: mode, exact: true }).click();
     const selector = mode === 'Visual' ? '[aria-label="Visual document"]' : '.cm-content';
@@ -159,11 +188,9 @@ for (const mode of ['Visual', 'Source'] as const) {
 test('direct SVG navigation cannot run scripts or access the app origin', async ({
   page,
   context,
+  createDocument,
 }) => {
-  const response = await csrfRequest(page.request).post('/api/v1/documents', {
-    data: { name: 'Sandbox SVG' },
-  });
-  const { id } = (await response.json()) as { id: string };
+  const id = await createDocument('Sandbox SVG');
   const upload = await csrfRequest(page.request).post(`/api/v1/documents/${id}/attachments`, {
     multipart: {
       file: {

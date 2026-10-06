@@ -5,7 +5,7 @@
 |                   |                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------- |
 | **Current phase** | **Phase 12 — File watcher & external changes**                                  |
-| **Last updated**  | 2026-10-07 by @codex (dev branch connection)                                    |
+| **Last updated**  | 2026-10-07 by @codex (CI browser fixes verified)                                |
 | **Spec versions** | PROJECT_SPEC 0.4 · UI_SPEC 1.8                                                  |
 | **Branding**      | Final and applied: **Folded Stack** mark + Inter wordmark; see `BRAND_SPEC.md`. |
 
@@ -23,8 +23,8 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 4. Open small issues: KI-7, KI-8 (attachments), KI-9 (per-request tree scan), KI-10 (raw HTML / cross-document attachment links on move).
 5. **Preview:** rebuilt on 2026-10-02 after Phase 10 (`docker compose up --build -d`, port 8090); `_templates/` seeded in the owner's data (only new folder); owner `.md` files verified unchanged (md5).
 6. **Icons:** Tabler Icons only (D-43). Never import `@tabler/icons-react` outside `apps/web/src/components/icons.tsx`; add new icons there.
-7. **Tooling:** if `pnpm` is not on `PATH` (KI-1), put a shim `exec corepack pnpm "$@"` on `PATH`. E2E: command in `docs/development.md` (Playwright container). E2E tests use fixed document names, so `--repeat-each` fails on the second round by design. `POST /documents` stores `content` as the body (front matter inside it is not parsed; use `template` or files on disk). Playwright `getByLabel` matches substrings: use `exact: true` for "Tags"/"Aliases" (chip lists are labelled "Current tags").
-8. **Git workflow (owner decision, 2026-10-07):** use `dev` with `origin/dev` at `https://github.com/pbuzdygan/leandocs.git`. The owner created local initial commit `a87c7f6` on `main`; renamed it to `dev` and joined the existing remote history with an ours merge, retaining local project files and removing the remote placeholder `test` from the resulting tree. CI push events cover both `main` and `dev`. First-push artifact audit passed; disposable test/runtime data, credentials, builds and temporary output remain ignored. Full test verification remains unresolved (see P0-14 work log). No force push or history rewrite is needed.
+7. **Tooling:** if `pnpm` is not on `PATH` (KI-1), put a shim `exec corepack pnpm "$@"` on `PATH`. E2E: command in `docs/development.md` (Playwright container). Most E2E tests still use fixed document names without teardown; do not repeat the entire suite against the same server. Attachment/editor-feedback tests now clean up their own documents and support repeated runs. `POST /documents` stores `content` as the body (front matter inside it is not parsed; use `template` or files on disk). Playwright `getByLabel` matches substrings: use `exact: true` for "Tags"/"Aliases" (chip lists are labelled "Current tags").
+8. **Git workflow (owner decision, 2026-10-07):** use `dev` with `origin/dev` at `https://github.com/pbuzdygan/leandocs.git`. The owner created local initial commit `a87c7f6` on `main`; renamed it to `dev` and joined the existing remote history with an ours merge, retaining local project files and removing the remote placeholder `test` from the resulting tree. CI push events cover both `main` and `dev`. First-push artifact audit passed; disposable test/runtime data, credentials, builds and temporary output remain ignored. Full verification restored during P0-15: 546 unit/API tests and all 37 browser tests pass, including MFA. Attachment/editor-feedback tests also pass three repetitions (31 checks); no application/security changes were required. No force push or history rewrite is needed.
 
 ---
 
@@ -71,7 +71,8 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 - [x] P0-11 GitHub Actions CI (format, lint, typecheck, test, build, docker build) — @claude-code 2026-10-02 · not yet run on GitHub (no remote, see OQ-2)
 - [x] P0-12 `docs/development.md`, README, CONTRIBUTING, CHANGELOG, SECURITY — @claude-code 2026-10-02
 - [x] P0-13 English specs, `AGENTS.md`/`CLAUDE.md`, this status board, ADR 0001–0005 — @claude-code 2026-10-02
-- [~] P0-14 Owner-requested first-push artifact audit and ignore-rule hardening — @codex 2026-10-07
+- [x] P0-14 Owner-requested first-push artifact audit and ignore-rule hardening — @codex 2026-10-07 · ignore checks; full verification restored during P0-15 (546 tests)
+- [x] P0-15 Diagnose and fix first GitHub CI browser failures; resolve local MFA verification — @codex 2026-10-07 · browser document fixture, deletion synchronization, editor readiness/caret; 546 unit/API tests and 37 browser tests pass
 
 ### Phase 1 — Filesystem core
 
@@ -382,6 +383,15 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 ---
 
 ## Work log
+
+### 2026-10-07 · @codex · P0-15, P0-14
+
+- **Done:** Diagnosed the pasted CI failures: attachment row disappearance was visible before the DELETE request completed because the modal hides background regions; retries collided with leftover document names. Added a document fixture that trashes created documents during teardown, waits for deletion response/modal closure, and a controlled pending-delete regression. Editor-feedback tests wait for readiness, position the caret through the editor textbox and retain the original paragraph in the Markdown assertion.
+- **Files:** `e2e/document-fixture.ts`, `e2e/attachments.spec.ts`, `e2e/editor-feedback.spec.ts`, `docs/development.md`, this tracker.
+- **Verified:** All eight MFA API tests pass in isolation (16.43 s); the previously timed-out challenge-cap test passed in 3.875 s with real Argon2id. Baseline affected browser tests passed once (11 including setup). Updated attachment/editor-feedback tests passed three repetitions under CI settings (31 including setup), with no retries. Lint, typecheck and changed-file formatting pass. Complete unit/API suite passes (546 tests / 67 files, two workers, 102.64 s); build and full-repository formatting also pass. Complete browser suite passes with CI settings (37 tests, 2.3 min, no retries used), including MFA. All verification gates pass; P0-14/P0-15 are closed.
+- **Decisions:** Test synchronization and isolation fixes only; no application code, cryptographic parameters or security checks changed. No changelog entry because user behavior is unchanged. Checked official Playwright retry/response-wait documentation.
+- **Issues/notes:** CI already passed its verification prerequisite and its browser MFA case; the earlier local MFA timeout is not reproduced in isolation or the complete suite. P0-14 verification is now complete.
+- **Next:** Publish the verified patch on `dev` and inspect the resulting GitHub CI run; application work remains P12-02.
 
 ### 2026-10-07 · @codex · Git development branch correction
 
