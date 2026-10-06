@@ -5,7 +5,7 @@
 |                   |                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------- |
 | **Current phase** | **Phase 12 — File watcher & external changes**                                  |
-| **Last updated**  | 2026-10-07 by @codex (first-push artifact audit)                                |
+| **Last updated**  | 2026-10-07 by @codex (dev branch connection)                                    |
 | **Spec versions** | PROJECT_SPEC 0.4 · UI_SPEC 1.8                                                  |
 | **Branding**      | Final and applied: **Folded Stack** mark + Inter wordmark; see `BRAND_SPEC.md`. |
 
@@ -24,7 +24,7 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 5. **Preview:** rebuilt on 2026-10-02 after Phase 10 (`docker compose up --build -d`, port 8090); `_templates/` seeded in the owner's data (only new folder); owner `.md` files verified unchanged (md5).
 6. **Icons:** Tabler Icons only (D-43). Never import `@tabler/icons-react` outside `apps/web/src/components/icons.tsx`; add new icons there.
 7. **Tooling:** if `pnpm` is not on `PATH` (KI-1), put a shim `exec corepack pnpm "$@"` on `PATH`. E2E: command in `docs/development.md` (Playwright container). E2E tests use fixed document names, so `--repeat-each` fails on the second round by design. `POST /documents` stores `content` as the body (front matter inside it is not parsed; use `template` or files on disk). Playwright `getByLabel` matches substrings: use `exact: true` for "Tags"/"Aliases" (chip lists are labelled "Current tags").
-8. **First-push artifact audit (2026-10-07, full test verification pending):** repository source remains untracked; no commits or remote are configured. Disposable `.e2e*-data/`, browser results, runtime data, environment files, builds, dependencies, caches and temporary output are ignored. Keep test source, brand exports, examples and the lockfile. The owner requested pre-push verification; no commit or push was performed. CI push events currently cover only `main`, so a `dev` push alone does not run CI. Next Git step: configure the intended remote/branch and review the staged file list before the initial commit/push.
+8. **Git workflow (owner decision, 2026-10-07):** use `dev` with `origin/dev` at `https://github.com/pbuzdygan/leandocs.git`. The owner created local initial commit `a87c7f6` on `main`; renamed it to `dev` and joined the existing remote history with an ours merge, retaining local project files and removing the remote placeholder `test` from the resulting tree. CI push events cover both `main` and `dev`. First-push artifact audit passed; disposable test/runtime data, credentials, builds and temporary output remain ignored. Full test verification remains unresolved (see P0-14 work log). No force push or history rewrite is needed.
 
 ---
 
@@ -282,10 +282,10 @@ Owner feedback 2026-10-02 (testing the preview), done before Phase 9 on the owne
 
 ## Open questions (owner)
 
-| ID   | Question                                                                                                        | Default until answered                       | Blocks             |
-| ---- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------ |
-| OQ-1 | **License?** Owner (2026-10-02): **no license for now**, decide later                                           | No LICENSE file; README says "to be decided" | Public release     |
-| OQ-2 | **GitHub owner/repository name** (remote, CI, `ghcr.io/<owner>/leandocs`)? Owner (2026-10-02): **GitHub later** | Local-only repo, no remote, no push          | P14-07, running CI |
+| ID   | Question                                                                                                         | Default until answered                          | Blocks         |
+| ---- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------- |
+| OQ-1 | **License?** Owner (2026-10-02): **no license for now**, decide later                                            | No LICENSE file; README says "to be decided"    | Public release |
+| OQ-2 | **GitHub owner/repository name**: resolved by owner 2026-10-07 — `pbuzdygan/leandocs`, development branch `dev`. | Remote configured; CI includes pushes to `dev`. | P14-07         |
 
 ---
 
@@ -370,7 +370,7 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | KI-1  | Root scripts call `pnpm`, so `pnpm` must be on `PATH`. On the owner's machine `corepack enable` failed: `~/.local` did not exist, and `/usr/bin` needs sudo.                                                   | `sudo corepack enable`, or `mkdir -p ~/.local/bin && corepack enable --install-directory ~/.local/bin` and add it to `PATH` (see `docs/development.md`) |
 | KI-2  | Port 8080 is already in use on the owner's dev machine (another service)                                                                                                                                       | `PORT=9000 pnpm dev` (the Vite proxy follows `PORT`)                                                                                                    |
-| KI-3  | The CI workflow has never run on GitHub (no remote yet)                                                                                                                                                        | Verify after OQ-2                                                                                                                                       |
+| KI-3  | GitHub CI results still need verification after the first push to `dev`                                                                                                                                        | Verify after OQ-2                                                                                                                                       |
 | KI-4  | Docker image is ~350 MB                                                                                                                                                                                        | Optimise in P14-01                                                                                                                                      |
 | KI-5  | Playwright's Chromium cannot start on the owner's host (missing system libraries such as `libatk`, and installing them needs sudo)                                                                             | Run E2E in `mcr.microsoft.com/playwright:v1.63.0-noble` (command in `docs/development.md`); CI uses `playwright install --with-deps`                    |
 | KI-7  | Attachments added outside the app with an upper-case extension (`Photo.PNG`) are listed but cannot be opened or deleted (names must round-trip through the lower-casing sanitiser)                             | Fix with P9/P12 or when touching attachments: accept the stored name case-insensitively in `attachments/service.ts` `target()`                          |
@@ -382,6 +382,15 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 ---
 
 ## Work log
+
+### 2026-10-07 · @codex · Git development branch correction
+
+- **Done:** Connected the existing workspace to `pbuzdygan/leandocs`; renamed local `main` to `dev`. Prepared an ours merge with unrelated remote history so the local project replaces the remote placeholder through a normal fast-forward push, preserving both initial commits.
+- **Files:** `AGENTS.md`, `.github/workflows/ci.yml`, `docs/implementation-status.md`; Git remote/branch metadata.
+- **Verified:** Remote `dev` contains only `test`; local commit contains the 362 previously audited source/assets. Application code is unchanged; full application-test limitations from P0-14 remain. Local branch/tree checks and formatting passed; no private/test artifacts are tracked. Remote publication is checked separately after the merge commit.
+- **Decisions:** Owner selected `https://github.com/pbuzdygan/leandocs/tree/dev` as the development destination and explicitly said its placeholder content may be replaced. Future local commits default to `dev`; CI also runs for `dev` pushes.
+- **Issues/notes:** No force push, rebase or reset. Git-only correction does not resolve the existing MFA timeout/full-suite stall.
+- **Next:** Use ordinary commits and pushes on `dev`; continue application work at P12-02 after unresolved P0-14 verification.
 
 ### 2026-10-07 · @codex · P0-14
 

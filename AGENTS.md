@@ -89,7 +89,7 @@ If you stop mid-task, leave the task as `[~]`. Write a log entry that says what 
 
 ## 4. Git conventions
 
-- Default branch: `main`. Unless the owner says otherwise, commit task-sized changes locally on `main` or on a short-lived branch named `<handle>/<task-id>-<slug>` (e.g. `codex/P1-04-frontmatter`). **Do not push or open PRs unless the owner asks.**
+- Development branch: `dev`, tracking `origin/dev` at `https://github.com/pbuzdygan/leandocs.git` (owner decision, 2026-10-07). Unless the owner says otherwise, commit task-sized changes locally on `dev` or on a short-lived branch named `<handle>/<task-id>-<slug>` (e.g. `codex/P1-04-frontmatter`). **Do not push or open PRs unless the owner asks.**
 - [Conventional Commits](https://www.conventionalcommits.org/) with the task ID first in the subject:
 
   ```text
