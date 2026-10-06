@@ -9,6 +9,9 @@ import {
   type ScanIssue,
   type TreeFolderNode,
   type TreeNode,
+  type ContentChanges,
+  type DocumentChange,
+  type FolderChange,
 } from '@leandocs/shared';
 import Database from 'better-sqlite3';
 import { migrate } from '../db/migrations.js';
@@ -40,24 +43,7 @@ export interface DocumentEntry {
 }
 
 /** One document that appeared, changed on disk or disappeared during a refresh. */
-export interface DocumentChange {
-  kind: 'added' | 'changed' | 'removed';
-  id: string;
-  path: string;
-  /** Set when the document kept its id but now lives at another path (moved or renamed). */
-  previousPath?: string;
-}
-
-export interface FolderChange {
-  kind: 'added' | 'removed';
-  path: string;
-}
-
-/** What one refresh changed in the registry, ordered by path. Empty when nothing changed. */
-export interface ContentChanges {
-  documents: DocumentChange[];
-  folders: FolderChange[];
-}
+export type { DocumentChange, FolderChange, ContentChanges } from '@leandocs/shared';
 
 export function hasChanges(changes: ContentChanges): boolean {
   return changes.documents.length > 0 || changes.folders.length > 0;

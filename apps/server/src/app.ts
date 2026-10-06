@@ -43,6 +43,8 @@ import { FolderService } from './folders/service.js';
 import { TrashService } from './trash/trash.js';
 import { ContentSync } from './watcher/content-sync.js';
 import { ContentWatcher } from './watcher/content-watcher.js';
+import { ChangeEvents } from './watcher/change-events.js';
+import { eventRoutes } from './api/events.js';
 
 // Documents can be large; the default 1 MiB body limit is too small for real runbooks.
 const BODY_LIMIT_BYTES = 10 * 1024 * 1024;
@@ -156,6 +158,9 @@ export async function buildApp(
   app.log.info({ contentDir, documents: registry.list().length }, 'Content loaded');
   const lock = new MutationLock();
   const sync = new ContentSync(registry, lock, app.log.child({ module: 'sync' }));
+  const events = new ChangeEvents(sync);
+  // End active streams before Fastify drains requests and before onClose shuts down SQLite.
+  app.addHook('preClose', async () => events.close());
   const trash = new TrashService(contentDir);
   const templates = new TemplateService(contentDir);
   const seeded = await templates.seed();
@@ -244,6 +249,16 @@ export async function buildApp(
     prefix: API_BASE_PATH,
     sync,
     search: new SearchService(db),
+  });
+  await app.register(eventRoutes, {
+    prefix: API_BASE_PATH,
+    config,
+    events,
+    authorized: (request) =>
+      config.authMode === 'none' ||
+      Boolean(
+        proxyAuth ? proxyAuth.session(request).user : auth.session(request.headers.cookie).user,
+      ),
   });
 
   if (config.webDistDir && existsSync(config.webDistDir)) {

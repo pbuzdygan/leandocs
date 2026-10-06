@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { once } from 'node:events';
 import Database from 'better-sqlite3';
 import type { FastifyInstance, RouteOptions } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -66,9 +67,19 @@ describe('deliberate unauthenticated mode', () => {
           method: method as 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS',
           headers,
           url: route.url.replace(/:[^/]+/g, 'example'),
+          payloadAsStream: route.url === '/api/v1/events',
         });
         expect(response.statusCode, `${method} ${route.url}`).not.toBe(401);
         expect(response.statusCode, `${method} ${route.url}`).toBeLessThan(500);
+        if (route.url === '/api/v1/events') {
+          // An SSE response stays open: verify its first event instead of buffering to EOF.
+          expect(response.headers['content-type']).toContain('text/event-stream');
+          const stream = response.stream();
+          const [chunk] = await once(stream, 'data');
+          expect(String(chunk)).toContain('event: ready');
+          stream.destroy();
+          response.raw.res.destroy();
+        }
         count++;
       }
     }

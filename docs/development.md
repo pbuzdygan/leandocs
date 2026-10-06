@@ -274,6 +274,16 @@ default `WATCH_MODE=off`. Pass `true` as its second argument to test configured 
 for the resulting index update. Startup, explicit rebuilds and app content mutations still reconcile
 the whole tree. See [ADR-0020](adr/0020-content-watcher.md).
 
+## External-change event stream
+
+The external-change transport is `GET /api/v1/events`, with normal API authentication. Native
+`EventSource` sends the same-origin session cookie; do not put credentials in query parameters.
+Listen for `ready` to refetch current data and `content-changed` for external index invalidations.
+Reconnect gaps are not replayed. See [ADR-0021](adr/0021-external-change-events.md) for payloads,
+authentication renewal and resource limits. Reverse proxies should disable response buffering for
+this route and allow idle timeouts longer than the 15-second heartbeat. The response sets
+`X-Accel-Buffering: no` for Nginx/Nginx Proxy Manager. Frontend subscription is implemented in P12-04.
+
 ## Optional local two-factor authentication
 
 With `AUTH_MODE=local`, open **Settings › Security**, enter the current password, and scan the QR

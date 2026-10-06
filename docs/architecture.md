@@ -212,6 +212,14 @@ See [ADR-0020](adr/0020-content-watcher.md).
 - **Incremental reconciliation:** event paths are validated and inspected on disk. A file event reads only that file; directory events scan the affected subtree. Missing or unsafe ancestors invalidate that cached subtree. Metadata for other paths remains cached. Global duplicate-id resolution stays deterministic, and all affected SQLite tables update transactionally. Explicit file events ignore the mtime/size shortcut and compare content hashes, detecting edits that preserve both. Event-refresh failures disable the healthy-watcher read shortcut. Startup, rebuilds and app mutations retain full reconciliation.
 - **Read consistency:** externally edited tree/search/tag/link views update after the watcher debounce (plus the polling interval in polling mode). Known documents and save revision checks still read actual bytes. API fixtures that require immediate discovery after direct filesystem writes explicitly use `WATCH_MODE=off`; watcher integration tests wait for event-driven indexing. Index status skips registry reconciliation while healthy, but storage usage accounting still visits attachment folders.
 
+External invalidations are available at `GET /api/v1/events` (SSE), documented in
+[ADR-0021](adr/0021-external-change-events.md). Every connection emits `ready` with `{ "resync": true }`;
+clients refetch after connecting/reconnecting. Nonempty external batches emit `content-changed` with
+the shared `ContentChanges` contract. There are no event ids or replay. Heartbeats run every 15 seconds;
+local-session access is rechecked before each write. Five-minute connection lifetimes renew gateway
+authentication, and disconnect/shutdown releases timers and streams. Limits are 32 connections and
+64 KiB queued per stream; a disconnected client resyncs. Frontend consumption remains P12-04.
+
 ## Search (Phase 8, `search/`)
 
 - **Query (`search/query.ts`, PROJECT_SPEC §33):** free words, `"quoted phrases"` and the filters `tag:`, `path:`, `title:` (values may be quoted). Any other `key:value` (e.g. `host:8080`) is searched as text. User text reaches FTS5 `MATCH` **only as double-quoted strings** (quotes doubled), so FTS syntax such as `NEAR`, `OR`, `-`, `*`, `^` or column filters cannot be injected; words get a trailing `*` (prefix match, type-ahead), phrases do not. All terms are ANDed. Terms without a letter or digit are dropped.
