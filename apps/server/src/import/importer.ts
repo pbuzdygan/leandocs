@@ -26,6 +26,8 @@ export interface ImportEntry {
   bytes?: Buffer;
   /** The file was larger than the importer may read. */
   tooLarge?: boolean;
+  /** Content type sent by the browser (checked for attachments). */
+  mime?: string;
 }
 
 export interface ScannedDocument {
@@ -51,6 +53,17 @@ export interface ConvertedDocument {
   converted: boolean;
   notes: string[];
   warnings: string[];
+}
+
+/** Reason for a file that is neither a document nor an attachment of an imported document. */
+export const UNUSED_FILE = 'Not used by any imported document';
+
+/** True when a folder segment of `path` is an attachment folder (`Doc.assets/`). */
+export function insideAssetsFolder(path: string): boolean {
+  return path
+    .split('/')
+    .slice(0, -1)
+    .some((segment) => segment.toLowerCase().endsWith('.assets'));
 }
 
 /** A single item cannot be imported; the rest of the selection continues. */

@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import type { ImportReport } from '@leandocs/shared';
+import { IMPORT_NAME_ONLY_TYPE, type ImportReport } from '@leandocs/shared';
 import { describe, expect, it } from 'vitest';
 import { documentDto, folder, mockApi, renderApp, sampleTree } from '../test/render';
 
@@ -33,19 +33,27 @@ function report(dryRun: boolean, destination = ''): ImportReport {
       },
       {
         source: 'Notes/image.png',
+        destination: 'Notes/Router (2).assets/image.png',
+        status: dryRun ? 'ready' : 'imported',
+        attachmentOf: 'Notes/Router.md',
+        notes: [],
+        warnings: [],
+      },
+      {
+        source: 'Notes/unused.png',
         status: 'skipped',
-        reason: 'Only Markdown files are imported',
+        reason: 'Not used by any imported document',
         notes: [],
         warnings: [],
       },
     ],
-    summary: { documents: 2, folders: 1, skipped: 1, failed: 0, warnings: 1 },
+    summary: { documents: 2, attachments: 1, folders: 1, skipped: 1, failed: 0, warnings: 1 },
   };
 }
 
 interface Upload {
   query: string;
-  parts: { path: string; size: number }[];
+  parts: { path: string; size: number; type?: string }[];
 }
 
 function mockImport() {
@@ -61,6 +69,7 @@ function mockImport() {
         parts: form.getAll('files').map((part) => ({
           path: (part as File).name,
           size: (part as File).size,
+          type: (part as File).type,
         })),
       });
       return { body: report(request.path.includes('dryRun=true')) };
@@ -82,6 +91,7 @@ describe('import dialog (UI_SPEC §134–135)', () => {
       file('Notes/Plain.md', '# Plain\n'),
       file('Notes/Router.md', '# Router\n'),
       file('Notes/image.png', 'binary image bytes'),
+      file('Notes/unused.png', 'unused bytes'),
       file('Notes/.git/config', '[core]'),
       file('Notes/.obsidian/app.json', '{}'),
     ]);
@@ -91,14 +101,16 @@ describe('import dialog (UI_SPEC §134–135)', () => {
     expect(uploads[0]!.query).toBe(
       '/import?importer=markdown-directory&destination=Infrastructure&dryRun=true',
     );
-    // Hidden folders stay in the browser; other files are listed but only Markdown is sent.
+    // Hidden folders stay in the browser; other files are listed by name only.
+    const nameOnly = { size: 0, type: IMPORT_NAME_ONLY_TYPE };
     expect(uploads[0]!.parts).toEqual([
-      { path: 'Notes/Plain.md', size: 8 },
-      { path: 'Notes/Router.md', size: 9 },
-      { path: 'Notes/image.png', size: 0 },
+      { path: 'Notes/Plain.md', size: 8, type: 'text/markdown' },
+      { path: 'Notes/Router.md', size: 9, type: 'text/markdown' },
+      { path: 'Notes/image.png', ...nameOnly },
+      { path: 'Notes/unused.png', ...nameOnly },
     ]);
     expect(within(preview).getByRole('status')).toHaveTextContent(
-      '2 documents will be imported into Documentation. 1 new folder · 1 skipped · 1 warning.',
+      '2 documents and 1 attachment will be imported into Documentation. 1 new folder · 1 skipped · 1 warning.',
     );
     expect(within(preview).getByText(/Left out 2 files in hidden folders/)).toHaveTextContent(
       '(.git, .obsidian)',
@@ -108,7 +120,8 @@ describe('import dialog (UI_SPEC §134–135)', () => {
       'SourceDestinationStatus',
       'Notes/Plain.mdAdds missing front matter: id, title, created, updatedNotes/Plain.mdReady',
       'Notes/Router.md A document named "Router.md" already exists; imported as "Router (2).md"Notes/Router (2).mdReady',
-      'Notes/image.pngOnly Markdown files are imported—Skipped',
+      'Notes/image.pngAttachment of Notes/Router.mdNotes/Router (2).assets/image.pngReady',
+      'Notes/unused.pngNot used by any imported document—Skipped',
     ]);
 
     await user.click(within(preview).getByRole('button', { name: 'Import 2 documents' }));
@@ -116,8 +129,15 @@ describe('import dialog (UI_SPEC §134–135)', () => {
     expect(uploads[1]!.query).toBe(
       '/import?importer=markdown-directory&destination=Infrastructure&dryRun=false',
     );
-    expect(uploads[1]!.parts).toEqual(uploads[0]!.parts);
-    expect(within(finished).getByRole('status')).toHaveTextContent('2 documents imported into');
+    // The import sends the attachment the preview listed, and still not the unused file.
+    expect(uploads[1]!.parts).toEqual([
+      ...uploads[0]!.parts.slice(0, 2),
+      { path: 'Notes/image.png', size: 18, type: 'text/markdown' },
+      { path: 'Notes/unused.png', ...nameOnly },
+    ]);
+    expect(within(finished).getByRole('status')).toHaveTextContent(
+      '2 documents and 1 attachment imported into',
+    );
     expect(await screen.findByText('Imported 2 documents')).toBeInTheDocument();
     await user.click(within(finished).getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -151,7 +171,14 @@ describe('import dialog (UI_SPEC §134–135)', () => {
                 warnings: [],
               },
             ],
-            summary: { documents: 1, folders: 0, skipped: 0, failed: 0, warnings: 0 },
+            summary: {
+              documents: 1,
+              attachments: 0,
+              folders: 0,
+              skipped: 0,
+              failed: 0,
+              warnings: 0,
+            },
           } satisfies ImportReport,
         };
       }
@@ -208,7 +235,14 @@ describe('import dialog (UI_SPEC §134–135)', () => {
                 warnings: ['Removed a script that Markdown cannot contain'],
               },
             ],
-            summary: { documents: 1, folders: 0, skipped: 0, failed: 0, warnings: 1 },
+            summary: {
+              documents: 1,
+              attachments: 0,
+              folders: 0,
+              skipped: 0,
+              failed: 0,
+              warnings: 1,
+            },
           } satisfies ImportReport,
         };
       }

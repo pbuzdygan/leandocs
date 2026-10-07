@@ -10,4 +10,6 @@ Expand **Attachments** below a document to open, download or delete files. Delet
 
 SVG is delivered with sandbox restrictions. Scripts and external resources do not execute, including when opening an SVG directly. Generic files download instead of running in the application.
 
+Importing Markdown or HTML brings along the pictures and files that the imported notes link to. Each one is copied into the attachments folder of the document that uses it, and its links are updated. The same type and size rules apply as for uploads.
+
 The API and security choices are described in [ADR-0008](adr/0008-attachment-upload-and-serving.md). Content remains in files; no attachment bytes are stored in SQLite.

@@ -9,6 +9,12 @@ export const MAX_IMPORT_FILES = 10_000;
 export const MAX_IMPORT_DOCUMENT_BYTES = 10 * 1024 * 1024;
 
 /**
+ * Content type of an upload part that carries only a file name (ADR-0022, P13-06). The preview
+ * lists other files by name; the import then sends the files the preview used as attachments.
+ */
+export const IMPORT_NAME_ONLY_TYPE = 'application/x-leandocs-name-only';
+
+/**
  * `ready` / `skipped` in a preview; `imported` / `skipped` / `failed` after the import ran.
  */
 export type ImportItemStatus = 'ready' | 'imported' | 'skipped' | 'failed';
@@ -19,6 +25,8 @@ export interface ImportItem {
   /** Content-relative target path; absent when the item is not imported. */
   destination?: string;
   status: ImportItemStatus;
+  /** Set for an attachment copy: the source path of the document that uses it. */
+  attachmentOf?: string;
   /** The source was converted to Markdown (e.g. from HTML). */
   converted?: boolean;
   /** Why the item is skipped or failed. */
@@ -33,6 +41,7 @@ export interface ImportItem {
 
 export interface ImportSummary {
   documents: number;
+  attachments: number;
   folders: number;
   skipped: number;
   failed: number;

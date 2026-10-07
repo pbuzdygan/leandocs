@@ -211,7 +211,7 @@ export async function buildApp(
   });
   await app.register(importRoutes, {
     prefix: API_BASE_PATH,
-    imports: new ImportService(contentDir, registry, lock, sync),
+    imports: new ImportService(contentDir, registry, lock, sync, config.maxUploadSize),
     maxFileSize: config.maxUploadSize,
   });
   await app.register(healthRoutes, { prefix: API_BASE_PATH });

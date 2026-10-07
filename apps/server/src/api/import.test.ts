@@ -1,6 +1,10 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { MAX_IMPORT_DOCUMENT_BYTES, type ImportReport } from '@leandocs/shared';
+import {
+  IMPORT_NAME_ONLY_TYPE,
+  MAX_IMPORT_DOCUMENT_BYTES,
+  type ImportReport,
+} from '@leandocs/shared';
 import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../test/authenticated-app.js';
@@ -12,7 +16,8 @@ afterEach(async () => {
   await Promise.all(apps.splice(0).map((app) => app.close()));
 });
 
-type Files = Record<string, string | Buffer>;
+type Part = string | Buffer | { data: string | Buffer; type: string };
+type Files = Record<string, Part>;
 
 async function setup() {
   const root = await makeTempDir();
@@ -44,14 +49,19 @@ async function setup() {
 
 function multipart(files: Files): Buffer {
   const parts: Buffer[] = [];
-  for (const [name, data] of Object.entries(files))
+  for (const [name, part] of Object.entries(files)) {
+    const { data, type } =
+      typeof part === 'object' && !Buffer.isBuffer(part)
+        ? part
+        : { data: part, type: 'application/octet-stream' };
     parts.push(
       Buffer.from(
-        `--leandocs-import\r\nContent-Disposition: form-data; name="files"; filename="${name}"\r\nContent-Type: application/octet-stream\r\n\r\n`,
+        `--leandocs-import\r\nContent-Disposition: form-data; name="files"; filename="${name}"\r\nContent-Type: ${type}\r\n\r\n`,
       ),
       Buffer.isBuffer(data) ? data : Buffer.from(data),
       Buffer.from('\r\n'),
     );
+  }
   parts.push(Buffer.from('--leandocs-import--\r\n'));
   return Buffer.concat(parts);
 }
@@ -68,6 +78,11 @@ async function listFiles(dir: string, prefix = ''): Promise<string[]> {
 }
 
 const ID = '7d9f3c1a-1111-4b6a-9c44-0f2f6a7b8c9d';
+const png = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aSf8AAAAASUVORK5CYII=',
+  'base64',
+);
+const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n');
 const withId = `---\r\nid: ${ID}\r\ntitle: Router\r\n# keep this comment\r\ntags: [network]\r\n---\r\n\r\nBody with CRLF.\r\n`;
 const plain = '\uFEFF# Plain note\n\nNo front matter, [[Router]] link.\n';
 
@@ -88,7 +103,7 @@ describe('POST /api/v1/import (Markdown directory)', () => {
       importer: 'markdown-directory',
       destination: '',
       dryRun: true,
-      summary: { documents: 2, folders: 2, skipped: 3, failed: 0, warnings: 0 },
+      summary: { documents: 2, attachments: 0, folders: 2, skipped: 3, failed: 0, warnings: 0 },
     });
     expect(report.items).toEqual([
       {
@@ -99,9 +114,9 @@ describe('POST /api/v1/import (Markdown directory)', () => {
         warnings: [],
       },
       {
-        source: 'Notes/Doc.assets/',
+        source: 'Notes/Doc.assets/a.png',
         status: 'skipped',
-        reason: 'Attachment folders are not imported yet (1 file)',
+        reason: 'Not used by any imported document',
         notes: [],
         warnings: [],
       },
@@ -122,7 +137,7 @@ describe('POST /api/v1/import (Markdown directory)', () => {
       {
         source: 'Notes/image.png',
         status: 'skipped',
-        reason: 'Only Markdown files are imported',
+        reason: 'Not used by any imported document',
         notes: [],
         warnings: [],
       },
@@ -174,7 +189,7 @@ describe('POST /api/v1/import (Markdown directory)', () => {
       destination: 'Router (2).md',
       status: 'imported',
       warnings: [
-        'A document named "Router.md" already exists; imported as "Router (2).md". Links to the original name need updating',
+        'A document named "Router.md" already exists; imported as "Router (2).md"',
         'The document id is already used in the library; a new id is assigned',
       ],
     });
@@ -330,6 +345,170 @@ describe('POST /api/v1/import (Markdown directory)', () => {
     );
     const markdownOnly = await upload({ 'a.md': '# a' }, '?importer=html');
     expect(markdownOnly.json().error.message).toBe('No HTML files were found in the selection');
+  });
+
+  it('copies referenced files next to each document and re-points only those links', async () => {
+    const { content, upload } = await setup();
+    const router = [
+      '# Router',
+      '',
+      '![Diagram](img/diagram.png "Network")',
+      '[Manual](../Shared/manual.pdf) and ![again](./img/diagram.png)',
+      '![Map][map] [video](movie.mp4) ![fake](fake.png) ![gone](img/missing.png)',
+      '[Other](Other.md) [[Other]] https://example.com/x.png `img/diagram.png`',
+      '',
+      '[map]: <img/net map.png>',
+      '',
+    ].join('\n');
+    const other = '# Other\n\n![Same diagram](img/diagram.png)\n';
+    const binaries: Record<string, { data: Buffer; type: string }> = {
+      'Lib/Notes/img/diagram.png': { data: png, type: 'image/png' },
+      'Lib/Notes/img/net map.png': { data: png, type: 'image/png' },
+      'Lib/Shared/manual.pdf': { data: pdf, type: 'application/pdf' },
+      'Lib/Notes/movie.mp4': { data: Buffer.from('video'), type: 'video/mp4' },
+      'Lib/Notes/fake.png': { data: Buffer.from('not an image'), type: 'image/png' },
+      'Lib/Notes/unused.png': { data: png, type: 'image/png' },
+    };
+    const documents = { 'Lib/Notes/Router.md': router, 'Lib/Notes/Other.md': other };
+    // The browser previews with names only, then sends the files the preview attached.
+    const nameOnly = Object.fromEntries(
+      Object.keys(binaries).map((name) => [name, { data: '', type: IMPORT_NAME_ONLY_TYPE }]),
+    );
+    const previewResponse = await upload({ ...documents, ...nameOnly }, '?dryRun=true');
+    expect(previewResponse.statusCode, previewResponse.body).toBe(200);
+    const preview = previewResponse.json<ImportReport>();
+    expect(preview.summary).toMatchObject({ documents: 2, attachments: 5 });
+    expect(
+      preview.items.map((item) => [item.source, item.status, item.destination, item.attachmentOf]),
+    ).toEqual([
+      ['Lib/Notes/Other.md', 'ready', 'Lib/Notes/Other.md', undefined],
+      [
+        'Lib/Notes/img/diagram.png',
+        'ready',
+        'Lib/Notes/Other.assets/diagram.png',
+        'Lib/Notes/Other.md',
+      ],
+      ['Lib/Notes/Router.md', 'ready', 'Lib/Notes/Router.md', undefined],
+      [
+        'Lib/Notes/img/diagram.png',
+        'ready',
+        'Lib/Notes/Router.assets/diagram.png',
+        'Lib/Notes/Router.md',
+      ],
+      [
+        'Lib/Shared/manual.pdf',
+        'ready',
+        'Lib/Notes/Router.assets/manual.pdf',
+        'Lib/Notes/Router.md',
+      ],
+      // In document order: the `[map]:` definition comes last. Contents are checked on import.
+      ['Lib/Notes/fake.png', 'ready', 'Lib/Notes/Router.assets/fake.png', 'Lib/Notes/Router.md'],
+      [
+        'Lib/Notes/img/net map.png',
+        'ready',
+        'Lib/Notes/Router.assets/net map.png',
+        'Lib/Notes/Router.md',
+      ],
+      ['Lib/Notes/movie.mp4', 'skipped', undefined, undefined],
+      ['Lib/Notes/unused.png', 'skipped', undefined, undefined],
+    ]);
+    const attached = new Set(
+      preview.items.filter((item) => item.attachmentOf).map((item) => item.source),
+    );
+    const selection = Object.fromEntries(
+      Object.entries(binaries).map(([name, part]) => [
+        name,
+        attached.has(name) ? part : nameOnly[name]!,
+      ]),
+    );
+    const response = await upload({ ...documents, ...selection });
+    expect(response.statusCode, response.body).toBe(200);
+    const report = response.json<ImportReport>();
+    expect(report.summary).toMatchObject({ documents: 2, attachments: 4, failed: 0 });
+    const byKey = Object.fromEntries(
+      report.items.map((item) => [`${item.attachmentOf ?? ''}>${item.source}`, item]),
+    );
+    expect(byKey['>Lib/Notes/Router.md']!.warnings).toEqual([
+      'Kept the link to Lib/Notes/movie.mp4: this file type cannot be attached',
+      'Kept the link to Lib/Notes/fake.png: the file contents do not match its type',
+      'Linked file is not in the selection, so the link was kept: Lib/Notes/img/missing.png',
+    ]);
+    expect(byKey['>Lib/Notes/Router.md']!.notes).toContain(
+      'Copies 3 attachments next to the document and updates the links',
+    );
+    expect(byKey['>Lib/Notes/fake.png']).toMatchObject({
+      status: 'skipped',
+      reason: 'Cannot be attached: the file contents do not match its type',
+    });
+    expect(byKey['>Lib/Notes/unused.png']!.reason).toBe('Not used by any imported document');
+
+    const written = await readFile(path.join(content, 'Lib/Notes/Router.md'), 'utf8');
+    expect(written.slice(written.indexOf('# Router'))).toBe(
+      [
+        '# Router',
+        '',
+        '![Diagram](Router.assets/diagram.png "Network")',
+        '[Manual](Router.assets/manual.pdf) and ![again](./Router.assets/diagram.png)',
+        '![Map][map] [video](movie.mp4) ![fake](fake.png) ![gone](img/missing.png)',
+        '[Other](Other.md) [[Other]] https://example.com/x.png `img/diagram.png`',
+        '',
+        '[map]: <Router.assets/net map.png>',
+        '',
+      ].join('\n'),
+    );
+    expect(await readFile(path.join(content, 'Lib/Notes/Other.md'), 'utf8')).toContain(
+      '![Same diagram](Other.assets/diagram.png)',
+    );
+    expect(await listFiles(path.join(content, 'Lib'))).toEqual([
+      'Notes/Other.assets/diagram.png',
+      'Notes/Other.md',
+      'Notes/Router.assets/diagram.png',
+      'Notes/Router.assets/manual.pdf',
+      'Notes/Router.assets/net map.png',
+      'Notes/Router.md',
+    ]);
+    expect(await readFile(path.join(content, 'Lib/Notes/Router.assets/manual.pdf'))).toEqual(pdf);
+  });
+
+  it('copies images that converted HTML pages refer to', async () => {
+    const { content, upload } = await setup();
+    const response = await upload(
+      {
+        'Site/page.html': '<h1>Page</h1><p><img src="img/logo.png" alt="Logo"></p>',
+        'Site/img/logo.png': { data: png, type: 'image/png' },
+      },
+      '?importer=html',
+    );
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json<ImportReport>().summary).toMatchObject({ documents: 1, attachments: 1 });
+    expect(await readFile(path.join(content, 'Site/page.md'), 'utf8')).toContain(
+      '![Logo](page.assets/logo.png)',
+    );
+    expect(await readFile(path.join(content, 'Site/page.assets/logo.png'))).toEqual(png);
+  });
+
+  it('keeps links between imported documents working when one has to be renamed', async () => {
+    const { content, run } = await setup();
+    await writeFile(path.join(content, 'Other.md'), '# Existing other\n');
+    const report = await run({
+      'Index.md': '# Index\n\nSee [other](Other.md#setup) and [[Other]].\n',
+      'Other.md': '# Other\n\n![pic](pic.png)\n',
+      'pic.png': { data: png, type: 'image/png' },
+    });
+    expect(report.items.find((item) => item.source === 'Other.md')!.destination).toBe(
+      'Other (2).md',
+    );
+    expect(await readFile(path.join(content, 'Index.md'), 'utf8')).toContain(
+      'See [other](Other%20%282%29.md#setup) and [[Other]].',
+    );
+    expect(await readFile(path.join(content, 'Other (2).md'), 'utf8')).toContain(
+      '![pic](Other%20%282%29.assets/pic.png)',
+    );
+    expect(await readFile(path.join(content, 'Other (2).assets/pic.png'))).toEqual(png);
+    // Untouched apart from the id the index gives every document (D-10).
+    expect(await readFile(path.join(content, 'Other.md'), 'utf8')).toMatch(
+      /^---\nid: .+\n---\n\n# Existing other\n$/s,
+    );
   });
 
   it('places a selection into an existing folder and merges folders', async () => {

@@ -73,6 +73,10 @@
   border-bottom: 0;
 }
 
+.import-table__attachment td:first-child {
+  padding-left: var(--space-6);
+}
+
 .import-table__path {
   overflow-wrap: anywhere;
 }

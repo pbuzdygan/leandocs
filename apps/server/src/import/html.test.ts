@@ -68,7 +68,6 @@ describe('HTML importer (PROJECT_SPEC §68)', () => {
       'Removed 2 embedded pages that Markdown cannot contain',
       'Removed a form that Markdown cannot contain',
       'Removed an image stored inside the HTML; only the description text was kept',
-      'Images are not imported yet; the document still refers to pics/diagram.png',
       'Removed a link that could run code; the link text was kept',
       'A table with merged cells was simplified',
       'Formatting Markdown does not support was removed: collapsible section, highlight, subscript, underline',
@@ -115,7 +114,7 @@ describe('HTML importer (PROJECT_SPEC §68)', () => {
     expect(
       items.map((item) => [item.source, item.kind === 'document' ? item.target : item.reason]),
     ).toEqual([
-      ['Export/.cache/x.html', 'Hidden or attachment file'],
+      ['Export/.cache/x.html', 'Hidden file'],
       ['Export/Big.htm', 'Larger than 10 MiB'],
       ['Export/Page.HTML', 'Export/Page.md'],
       ['Export/notes.md', 'Only HTML files are converted'],

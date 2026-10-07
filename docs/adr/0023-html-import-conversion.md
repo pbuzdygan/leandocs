@@ -23,8 +23,8 @@ unified/remark syntax-tree ecosystem (`remark-parse`, `remark-gfm`, `mdast-util-
   drawings, formulas and forms. Links that could run code keep only their text. Images stored as
   `data:` URLs keep only their description. Each kind of loss becomes one report warning: removed
   elements, formatting Markdown cannot express (underline, highlight, sub/superscript,
-  collapsible sections), merged table cells, inline styles, and local images that are not
-  imported yet (P13-06). Relative links to `.html`/`.htm` pages are rewritten to the converted
+  collapsible sections), merged table cells and inline styles. Local images become attachments
+  like any referenced file (P13-06, ADR-0022 amendment). Relative links to `.html`/`.htm` pages are rewritten to the converted
   `.md` files and reported as a note.
 - Encoding follows a simplified version of the HTML standard: byte order mark, then the
   `<meta charset>` declaration, then UTF-8, then Windows-1252 with a warning. Unsupported declared
@@ -59,4 +59,4 @@ unified/remark syntax-tree ecosystem (`remark-parse`, `remark-gfm`, `mdast-util-
   dependencies.
 - Adding a new HTML construct to the report is one entry in the `REMOVED` or `FLATTENED`
   tables.
-- Follow-up: images referenced by converted pages arrive with P13-06.
+- Images referenced by converted pages are copied as attachments since P13-06.

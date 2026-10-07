@@ -12,14 +12,20 @@ test('imports a Markdown directory through the preview and keeps its structure',
 }) => {
   const source = await mkdtemp(path.join(tmpdir(), 'leandocs-import-'));
   const library = path.join(source, 'Homelab');
-  const router = '---\ntitle: Edge router\ntags: [network]\n---\n\n# Edge router\n\nSee [[NAS]].\n';
+  const router =
+    '---\ntitle: Edge router\ntags: [network]\n---\n\n# Edge router\n\nSee [[NAS]].\n\n![Topology](../diagram.png)\n';
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aSf8AAAAASUVORK5CYII=',
+    'base64',
+  );
   const destination = path.join(content, 'Imported Library');
   try {
     await mkdir(path.join(library, 'Network'), { recursive: true });
     await mkdir(path.join(library, '.git'), { recursive: true });
     await writeFile(path.join(library, 'Network/Router.md'), router);
     await writeFile(path.join(library, 'NAS.md'), '# NAS\n\nStorage notes.\n');
-    await writeFile(path.join(library, 'diagram.png'), 'not imported yet');
+    await writeFile(path.join(library, 'diagram.png'), png);
+    await writeFile(path.join(library, 'unused.png'), png);
     await writeFile(path.join(library, '.git/HEAD'), 'ref: refs/heads/main\n');
     const folder = await csrfRequest(page.request).post('/api/v1/folders', {
       data: { name: 'Imported Library' },
@@ -36,11 +42,14 @@ test('imports a Markdown directory through the preview and keeps its structure',
 
     const preview = page.getByRole('dialog', { name: 'Import preview' });
     await expect(preview.getByRole('status')).toHaveText(
-      '2 documents will be imported into Imported Library. 2 new folders · 1 skipped.',
+      '2 documents and 1 attachment will be imported into Imported Library. 2 new folders · 1 skipped.',
     );
     await expect(preview.getByText('Left out 1 file in hidden folders (.git).')).toBeVisible();
     await expect(preview.getByRole('row', { name: /Homelab\/diagram\.png/ })).toContainText(
-      'Only Markdown files are imported',
+      'Attachment of Homelab/Network/Router.md',
+    );
+    await expect(preview.getByRole('row', { name: /Homelab\/unused\.png/ })).toContainText(
+      'Not used by any imported document',
     );
     // The preview writes nothing.
     expect(await readdir(destination)).toEqual([]);
@@ -48,13 +57,29 @@ test('imports a Markdown directory through the preview and keeps its structure',
     await preview.getByRole('button', { name: 'Import 2 documents' }).click();
     const finished = page.getByRole('dialog', { name: 'Import finished' });
     await expect(finished.getByRole('status')).toHaveText(
-      '2 documents imported into Imported Library. 2 new folders · 1 skipped.',
+      '2 documents and 1 attachment imported into Imported Library. 2 new folders · 1 skipped.',
     );
     await finished.getByRole('button', { name: 'Done' }).click();
+    expect(
+      await readFile(path.join(destination, 'Homelab/Network/Router.assets/diagram.png')),
+    ).toEqual(png);
+    expect(await readdir(path.join(destination, 'Homelab'))).toEqual(['NAS.md', 'Network']);
 
     const imported = await readFile(path.join(destination, 'Homelab/Network/Router.md'), 'utf8');
     expect(imported).toMatch(/^---\ntitle: Edge router\ntags: \[network\]\nid: [0-9a-f-]{36}\n/);
-    expect(imported.endsWith('---\n\n# Edge router\n\nSee [[NAS]].\n')).toBe(true);
+    expect(
+      imported.endsWith(
+        '---\n\n# Edge router\n\nSee [[NAS]].\n\n![Topology](Router.assets/diagram.png)\n',
+      ),
+    ).toBe(true);
+    // The copied image renders in the imported document.
+    const id = /\nid: (\S+)\n/.exec(imported)![1]!;
+    await page.goto(`/doc/${id}`);
+    const image = page.getByRole('img', { name: 'Topology' });
+    await expect(image).toBeVisible();
+    await expect
+      .poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth))
+      .toBe(1);
     const tree = page.getByRole('tree', { name: 'Documentation' });
     await expect(tree.getByRole('treeitem', { name: 'Homelab' })).toBeVisible();
     await page.keyboard.press('ControlOrMeta+k');

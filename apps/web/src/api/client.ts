@@ -1,5 +1,6 @@
 import {
   API_BASE_PATH,
+  IMPORT_NAME_ONLY_TYPE,
   type SetupRequest,
   type SetupStatus,
   type LoginRequest,
@@ -140,12 +141,24 @@ export const api = {
   /** ADR-0022: the same upload previews (`dryRun`) or imports. Paths are relative to the selection. */
   importFiles: (
     files: readonly ImportSelection[],
-    options: { importer: ImporterKind; destination: string; dryRun: boolean },
+    options: {
+      importer: ImporterKind;
+      destination: string;
+      dryRun: boolean;
+      /** Other files whose content is sent: the attachments a preview listed (P13-06). */
+      include?: ReadonlySet<string>;
+    },
   ) => {
     const body = new FormData();
     for (const { path, file } of files)
-      // The importer reads only its own file type; other files are listed by name only.
-      body.append('files', importerReads(options.importer, path) ? file : new Blob([]), path);
+      // Documents are always sent; other files only by name unless they are attachments.
+      body.append(
+        'files',
+        importerReads(options.importer, path) || options.include?.has(path)
+          ? file
+          : new Blob([], { type: IMPORT_NAME_ONLY_TYPE }),
+        path,
+      );
     const query = `destination=${enc(options.destination)}&dryRun=${options.dryRun}`;
     return request<ImportReport>(`/import?importer=${options.importer}&${query}`, {
       method: 'POST',

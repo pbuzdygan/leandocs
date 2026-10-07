@@ -6,9 +6,10 @@ import { toMarkdown } from 'mdast-util-to-markdown';
 import { CONTINUE, SKIP, visit } from 'unist-util-visit';
 import { MAX_IMPORT_DOCUMENT_BYTES } from '@leandocs/shared';
 import { composeFile, setFrontmatterFields } from '../documents/frontmatter.js';
-import { ASSETS_SUFFIX } from '../filesystem/file-name.js';
 import {
   ImportItemError,
+  insideAssetsFolder,
+  UNUSED_FILE,
   type ConvertedDocument,
   type Importer,
   type ScannedDocument,
@@ -72,17 +73,19 @@ export const htmlImporter: Importer = {
     for (const entry of entries) {
       const segments = entry.path.split('/');
       const name = segments.at(-1)!;
-      if (
-        segments.some((segment) => segment.startsWith('.')) ||
-        segments.slice(0, -1).some((segment) => segment.toLowerCase().endsWith(ASSETS_SUFFIX))
-      )
-        items.push({ kind: 'skipped', source: entry.path, reason: 'Hidden or attachment file' });
-      else if (!this.reads(entry.path))
+      if (segments.some((segment) => segment.startsWith('.')))
+        items.push({ kind: 'skipped', source: entry.path, reason: 'Hidden file' });
+      else if (/\.md$/i.test(name))
         items.push({
           kind: 'skipped',
           source: entry.path,
           reason: 'Only HTML files are converted',
         });
+      else if (!this.reads(entry.path))
+        // ImportService turns it into an attachment when a converted page refers to it.
+        items.push({ kind: 'skipped', source: entry.path, reason: UNUSED_FILE });
+      else if (insideAssetsFolder(entry.path))
+        items.push({ kind: 'skipped', source: entry.path, reason: 'Inside an attachment folder' });
       else if (entry.tooLarge || !entry.bytes)
         items.push({ kind: 'skipped', source: entry.path, reason: `Larger than ${LIMIT_MIB} MiB` });
       else
@@ -134,7 +137,6 @@ export const htmlImporter: Importer = {
 function simplify(tree: Root, notes: string[]): string[] {
   const removed = new Map<string, number>();
   const flattened = new Set<string>();
-  const images: string[] = [];
   let embeddedImages = 0;
   let unsafeLinks = 0;
   let mergedCells = false;
@@ -178,7 +180,6 @@ function simplify(tree: Root, notes: string[]): string[] {
         parent.children.splice(index, 1, ...altText(node));
         return [SKIP, index];
       }
-      if (src !== '' && !/^https?:/i.test(src)) images.push(src);
     }
     return CONTINUE;
   });
@@ -191,10 +192,6 @@ function simplify(tree: Root, notes: string[]): string[] {
   if (embeddedImages > 0)
     warnings.push(
       `Removed ${embeddedImages === 1 ? 'an image' : `${embeddedImages} images`} stored inside the HTML; only the description text was kept`,
-    );
-  if (images.length > 0)
-    warnings.push(
-      `Images are not imported yet; the document still refers to ${[...new Set(images)].slice(0, 3).join(', ')}${new Set(images).size > 3 ? ' …' : ''}`,
     );
   if (unsafeLinks > 0)
     warnings.push(

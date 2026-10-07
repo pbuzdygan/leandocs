@@ -3,16 +3,18 @@ import {
   IMPORTERS,
   MAX_IMPORT_DOCUMENT_BYTES,
   MAX_IMPORT_FILES,
+  IMPORT_NAME_ONLY_TYPE,
   type ImportReport,
   type ImporterKind,
 } from '@leandocs/shared';
 import type { FastifyPluginAsync } from 'fastify';
+import { isAttachmentFileName } from '../attachments/validation.js';
 import { AppError } from '../errors.js';
 import { normalizeRelativePath } from '../filesystem/safe-path.js';
 import type { ImportEntry } from '../import/importer.js';
 import type { ImportService } from '../import/service.js';
 
-/** File contents kept in memory for one request; other uploads are only counted. */
+/** Documents and attachments kept in memory for one request; other uploads are only counted. */
 const MAX_IMPORT_READ_BYTES = 256 * 1024 * 1024;
 
 interface ImportQuery {
@@ -31,7 +33,7 @@ export const importRoutes: FastifyPluginAsync<{
   maxFileSize: number;
 }> = async (app, { imports, maxFileSize }) => {
   await app.register(multipart, {
-    // Oversized non-Markdown files are truncated and listed; they are never stored.
+    // Larger files are truncated and reported as too large, never stored.
     limits: { fileSize: maxFileSize, files: MAX_IMPORT_FILES, fields: 0 },
     throwFileSizeLimit: false,
     preservePath: true,
@@ -62,12 +64,21 @@ export const importRoutes: FastifyPluginAsync<{
           if (part.type !== 'file' || part.fieldname !== 'files')
             throw new AppError(400, 'INVALID_UPLOAD', 'Upload the selected files as "files"');
           const source = sourcePath(part.filename);
-          const reads = source !== undefined && importer.reads(source);
+          const nameOnly = part.mimetype === IMPORT_NAME_ONLY_TYPE;
+          // Documents and possible attachments are kept in memory; everything else is counted.
+          const limit =
+            source === undefined || nameOnly
+              ? 0
+              : importer.reads(source)
+                ? MAX_IMPORT_DOCUMENT_BYTES
+                : isAttachmentFileName(source)
+                  ? maxFileSize
+                  : 0;
           const chunks: Buffer[] = [];
           let size = 0;
           for await (const chunk of part.file as AsyncIterable<Buffer>) {
             size += chunk.length;
-            if (reads && size <= MAX_IMPORT_DOCUMENT_BYTES) chunks.push(chunk);
+            if (size <= limit) chunks.push(chunk);
           }
           if (source === undefined || seen.has(source))
             throw new AppError(
@@ -76,10 +87,10 @@ export const importRoutes: FastifyPluginAsync<{
               `Invalid or repeated file path: "${part.filename}"`,
             );
           seen.add(source);
-          const tooLarge = part.file.truncated || size > MAX_IMPORT_DOCUMENT_BYTES;
           const entry: ImportEntry = { path: source, size };
-          if (reads && tooLarge) entry.tooLarge = true;
-          else if (reads) {
+          if (!nameOnly && part.mimetype) entry.mime = part.mimetype;
+          if (limit > 0 && (part.file.truncated || size > limit)) entry.tooLarge = true;
+          else if (limit > 0) {
             readBytes += size;
             if (readBytes > MAX_IMPORT_READ_BYTES)
               throw new AppError(

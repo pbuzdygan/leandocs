@@ -5,7 +5,7 @@
 |                   |                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------- |
 | **Current phase** | **Phase 13 — Import / migration**                                               |
-| **Last updated**  | 2026-10-07 by @claude-code (P13-03)                                             |
+| **Last updated**  | 2026-10-07 by @claude-code (P13-06)                                             |
 | **Spec versions** | PROJECT_SPEC 0.4 · UI_SPEC 1.8                                                  |
 | **Branding**      | Final and applied: **Folded Stack** mark + Inter wordmark; see `BRAND_SPEC.md`. |
 
@@ -17,7 +17,7 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 
 > Rewrite this block at the end of every session.
 
-1. **Phase 13 — Import / migration. Next: P13-04** Obsidian vault import (PROJECT_SPEC §70). Obsidian builds on the Markdown importer: preserve folders and Markdown, attachments and wiki links where possible. Attachments depend on **P13-06** (copy referenced local files into `<doc>.assets/` and rewrite links), so consider doing P13-06 first; it also helps HTML pages that reference local images. Obsidian specifics to check: `.obsidian/` is skipped already; `![[embed.png]]` embeds and `[[note|alias]]` links; attachment folder settings. Import architecture: ADR-0022 (pipeline, `POST /api/v1/import`) and ADR-0023 (HTML conversion). Importers live in `apps/server/src/import/`, and the dialog in `apps/web/src/actions/dialogs/ImportDialog.tsx` (`SOURCES` table; `importerReads` in `api/client.ts` must mirror each importer's `reads`). Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups. **Owner deployment plan remains:** external Nginx Proxy Manager for HTTPS/routing, `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true`, optional `PUBLIC_ORIGIN`. Production deployment/release validation remain Phases 14–15.
+1. **Phase 13 — Import / migration. Next: P13-04** Obsidian vault import (PROJECT_SPEC §70): preserve folders, Markdown, attachments and wiki links where possible. The Markdown importer now covers folders, ids, `.obsidian/` skipping and attachments referenced by ordinary Markdown links/images (P13-06). Obsidian adds, in particular: `![[image.png]]` / `![[image.png|300]]` embeds and `[[file.pdf]]` links to attachments (resolved by file name anywhere in the vault, as Obsidian does); attachment folder settings; `[[note|alias]]` and `[[note#heading]]` already work as LeanDocs wiki links. Decide whether embeds are converted to ordinary Markdown images pointing into `<doc>.assets/` (portable) — record it in an ADR or the decisions table. Implement it as an importer kind `obsidian` reusing the Markdown scan, with a `references`/`rewrite` extension point in `ImportService.attach` for wiki embeds. Add a dialog option (UI_SPEC §134 lists only Markdown/HTML, so check with the owner or treat Obsidian as "Markdown directory" with automatic detection of `.obsidian/`). Import docs: ADR-0022 (+ P13-06 amendment), ADR-0023. Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups. **Owner deployment plan remains:** external Nginx Proxy Manager for HTTPS/routing, `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true`, optional `PUBLIC_ORIGIN`. Production deployment/release validation remain Phases 14–15.
 2. **Phase 10 summary:** templates (`templates/`, `GET /templates`, `template` on create), properties endpoint + `GET /tags`, pins (migration 3, `/pins`), web Info tab, TagInput, tag filter, Pinned sidebar/Home. See `docs/architecture.md` _Templates, properties and pins_.
 3. **Schema:** current version 5. Never edit migrations 1–5; add new ones. New password hashes use native Node Argon2id (64 MiB, three passes, parallelism one), and existing scrypt hashes upgrade after successful password verification (ADR-0011/0018). Session tokens are random, stored only as digests; cookies are HttpOnly/SameSite=Strict, and HTTPS proxy deployments must set `SESSION_COOKIE_SECURE=true` (ADR-0012). Keep the minimum 15-character password and 1024 UTF-8 byte maximum. One in-flight login bounds hash concurrency; legacy verification still uses ~128 MiB. Require Node >=24.7.0. Local browser tests create the account, sign in and reuse an ignored cookie-state file. A separate proxy project uses port 18766 and disposable `.e2e-proxy-data/`; The none project uses port 18767 and disposable `.e2e-none-data/`; the isolated MFA project uses port 18769 and `.e2e-mfa-data/`; `.e2e-data/` remains ordinary local-only. All test data/browser artifacts are ignored by Git/tooling and excluded from Docker build context. Await authenticated UI readiness before sending shortcuts.
 4. Open small issues: KI-7, KI-8 (attachments), KI-12 (intermittent unit test under full-suite load), KI-10 (raw HTML / cross-document attachment links on move). KI-9 is resolved by P12-02 for healthy-watcher reads; broader performance measurements remain P15-07.
@@ -231,7 +231,7 @@ Owner feedback 2026-10-02 (testing the preview), done before Phase 9 on the owne
 - [x] P13-03 HTML importer with conversion report (§68) — @claude-code 2026-10-07 · `import/html.ts`, HTML option in `ImportDialog.tsx`; tests: `import/html.test.ts`, `api/import.test.ts`, web `actions/import.test.tsx`, `e2e/import.spec.ts`; ADR-0023
 - [ ] P13-04 Obsidian vault import (§70)
 - [ ] P13-05 Poznote adapter, only if needed (§69)
-- [ ] P13-06 Attachments referenced by imported documents: copy local files into `<doc>.assets/` and rewrite the links (shared by the Markdown and Obsidian importers; ADR-0022)
+- [x] P13-06 Attachments referenced by imported documents: copy local files into `<doc>.assets/` and rewrite the links (shared by the Markdown and Obsidian importers; ADR-0022) — @claude-code 2026-10-07 · `import/{service,references}.ts`, two-phase upload (`IMPORT_NAME_ONLY_TYPE`), dialog attachment rows; tests: `api/import.test.ts`, web `actions/import.test.tsx`, `e2e/import.spec.ts`; ADR-0022 amendment
 
 ### Phase 14 — Deployment
 
@@ -388,6 +388,15 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 ---
 
 ## Work log
+
+### 2026-10-07 · @claude-code · P13-06
+
+- **Done:** Imported documents bring the local files they refer to. Relative links, images and reference definitions are resolved inside the selection. Each referenced non-document file is copied into the referencing document's new `<name>.assets/` folder (one copy per document, `-n` on name clashes), and only those link destinations are rewritten with the P9 `rewriteRelativeLinks` machinery. Links between imported documents also follow documents that had to be renamed (` (2)` or a sanitised name). Normal upload rules apply (type allowlist, `MAX_UPLOAD_SIZE`, content sniffing, no executables). A failure keeps the link and adds a warning; missing files are warned about too. Converted HTML pages get their images the same way. Two-phase upload: the preview sends other files as name-only parts, and the import sends only the files the preview attached. The dialog shows "Attachment of …" rows and counts attachments in the summary.
+- **Files:** `apps/server/src/import/{service,references,importer,markdown-directory,html}.ts`, `api/import.ts`, `attachments/validation.ts` (`isAttachmentFileName`), `app.ts`, `packages/shared/src/imports.ts`, `apps/web/src/api/client.ts`, `actions/dialogs/{ImportDialog.tsx,import.css}`, tests (`api/import.test.ts`, `import/html.test.ts`, web `actions/import.test.tsx`, `e2e/import.spec.ts`), ADR-0022 amendment, architecture, attachments doc, CHANGELOG, status.
+- **Verified:** lint ✔ typecheck ✔ test ✔ (599) build ✔; full E2E ✔ (45). The browser test imports a directory with a real PNG and checks the preview/result counts, the copy on disk, the unused file left out and the image rendering in the imported document.
+- **Decisions:** ADR-0022 amendment. Per-document copies, because attachments belong to one document. The removed "Images are not imported yet" HTML warning is superseded by real attachment handling.
+- **Issues/notes:** Obsidian `![[embed]]` references are not resolved yet (P13-04).
+- **Next:** P13-04 Obsidian vault import.
 
 ### 2026-10-07 · @claude-code · P13-03
 

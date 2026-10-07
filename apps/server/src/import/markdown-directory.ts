@@ -1,7 +1,9 @@
 import { MAX_IMPORT_DOCUMENT_BYTES } from '@leandocs/shared';
-import { ASSETS_SUFFIX, isDocumentFileName } from '../filesystem/file-name.js';
+import { isDocumentFileName } from '../filesystem/file-name.js';
 import {
   ImportItemError,
+  insideAssetsFolder,
+  UNUSED_FILE,
   type ConvertedDocument,
   type Importer,
   type ScannedDocument,
@@ -13,7 +15,8 @@ const LIMIT_MIB = MAX_IMPORT_DOCUMENT_BYTES / 1024 / 1024;
 /**
  * Generic Markdown directory (PROJECT_SPEC §67): every `.md` file keeps its folder path and its
  * bytes; existing front matter is kept (identity is handled by ImportService). Hidden entries
- * (`.git/`, `.obsidian/`) are skipped. Attachments are not imported yet (P13-06).
+ * (`.git/`, `.obsidian/`) are skipped. Other files become attachments when a document refers to
+ * them (ImportService).
  */
 export const markdownDirectoryImporter: Importer = {
   kind: 'markdown-directory',
@@ -32,27 +35,19 @@ export const markdownDirectoryImporter: Importer = {
     const folders = new Map<string, { reason: string; files: number }>();
     for (const entry of entries) {
       const segments = entry.path.split('/');
-      const folderIndex = segments
-        .slice(0, -1)
-        .findIndex(
-          (segment) => segment.startsWith('.') || segment.toLowerCase().endsWith(ASSETS_SUFFIX),
-        );
+      const folderIndex = segments.slice(0, -1).findIndex((segment) => segment.startsWith('.'));
       if (folderIndex !== -1) {
         const folder = `${segments.slice(0, folderIndex + 1).join('/')}/`;
-        const reason = segments[folderIndex]!.startsWith('.')
-          ? 'Hidden folder'
-          : 'Attachment folders are not imported yet';
-        const current = folders.get(folder) ?? { reason, files: 0 };
+        const current = folders.get(folder) ?? { reason: 'Hidden folder', files: 0 };
         current.files++;
         folders.set(folder, current);
       } else if (baseName(entry.path).startsWith('.')) {
         items.push({ kind: 'skipped', source: entry.path, reason: 'Hidden file' });
       } else if (!this.reads(entry.path)) {
-        items.push({
-          kind: 'skipped',
-          source: entry.path,
-          reason: 'Only Markdown files are imported',
-        });
+        // ImportService turns it into an attachment when an imported document refers to it.
+        items.push({ kind: 'skipped', source: entry.path, reason: UNUSED_FILE });
+      } else if (insideAssetsFolder(entry.path)) {
+        items.push({ kind: 'skipped', source: entry.path, reason: 'Inside an attachment folder' });
       } else if (entry.tooLarge || !entry.bytes) {
         items.push({
           kind: 'skipped',

@@ -37,11 +37,23 @@ preview with warnings before anything is written. Everything runs in the single 
   and unusable ids are kept unchanged with a warning; the index then gives the document a
   provisional id. All other bytes, including BOM, line endings, comments and key order, stay
   unchanged.
-- **Skips:** hidden files and folders (`.git/`, `.obsidian/`), `.assets` folders, non-Markdown
-  files, files that are not UTF-8, and Markdown files over 10 MiB are listed as skipped, with one
-  line per skipped folder. Moving referenced attachments is follow-up work (P13-06).
-- **Limits and safety:** at most 10,000 files per request and 256 MiB of retained Markdown; other
-  files are streamed and discarded. An unsafe or repeated path rejects the whole request.
+- **Skips:** hidden files and folders (`.git/`, `.obsidian/`), files that are not UTF-8, Markdown
+  files over 10 MiB and files no imported document uses are listed as skipped. Each hidden folder
+  gets one line.
+- **Attachments (P13-06, amendment 2026-10-07):** relative links, images and reference definitions
+  in an imported document are resolved inside the selection. Every non-document file found this
+  way is copied into the document's new `<name>.assets/` folder. A file used by several documents
+  is copied for each of them, so each document stays self-contained, as with normal uploads. Name
+  clashes get `-2`, `-3`… Only those destinations are rewritten (`rewriteRelativeLinks`, the P9
+  move machinery). Prose, code, wiki links and external URLs stay unchanged. The rules of normal
+  uploads apply: allowed type, size limit, content sniffing and no executables. A file that fails
+  keeps its original link, with a warning on the document. Missing files get a warning too. Links
+  between imported documents follow a document that had to be renamed (` (2)` or a safe name).
+  The preview sends other files by name only (parts typed `IMPORT_NAME_ONLY_TYPE`). The import
+  then sends the content of the files the preview listed as attachments, so unused media is never
+  uploaded. File contents are checked when the import runs.
+- **Limits and safety:** at most 10,000 files per request and 256 MiB of retained documents and
+  attachments; other files are streamed and discarded. An unsafe or repeated path rejects the whole request.
   Normal authentication and CSRF rules apply. The import runs under the `MutationLock`, plans
   again with the current library state, writes each file with `atomicCreateFile`, then refreshes
   the index once. Its writes are therefore not reported as external changes. If one item fails,
@@ -59,7 +71,10 @@ preview with warnings before anything is written. Everything runs in the single 
   changes when the file moves and drops its pins. Replacing the id at import time is more
   predictable, and the report says so.
 - **Copy non-Markdown files verbatim:** they would be invisible to the app outside `.assets`
-  folders. Moving attachments next to their documents needs link rewriting, planned as P13-06.
+  folders. P13-06 instead copies the files documents use next to those documents.
+- **One shared copy of an attachment used by several documents:** LeanDocs attachments belong to
+  one document. They move, rename and go to the trash with it, so a shared copy would break on
+  the first move.
 
 ## Consequences
 

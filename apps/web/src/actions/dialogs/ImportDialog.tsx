@@ -89,7 +89,15 @@ export function ImportDialog({ folder, onClose }: { folder: string; onClose: () 
       api.importFiles(files, { importer: SOURCES[source].importer, destination, dryRun: true }),
   });
   const run = useContentMutation((files: ImportSelection[]) =>
-    api.importFiles(files, { importer: SOURCES[source].importer, destination, dryRun: false }),
+    api.importFiles(files, {
+      importer: SOURCES[source].importer,
+      destination,
+      dryRun: false,
+      // The preview decided which other files are attachments; only those are uploaded.
+      include: new Set(
+        (preview.data?.items ?? []).filter((item) => item.attachmentOf).map((item) => item.source),
+      ),
+    }),
   );
   const report: ImportReport | undefined = run.data ?? preview.data;
   const done = run.data !== undefined;
@@ -249,8 +257,12 @@ function ImportReportView({
   report: ImportReport;
   hidden: Selection['hidden'] | undefined;
 }) {
-  const { documents, folders, skipped, failed, warnings } = report.summary;
+  const { documents, attachments, folders, skipped, failed, warnings } = report.summary;
   const into = displayFolder(report.destination);
+  const what =
+    attachments > 0
+      ? `${plural(documents, 'document')} and ${plural(attachments, 'attachment')}`
+      : plural(documents, 'document');
   const details = [
     folders > 0 && `${plural(folders, 'new folder')}`,
     skipped > 0 && `${skipped} skipped`,
@@ -261,8 +273,8 @@ function ImportReportView({
     <div className="import-report">
       <p className="import-report__summary" role="status">
         {report.dryRun
-          ? `${plural(documents, 'document')} will be imported into ${into}.`
-          : `${plural(documents, 'document')} imported into ${into}.`}
+          ? `${what} will be imported into ${into}.`
+          : `${what} imported into ${into}.`}
         {details.length > 0 && ` ${details.join(' · ')}.`}
       </p>
       {hidden && hidden.count > 0 && (
@@ -281,10 +293,17 @@ function ImportReportView({
             </tr>
           </thead>
           <tbody>
-            {report.items.map((item) => (
-              <tr key={item.source}>
+            {report.items.map((item, index) => (
+              // An attachment used by several documents appears once per copy.
+              <tr
+                key={index}
+                className={item.attachmentOf ? 'import-table__attachment' : undefined}
+              >
                 <td>
                   <span className="import-table__path">{item.source}</span>
+                  {item.attachmentOf && (
+                    <span className="import-table__reason">Attachment of {item.attachmentOf}</span>
+                  )}
                   {item.reason && <span className="import-table__reason">{item.reason}</span>}
                   {item.warnings.map((warning) => (
                     <span key={warning} className="import-table__warning">

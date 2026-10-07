@@ -28,6 +28,11 @@ export const ATTACHMENT_TYPES: Record<
   '.json': { mime: 'application/json', image: false, aliases: ['text/plain'] },
 };
 
+/** True when the file type may be stored as an attachment (by extension only). */
+export function isAttachmentFileName(name: string): boolean {
+  return ATTACHMENT_TYPES[path.extname(name).toLowerCase()] !== undefined;
+}
+
 export function attachmentName(input: string): string {
   if (
     !input ||
