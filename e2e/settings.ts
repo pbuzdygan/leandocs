@@ -13,6 +13,23 @@ const DEFAULT_SETTINGS = {
   },
 };
 
+/**
+ * Waits until the server has stored the settings the page just changed. Settings pages save in
+ * the background (a CSRF token request, then the update), so a reload or `page.goto` right after
+ * a change can abort the save on a slow machine.
+ */
+export async function expectStoredSettings(
+  page: Page,
+  expected: { general?: Record<string, unknown>; editor?: Record<string, unknown> },
+): Promise<void> {
+  await expect
+    .poll(async () => {
+      const response = await page.request.get('/api/v1/settings');
+      return response.json() as Promise<Record<string, Record<string, unknown>>>;
+    })
+    .toMatchObject(expected);
+}
+
 /** Sets the default editor (Settings › Editor) on the test server. */
 export async function setDefaultEditor(page: Page, mode: 'visual' | 'source'): Promise<void> {
   const response = await csrfRequest(page.request).patch('/api/v1/settings', {

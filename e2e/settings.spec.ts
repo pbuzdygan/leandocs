@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test } from './document-fixture';
-import { restoreSettingsAfterEach } from './settings';
+import { expectStoredSettings, restoreSettingsAfterEach } from './settings';
 
 /** P16-01 (UI_SPEC §81–83): settings are saved on the server and change how editing works. */
 
@@ -20,6 +20,10 @@ test('editor settings: default editor, tab size and autosave off', async ({
   await page.getByRole('combobox', { name: 'Tab size' }).selectOption('4');
   await page.getByRole('link', { name: 'General' }).click();
   await page.getByRole('checkbox', { name: 'Autosave' }).uncheck();
+  await expectStoredSettings(page, {
+    general: { autosave: false },
+    editor: { defaultMode: 'source', tabSize: 4 },
+  });
   // Saved on the server: still there after a reload.
   await page.reload();
   await expect(page.getByRole('checkbox', { name: 'Autosave' })).not.toBeChecked();
@@ -53,6 +57,7 @@ test('opens the last viewed document on startup when enabled', async ({ page, cr
   const id = await createDocument('Settings Last Opened', 'Remember me.\n');
   await page.goto('/settings/general');
   await page.getByRole('checkbox', { name: 'Open last document on startup' }).check();
+  await expectStoredSettings(page, { general: { openLastDocument: true } });
   await page.goto(`/doc/${id}`);
   await expect(page.getByText('Remember me.')).toBeVisible();
   await page.goto('/');
