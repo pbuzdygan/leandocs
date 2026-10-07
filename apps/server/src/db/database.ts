@@ -1,4 +1,5 @@
 import {
+  accessSync,
   closeSync,
   constants,
   fstatSync,
@@ -18,6 +19,35 @@ const recoveryError = () =>
   new DatabaseRecoveryError(
     'Application database is missing, invalid or corrupt. Startup stopped to preserve authentication. Restore the matching system backup; do not delete app.db or reset setup.',
   );
+
+export class DatabaseAccessError extends Error {}
+
+/**
+ * SQLite cannot migrate a database it may not write, and it creates `-wal`/`-shm` with the
+ * database file's permissions: a failed start on a read-only `app.db` would leave read-only
+ * sidecars that keep blocking after `app.db` is fixed. Check before SQLite touches anything
+ * (P15-06). A read-only volume (EROFS) is reported the same way.
+ */
+function assertWritable(systemDir: string, file: string): void {
+  const blocked = [systemDir, file, `${file}-wal`, `${file}-shm`].filter((candidate) => {
+    try {
+      accessSync(candidate, constants.W_OK);
+      return false;
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code !== 'ENOENT';
+    }
+  });
+  if (blocked.length > 0)
+    throw new DatabaseAccessError(
+      `LeanDocs may not write ${blocked
+        .map((candidate) =>
+          candidate === systemDir ? 'the system folder' : path.basename(candidate),
+        )
+        .join(
+          ', ',
+        )} in ${systemDir}. Give the user LeanDocs runs as write access to every file in that folder (for example chown -R to LEANDOCS_UID:LEANDOCS_GID). Nothing was changed.`,
+    );
+}
 
 export interface DatabaseLogger {
   info(obj: object, msg: string): void;
@@ -91,6 +121,7 @@ export function openDatabase(systemDir: string, logger: DatabaseLogger): Databas
     )
       throw recoveryError();
   }
+  assertWritable(systemDir, file);
   try {
     return openAndMigrate(file, logger, existing);
   } catch (error) {

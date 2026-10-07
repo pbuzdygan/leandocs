@@ -94,6 +94,28 @@ describe('database upgrades', () => {
           )
           .run('a'.repeat(64));
       }
+      if (version >= 5) {
+        old.prepare('INSERT INTO user_mfa (user_id, secret, last_step) VALUES (1, ?, 7)').run('s');
+        old
+          .prepare('INSERT INTO mfa_recovery_codes (token_hash, user_id) VALUES (?, 1)')
+          .run('b'.repeat(64));
+      }
+      // Derived index rows: kept from version 2 on (version 2 empties the index for a re-read).
+      old
+        .prepare(
+          `INSERT INTO documents (key, id, id_source, path, filename, title, mtime_ms, size,
+             content_hash) VALUES (1, 'doc-1', 'frontmatter', 'A.md', 'A', 'A', 5, 1, 'sha256:x')`,
+        )
+        .run();
+      old.prepare("INSERT INTO tags (id, name) VALUES (1, 'ops')").run();
+      old.prepare('INSERT INTO document_tags (document_key, tag_id) VALUES (1, 1)').run();
+      old.prepare("INSERT INTO documents_fts (rowid, title, body) VALUES (1, 'A', 'quokka')").run();
+      if (version >= 2)
+        old
+          .prepare(
+            "INSERT INTO links (source_key, ordinal, kind, target, lookup) VALUES (1, 0, 'wiki', 'B', 'b')",
+          )
+          .run();
       old.close();
 
       const db = openDatabase(dir, silentLogger);
@@ -111,6 +133,24 @@ describe('database upgrades', () => {
         expect(db.prepare('SELECT COUNT(*) AS n FROM sessions').get()).toEqual({
           n: version >= 4 ? 1 : 0,
         });
+        expect(db.prepare('SELECT last_step FROM user_mfa').all()).toEqual(
+          version >= 5 ? [{ last_step: 7 }] : [],
+        );
+        expect(db.prepare('SELECT COUNT(*) AS n FROM mfa_recovery_codes').get()).toEqual({
+          n: version >= 5 ? 1 : 0,
+        });
+        // Index rows survive (except the deliberate v2 reset); migration 8 only forces a re-read.
+        const indexed = version >= 2 ? 1 : 0;
+        expect(db.prepare('SELECT id, mtime_ms FROM documents').all()).toEqual(
+          indexed ? [{ id: 'doc-1', mtime_ms: -1 }] : [],
+        );
+        expect(db.prepare('SELECT COUNT(*) AS n FROM document_tags').get()).toEqual({ n: indexed });
+        expect(
+          db
+            .prepare("SELECT COUNT(*) AS n FROM documents_fts WHERE documents_fts MATCH 'quokka'")
+            .get(),
+        ).toEqual({ n: indexed });
+        expect(db.prepare('SELECT COUNT(*) AS n FROM links').get()).toEqual({ n: indexed });
         expect(db.pragma('foreign_key_check')).toEqual([]);
         expect(db.pragma('integrity_check', { simple: true })).toBe('ok');
       } finally {

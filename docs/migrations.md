@@ -12,6 +12,8 @@
 - There is no manual step. Updating LeanDocs means starting the new version on the same data folder ([deployment](deployment.md#updating)), and the log shows `Migrated` with the applied steps.
 - **Forward only.** A database with a newer schema than the running code is refused at startup (`SchemaVersionError`) and left untouched. Going back to an older LeanDocs version means restoring the backup taken before the update.
 - Before migrating, startup checks the file (`quick_check`). A damaged or unreadable database stops startup and is never replaced (ADR-0019).
+- Startup also checks that the `system` folder, `app.db` and any `app.db-wal`/`app.db-shm` can be written, and otherwise stops with a message naming them (`DatabaseAccessError`) before SQLite opens anything. Without this, SQLite would create read-only `-wal`/`-shm` files next to a read-only `app.db`, and they would keep blocking after `app.db` itself was fixed.
+- **Tested failure modes** (`db/database.test.ts`, P15-06): a migration that throws leaves the previous version; a process killed inside a migration (its uncommitted pages already in the WAL file) leaves the previous version with all data, and the next start migrates normally; a database that cannot be written stops startup without changing a byte.
 
 ## Rules for changing the schema
 
@@ -19,7 +21,7 @@
 2. Add the change as a new migration at the end with the next version number, and give it a short name.
 3. **App data must survive.** Create or alter app tables in place; never drop and recreate them. SQLite needs the table rebuild procedure (`CREATE new` → `INSERT … SELECT` → `DROP old` → `ALTER … RENAME`) inside the same migration.
 4. **Derived data may be reset** when its shape changes: empty the derived tables in the migration (migration 2 does this), and the next start re-indexes every file.
-5. Add tests: the new migration on a database with data from the previous version (see `db/upgrade.test.ts`, which upgrades every released version with settings, pins, account and sessions), plus whatever the feature needs.
+5. Add tests: the new migration on a database with data from the previous version (see `db/upgrade.test.ts`, which upgrades every released version with settings, pins, account, sessions, MFA data and index rows), plus whatever the feature needs. Run the [upgrade check](#upgrade-check) against the latest published image.
 6. When the version ships, add its fingerprint to `RELEASED_SCHEMAS` in `db/upgrade.test.ts`. The test prints the value.
 
 ## Released schema versions

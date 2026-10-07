@@ -13,6 +13,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 - Long documents, and documents with many quotes or nested lists, open, save and import much faster. Before, they could take minutes or even stop LeanDocs.
 - A document that is too large or too complex to display safely no longer slows LeanDocs down. It is shown as plain text with an explanation, can still be found by search and can be edited as Markdown source. Settings › Index lists such documents.
 - Searching is instant even when a very long document contains the search word thousands of times.
+- If LeanDocs is not allowed to write its own database files, for example after restoring a backup with the wrong owner, it now says which files are affected and how to fix it. Fixing the permissions is then enough; before, LeanDocs could keep refusing to start.
 
 ### Bug fixes
 
