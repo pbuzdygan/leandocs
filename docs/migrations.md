@@ -39,7 +39,7 @@ Version 8 (re-read every document once after the update) is not released yet.
 
 ## Upgrade check
 
-`scripts/upgrade-check.mjs` (P15-04) tests a real update between two Docker images: it uses the
+`scripts/upgrade-check.mjs` (P15-04, helpers shared with the backup check in `scripts/docker-harness.mjs`) tests a real update between two Docker images: it uses the
 old image like an owner (account, authenticator app, documents with and without ids, a file that
 is not UTF-8, an attachment, pins, trash), stops it, starts the new image on the same data folder
 and checks that no file was rewritten and that sessions, sign-in, the library, pins, trash,

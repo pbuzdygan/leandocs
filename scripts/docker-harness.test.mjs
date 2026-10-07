@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { totpCode } from './upgrade-check.mjs';
+import { totpCode } from './docker-harness.mjs';
 
 describe('upgrade check authenticator codes', () => {
   // RFC 6238 appendix B (SHA-1 secret "12345678901234567890"), last six digits.
