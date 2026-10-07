@@ -401,6 +401,14 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 
 ## Work log
 
+### 2026-10-07 · @claude-code · P15-02 follow-up (CI fix)
+
+- **Done:** GitHub verify failed on `process-analyser.test.ts` › "survives the memory limit…": 5 s default timeout (2.6 s locally). Many server integration tests take 2–4 s locally under load (Argon2id sign-in, analysis child process, real directories), so the server Vitest project now uses `testTimeout`/`hookTimeout` 30 s. No assertion changed.
+- **Files:** `apps/server/vitest.config.ts`, this file.
+- **Verified:** lint ✔ typecheck ✔ format ✔ test ✔ (662, also with the suite pinned to 2 CPU cores: 289 s) build not affected.
+- **Issues/notes:** KI-12 (web `waitFor` timeout) is a separate issue and stays open.
+- **Next:** P15-04.
+
 ### 2026-10-07 · @claude-code · P15-03
 
 - **Done:** Filesystem corruption tests against real directories: non-UTF-8 and UTF-16 files, unreadable folders and files, non-UTF-8 file and folder names, six kinds of damaged front matter (including a YAML alias bomb), atomic-write leftovers, swap files, file/folder symlinks (incl. dangling), a folder named `*.md`, empty and control-byte files, a document replaced by a folder, the content folder disappearing and returning, and damaged trash items. **Defects fixed:** (1) id assignment, link rewriting, saves and property edits re-encoded non-UTF-8 files, replacing bytes with U+FFFD (data loss on first start for Windows-1250 notes); such files are now never written (D-52, migration 7, `NOT_UTF8`, read-only page and Info panel). (2) One folder without read permission made the whole scan throw (empty library, failed startup); now `UNREADABLE_FOLDER`. (3) Files and folders with non-UTF-8 names vanished silently; the scanner reads raw names and reports `INVALID_FILE_NAME`. (4) Front matter with exponential aliases threw in `toJS()` and the document disappeared as unreadable; now `FRONTMATTER_INVALID`. The four tests fail on the previous code.
