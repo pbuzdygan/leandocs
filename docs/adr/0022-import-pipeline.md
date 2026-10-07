@@ -1,6 +1,6 @@
 # ADR-0022: Import pipeline and generic Markdown directory importer
 
-- **Status:** Accepted
+- **Status:** Accepted (duplicate-id replacement and the stateless transport confirmed by the owner, 2026-10-07)
 - **Date:** 2026-10-07
 - **Author:** @claude-code
 - **Related:** PROJECT_SPEC §9, §10, §66–71, §100 Phase 13; UI_SPEC §134–135; P13-01; D-10, D-12, D-13
