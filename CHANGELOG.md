@@ -2,7 +2,7 @@
 
 What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in `AGENTS.md` §8.
 
-## [Unreleased]
+## 0.1.0
 
 ### New features
 
@@ -72,6 +72,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### Improvements
 
+- Diagrams now use an updated drawing library that fixes known security problems in one of its components.
 - The Docker Compose setup runs LeanDocs with the least access it needs: the container cannot change its own files or gain extra rights, and it only writes to your data folder. You can also choose which host address and port it listens on.
 
 - The Docker image is much smaller (about 250 MB instead of 425 MB), so it downloads and updates faster. It also contains only what LeanDocs needs to run, with no shell or package manager, which leaves less to attack. Existing data folders keep working without changes.

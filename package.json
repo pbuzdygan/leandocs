@@ -2,7 +2,7 @@
   "name": "leandocs",
   "version": "0.0.0",
   "private": true,
-  "description": "LeanDocs \u2014 Documentation without the bloat.",
+  "description": "LeanDocs — Documentation without the bloat.",
   "type": "module",
   "packageManager": "pnpm@12.8.1",
   "engines": {
@@ -23,14 +23,14 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
-    "@types/node": "^24.19.0",
-    "eslint": "^10.11.0",
+    "@types/node": "^24.19.1",
+    "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^17.12.0",
+    "globals": "^17.13.0",
     "prettier": "^3.9.9",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.71.0",
+    "typescript-eslint": "^8.71.1",
     "vitest": "^5.0.3"
   }
 }

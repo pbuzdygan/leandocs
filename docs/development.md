@@ -256,6 +256,13 @@ The image runs as UID/GID 1000 and stores everything under the `/data` volume. I
 
 The root `package.json` `version` is the only version source. It reaches the code as `APP_VERSION` from `@leandocs/shared`; the server reports it in `GET /api/v1/health` and its first log line, and the web app shows it with the server's version in Settings › About. To change it, set the same `version` in the root, `apps/server`, `apps/web` and `packages/shared` `package.json` files (a test enforces this). Release builds can override the reported version with `LEANDOCS_VERSION` (Docker build argument and environment variable of `pnpm build`), which dev images use to report `devX.Y.Z`.
 
+## Dependencies
+
+- **Version ranges.** Most dependencies use caret ranges and the lockfile pins exact versions. Security-sensitive parsers and storage libraries are pinned exactly (`@milkdown/kit`, `remark-directive`, `@fastify/multipart`, `better-sqlite3`, `chokidar`, `file-type`, `hast-util-*`, `mdast-util-*` in the server, `otpauth`, `qrcode`, `@tabler/icons-react`); change them deliberately and re-run their round-trip and security tests. Major upgrades (for example TypeScript 7) are separate tasks.
+- **Updating.** `pnpm update -r` stays within the ranges; then run the full verification, including the browser tests.
+- **Audit.** CI and the release workflow run `pnpm audit --audit-level=moderate`, so moderate, high and critical advisories fail the build. Low advisories are reviewed in the dependency audit (P15-01) and recorded in `docs/implementation-status.md` (_Known issues_) when accepted.
+- **Licences.** Runtime dependencies are permissive (MIT, ISC, BSD, Apache-2.0, 0BSD, BlueOak, Unlicense; DOMPurify under Apache-2.0 of its dual licence; fonts under OFL-1.1). `elkjs`, which Mermaid uses, is EPL-2.0 and is shipped unmodified. Check `pnpm licenses list --prod` when adding a runtime dependency; no GPL/AGPL/SSPL-style licences.
+
 ## Releasing
 
 Images are published to GHCR only by the _Release_ workflow (`.github/workflows/release.yml`), when the owner publishes a GitHub release (D-51). Pushes and pull requests never publish.
