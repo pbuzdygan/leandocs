@@ -399,6 +399,14 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 
 ## Work log
 
+### 2026-10-07 · @claude-code · P14-07 follow-up (first release attempt)
+
+- **Done:** The owner's first release `dev0.1.0` was correctly refused (package.json still `0.0.0`). Set version `0.1.0` in all four `package.json` files. GitHub warned that checkout/setup-node v4 run on deprecated Node 20: all actions in `ci.yml` and `release.yml` now use their latest majors on Node 24, pinned by commit SHA (checkout/setup-node/upload-artifact v7, qemu/buildx/login v4, build-push v7; inputs checked against each `action.yml`). Refusal messages now say how to recover (fix, push, delete release **and** tag, recreate); documented in `docs/development.md` _Releasing_.
+- **Files:** `package.json`, `apps/{server,web}/package.json`, `packages/shared/package.json`, `.github/workflows/{ci,release}.yml`, `scripts/release-tags.mjs`, `docs/development.md`, this file.
+- **Verified:** format ✔ lint ✔ test ✔ (621); `release-tags.mjs dev0.1.0` passes the version check locally (the branch check needs the commit on `origin/dev`).
+- **Issues/notes:** The owner must push, delete the GitHub release and tag `dev0.1.0`, and create it again. `CHANGELOG.md` keeps `[Unreleased]` for dev previews (renaming is for stable releases) unless the owner decides otherwise.
+- **Next:** P15-02 after the release succeeds.
+
 ### 2026-10-07 · @claude-code · P15-01
 
 - **Done:** Dependency audit. `pnpm audit` found 4 transitive advisories: high + moderate in `lodash-es` 4.17.23 (Mermaid → chevrotain 11), low in esbuild (tsup) and KaTeX (Mermaid). `pnpm update -r` within existing ranges moved Mermaid to 12.1.0 (chevrotain 13, no lodash-es) plus patch/minor updates (Vite 8.3.3, React Query, Radix, jsdom, ESLint, typescript-eslint, globals, mdast-util-directive). Exact security pins unchanged; no major upgrades (TypeScript 7, `@types/node` 26). The two remaining lows are not exploitable here and are recorded as KI-13/KI-14. CI and release verify now run `pnpm audit --audit-level=moderate`. Production licences reviewed: all permissive; khroma's metadata lacks a licence but its file is MIT; elkjs (EPL-2.0) shipped unmodified.

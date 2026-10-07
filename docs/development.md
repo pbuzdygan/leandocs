@@ -276,6 +276,8 @@ Images are published to GHCR only by the _Release_ workflow (`.github/workflows/
 2. On GitHub, create a release with the new tag on that branch and publish it.
 3. The workflow verifies the code, checks the tag (`scripts/release-tags.mjs`), refuses to overwrite an existing `X.Y.Z`/`devX.Y.Z` image, starts the image and checks its reported version, then pushes `linux/amd64` and `linux/arm64` images.
 
+If the workflow refuses a release (wrong version, wrong branch), nothing is published. Fix the cause and push it, delete the release **and** its tag on GitHub (re-running the workflow reuses the old commit), then create the release again.
+
 The first push creates the `leandocs` package on GHCR as private; make it public in the package settings so `docker compose pull` works without logging in.
 
 ## Layout

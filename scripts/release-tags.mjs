@@ -24,7 +24,8 @@ export function resolveRelease(tag, packageVersion) {
   if (number !== packageVersion) {
     throw new Error(
       `Release tag "${tag}" does not match package.json version ${packageVersion}. ` +
-        'Set the version in every package.json first (docs/development.md, Versions).',
+        'The tag must point to a commit whose package.json files carry that version: set it, push ' +
+        'it, delete this release and its tag, and create the release again (docs/development.md, Releasing).',
     );
   }
   return dev
@@ -41,7 +42,10 @@ function main() {
     // Exit code 1 means "not an ancestor": the release was made from the wrong branch.
     execFileSync('git', ['merge-base', '--is-ancestor', 'HEAD', `origin/${release.branch}`]);
   } catch {
-    throw new Error(`Release tag "${tag}" must point to a commit on the ${release.branch} branch.`);
+    throw new Error(
+      `Release tag "${tag}" must point to a commit on the ${release.branch} branch. ` +
+        'Delete this release and its tag, and create it again on that branch.',
+    );
   }
   const output = [
     `version=${release.version}`,
