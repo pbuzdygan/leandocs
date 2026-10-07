@@ -6,6 +6,20 @@ import { defineConfig, devices } from '@playwright/test';
  */
 const PORT = 18765;
 
+/**
+ * Browser for every project (P15-09): `E2E_BROWSER=firefox|webkit pnpm test:e2e` runs the whole
+ * suite in that engine; the default is Chromium. One engine per run, because the tests share
+ * fixed document names and every run starts with fresh data directories.
+ */
+const BROWSERS = {
+  chromium: devices['Desktop Chrome'],
+  firefox: devices['Desktop Firefox'],
+  webkit: devices['Desktop Safari'],
+};
+const browser = (process.env.E2E_BROWSER ?? 'chromium') as keyof typeof BROWSERS;
+const device = BROWSERS[browser];
+if (!device) throw new Error(`E2E_BROWSER must be one of ${Object.keys(BROWSERS).join(', ')}`);
+
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: false,
@@ -18,27 +32,27 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'setup', testMatch: /setup\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'setup', testMatch: /setup\.spec\.ts/, use: { ...device } },
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'], storageState: 'test-results/auth-state.json' },
+      name: browser,
+      use: { ...device, storageState: 'test-results/auth-state.json' },
       testIgnore: /(?:setup|proxy-auth|none-auth|mfa)\.spec\.ts/,
       dependencies: ['setup'],
     },
     {
       name: 'mfa',
       testMatch: /mfa\.spec\.ts/,
-      use: { ...devices['Desktop Chrome'], baseURL: 'http://127.0.0.1:18769' },
+      use: { ...device, baseURL: 'http://127.0.0.1:18769' },
     },
     {
       name: 'proxy',
       testMatch: /proxy-auth\.spec\.ts/,
-      use: { ...devices['Desktop Chrome'], baseURL: 'http://127.0.0.1:18766' },
+      use: { ...device, baseURL: 'http://127.0.0.1:18766' },
     },
     {
       name: 'none',
       testMatch: /none-auth\.spec\.ts/,
-      use: { ...devices['Desktop Chrome'], baseURL: 'http://127.0.0.1:18767' },
+      use: { ...device, baseURL: 'http://127.0.0.1:18767' },
     },
   ],
   webServer: [

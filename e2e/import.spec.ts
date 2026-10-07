@@ -9,13 +9,14 @@ const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 /** Phase 13 acceptance: an existing Markdown library is imported without copying by hand. */
 test('imports a Markdown directory through the preview and keeps its structure', async ({
   page,
+  browserName,
 }) => {
   const source = await mkdtemp(path.join(tmpdir(), 'leandocs-import-'));
   const library = path.join(source, 'Homelab');
   const router =
     '---\ntitle: Edge router\ntags: [network]\n---\n\n# Edge router\n\nSee [[NAS]].\n\n![Topology](../diagram.png)\n';
   const png = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aSf8AAAAASUVORK5CYII=',
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
     'base64',
   );
   const destination = path.join(content, 'Imported Library');
@@ -44,7 +45,9 @@ test('imports a Markdown directory through the preview and keeps its structure',
     await expect(preview.getByRole('status')).toHaveText(
       '2 documents and 1 attachment will be imported into Imported Library. 2 new folders · 1 skipped.',
     );
-    await expect(preview.getByText('Left out 1 file in hidden folders (.git).')).toBeVisible();
+    // WebKit does not pass files in hidden folders to the page at all, so there is nothing to report.
+    if (browserName !== 'webkit')
+      await expect(preview.getByText('Left out 1 file in hidden folders (.git).')).toBeVisible();
     await expect(preview.getByRole('row', { name: /Homelab\/diagram\.png/ })).toContainText(
       'Attachment of Homelab/Network/Router.md',
     );

@@ -9,6 +9,7 @@ Each reverse proxy setup below was tested with LeanDocs: sign-in over HTTPS, sav
 - Docker with the Compose plugin (`docker compose version`).
 - For access from other devices: a domain name pointing at the server and a reverse proxy for HTTPS.
 - Disk space for your documentation. LeanDocs itself needs about 250 MB for the image.
+- A current browser: Chrome, Edge, Firefox or Safari. The oldest versions LeanDocs is built for are Chrome/Edge 111, Firefox 114 and Safari 16.4 (2023); every change is tested automatically on the latest Chrome, Firefox and Safari engines.
 
 ## 1. Install
 

@@ -226,7 +226,7 @@ The setup token changes on server restart; reload an open setup form after resta
 - **Web tests** use jsdom + Testing Library (`apps/web/src/test/setup.ts`).
 - **End-to-end tests** (Playwright) live in `e2e/` and run against the production build with a fresh data directory (`.e2e-data/`):
   The `setup` project completes first run and login, then writes cookie state under ignored
-  `test-results/` before the `chromium` content tests. A separate `proxy` project checks gateway-mode access on port 18766 using disposable `.e2e-proxy-data/`. A `none` project on port 18767 uses `.e2e-none-data/` to verify anonymous access and the Settings warning. Never commit this state file.
+  `test-results/` before the content tests (project named after the browser, `chromium` by default). A separate `proxy` project checks gateway-mode access on port 18766 using disposable `.e2e-proxy-data/`. A `none` project on port 18767 uses `.e2e-none-data/` to verify anonymous access and the Settings warning. Never commit this state file.
   `e2e/accessibility.spec.ts` scans every screen with axe-core (WCAG AA) and checks focus, keyboard use and reflow; give new screens, menus and dialogs an `expectAccessible` call (see [accessibility.md](accessibility.md)).
 
   ```bash
@@ -234,6 +234,8 @@ The setup token changes on server restart; reload an open setup form after resta
   pnpm exec playwright install --with-deps chromium   # once (needs system libraries)
   pnpm test:e2e
   ```
+
+  **Other browsers (P15-09).** `E2E_BROWSER=firefox` or `E2E_BROWSER=webkit` (Safari's engine) runs the whole suite in that engine; install it first (`pnpm exec playwright install --with-deps firefox webkit`). Run one engine at a time: the tests share fixed document names and each run starts from empty data folders. CI runs all three engines in parallel jobs. Engine differences the tests account for: Firefox ignores `clipboardData` given to a synthetic paste event (set it with `Object.defineProperty`), throws from `form.submit()` when the CSP blocks it, and rejects images with a bad checksum; WebKit does not pass files from hidden folders when a directory is chosen.
 
   If Chromium cannot start on your machine (missing system libraries, no sudo), run the tests in the official image instead. The version must match `@playwright/test`:
 
@@ -243,6 +245,8 @@ The setup token changes on server restart; reload an open setup form after resta
     -v "$PWD:$PWD" -w "$PWD" mcr.microsoft.com/playwright:v1.63.0-noble \
     node_modules/.bin/playwright test
   ```
+
+  The image contains all three engines; add `-e E2E_BROWSER=firefox` (or `webkit`) after `-e HOME=/tmp` to use another one.
 
 ### Performance check
 

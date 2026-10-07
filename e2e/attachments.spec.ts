@@ -5,7 +5,7 @@ import path from 'node:path';
 import { expect, test, type Page } from './document-fixture';
 
 const png = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aSf8AAAAASUVORK5CYII=',
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
   'base64',
 );
 
@@ -14,9 +14,10 @@ async function pasteImage(page: Page, selector: string) {
     const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
     const transfer = new DataTransfer();
     transfer.items.add(new File([bytes], 'screenshot.png', { type: 'image/png' }));
-    element.dispatchEvent(
-      new ClipboardEvent('paste', { clipboardData: transfer, bubbles: true, cancelable: true }),
-    );
+    // Firefox ignores `clipboardData` passed to a synthetic event, so it is attached afterwards.
+    const event = new ClipboardEvent('paste', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'clipboardData', { value: transfer });
+    element.dispatchEvent(event);
   }, png.toString('base64'));
 }
 
@@ -147,7 +148,20 @@ for (const mode of ['Visual', 'Source'] as const) {
     await page.getByRole('tab', { name: mode, exact: true }).click();
     const selector = mode === 'Visual' ? '[aria-label="Visual document"]' : '.cm-content';
     await page.locator(selector).click();
-    await page.keyboard.press('ControlOrMeta+Home');
+    // A key pressed while the editor settles can be lost (seen in WebKit); retry until the caret
+    // is really at the start, or the typed text would split "Before. After.".
+    await expect(async () => {
+      await page.keyboard.press('ControlOrMeta+Home');
+      const atStart = await page.evaluate(() => {
+        const selection = getSelection();
+        return (
+          selection?.isCollapsed === true &&
+          selection.anchorOffset === 0 &&
+          (selection.anchorNode?.textContent ?? '').startsWith('Before.')
+        );
+      });
+      expect(atStart).toBe(true);
+    }).toPass({ timeout: 10_000 });
     let release: () => void = () => undefined;
     const gate = new Promise<void>((resolve) => {
       release = resolve;

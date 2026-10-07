@@ -46,7 +46,11 @@ test('CSP blocks injected scripts, event handlers, external connections, forms a
     // Target a child frame: a CSP-blocked main-frame submit leaves Chromium navigation pending.
     form.target = 'blocked-form-target';
     document.body.append(form);
-    form.submit();
+    try {
+      form.submit();
+    } catch {
+      // Firefox enforces form-action by throwing here (and still reports the violation).
+    }
   });
   await expect
     .poll(async () =>
