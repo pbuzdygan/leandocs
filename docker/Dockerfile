@@ -9,6 +9,8 @@ RUN corepack enable
 WORKDIR /repo
 # Dependencies first, so source changes reuse the cached download layer.
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+# Local fixes to dependencies (pnpm patchedDependencies), applied on install.
+COPY patches ./patches
 RUN pnpm fetch
 COPY . .
 RUN pnpm install --frozen-lockfile --offline

@@ -246,7 +246,7 @@ Owner feedback 2026-10-02 (testing the preview), done before Phase 9 on the owne
 ### Phase 15 — Release hardening
 
 - [x] P15-01 Dependency audit — @claude-code 2026-10-07 · high/moderate removed (Mermaid 12.1.0), two lows accepted (KI-13, KI-14), audit gate in CI/release, licences checked · `docs/development.md` _Dependencies_
-- [ ] P15-02 Security review (second pass)
+- [~] P15-02 Security review (second pass) — @claude-code 2026-10-07
 - [ ] P15-03 Filesystem corruption tests
 - [ ] P15-04 Upgrade tests
 - [ ] P15-05 Backup/restore tests (critical tests A and D)
@@ -398,6 +398,14 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 ---
 
 ## Work log
+
+### 2026-10-07 · @claude-code · P15-02 (in progress: parser performance)
+
+- **Done so far:** Second-pass review of import, SSE events, route guard, headers, watcher, Docker context and release workflow (no defects there yet; see below). **Finding A (fixed):** Markdown parsing was quadratic for documents with many block containers: in micromark, every closed quote/list item rebuilt the whole event list (`micromark-util-edit-map` `consume`). 400 KiB of short quotes took 106 s, nested lists 71 s; a realistic 1 MiB document took 24 s and 5 MiB exhausted the heap (fatal, kills the server). Upstream is at its latest version, so a pnpm patch keeps the untouched prefix in place (same output, tail-only cost): quotes 106 s → 1.8 s, nested lists 71 s → 2.1 s, realistic 1 MiB 24 s → 6 s. Applies to the server and the web bundle; the Docker build copies `patches/`.
+- **Still open (Finding B):** crafted inputs remain slow within one paragraph or deep nesting (10 KiB of `*` ≈ 1.8 s, 20 KiB of `[` ≈ 1.5 s, 5,000-deep quote ≈ 1.1 s, list nesting 1,000 deep ≈ 31 s), parse memory is ~750 MiB per MiB of Markdown (5 MiB still runs out of memory), and a stack overflow marks the document "unreadable" so it disappears from the library. Plan: ADR-0025, bounded analysis in a worker thread (time and heap limits, plain-text fallback, persisted flag), link rewriting/import skip such documents, and the web shows them as plain source.
+- **Files:** `patches/micromark-util-edit-map@1.0.0.patch`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `docker/Dockerfile`, `packages/shared/src/markdown/performance.test.ts`, `docs/development.md`, this file.
+- **Verified:** format ✔ lint ✔ typecheck ✔ test ✔ (623) build ✔ audit ✔; the new test fails without the patch (7.7 s) and passes with it; the Docker image contains the patched package.
+- **Next:** Finding B (worker-bounded analysis), then the remaining review areas and `docs/security-review.md` second-pass section.
 
 ### 2026-10-07 · @claude-code · P14-07 follow-up (first release attempt)
 

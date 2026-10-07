@@ -1,0 +1,32 @@
+diff --git a/dev/index.js b/dev/index.js
+index ea19c4844ace45a23c45c25b9a3794230538383d..f04b9e90917ed8b08f6e91d4e6bc8e95b78b0920 100644
+--- a/dev/index.js
++++ b/dev/index.js
+@@ -129,8 +129,9 @@ export class EditMap {
+       events.length = this.map[index][0]
+     }
+ 
+-    vecs.push(events.slice())
+-    events.length = 0
++    // LeanDocs patch: `events` now holds the untouched prefix before the first
++    // change. Keep it in place instead of copying it out and back, so each
++    // consume costs the edited tail only (container exits made this quadratic).
+ 
+     let slice = vecs.pop()
+ 
+diff --git a/index.js b/index.js
+index 5ddf22c742d46cb5a8c2642320bf917632e56ab7..a51dd1fbfda1fc3bcc1040b530afead580464356 100644
+--- a/index.js
++++ b/index.js
+@@ -124,8 +124,9 @@ export class EditMap {
+       // Truncate rest.
+       events.length = this.map[index][0];
+     }
+-    vecs.push(events.slice());
+-    events.length = 0;
++    // LeanDocs patch: `events` now holds the untouched prefix before the first
++    // change. Keep it in place instead of copying it out and back, so each
++    // consume costs the edited tail only (container exits made this quadratic).
+     let slice = vecs.pop();
+     while (slice) {
+       for (const element of slice) {
