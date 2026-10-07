@@ -29,6 +29,8 @@ const RELEASED_SCHEMAS: Record<number, string> = {
   3: 'd8a59d689383',
   4: 'f44c95489042',
   5: 'c6d07d813829',
+  6: '2ba1cabd5694',
+  7: 'ac7379b2aad1',
 };
 
 function schemaFingerprint(db: Database.Database): string {
@@ -158,5 +160,33 @@ describe('database upgrades', () => {
     const upgraded = new Database(path.join(system, DATABASE_FILE), { readonly: true });
     expect(upgraded.pragma('user_version', { simple: true })).toBe(LATEST_SCHEMA_VERSION);
     upgraded.close();
+  });
+
+  it('re-reads documents indexed before the encoding check (migration 8)', async () => {
+    const root = await makeTempDir();
+    const content = path.join(root, 'content');
+    await mkdir(content, { recursive: true });
+    // "# Zródło" in Windows-1250, with an id, so no release ever rewrote it.
+    const legacy = Buffer.from('---\nid: legacy\n---\n# Zr\xf3d\xb3o\n', 'latin1');
+    await writeFile(path.join(content, 'Legacy.md'), legacy);
+    const config = loadConfig({ DATA_DIR: root, LOG_LEVEL: 'silent' });
+    let app = await buildApp(config);
+    await app.close();
+
+    // What a release before version 7 left behind: the row exists, the file was never checked.
+    const db = new Database(path.join(root, 'system', DATABASE_FILE));
+    db.prepare('UPDATE documents SET not_utf8 = 0').run();
+    db.pragma('user_version = 7');
+    db.close();
+
+    app = await buildApp(config);
+    apps.push(app);
+    expect((await app.inject('/api/v1/index/status')).json().issues).toEqual([
+      expect.objectContaining({ code: 'NOT_UTF8', path: 'Legacy.md' }),
+    ]);
+    expect((await app.inject('/api/v1/documents/legacy')).json()).toMatchObject({
+      id: 'legacy',
+      notUtf8: true,
+    });
   });
 });

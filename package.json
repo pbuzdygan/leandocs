@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:upgrade": "node scripts/upgrade-check.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

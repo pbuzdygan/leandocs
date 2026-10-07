@@ -202,6 +202,16 @@ export const MIGRATIONS: readonly Migration[] = [
       db.exec('ALTER TABLE documents ADD COLUMN not_utf8 INTEGER NOT NULL DEFAULT 0');
     },
   },
+  {
+    version: 8,
+    name: 're-read documents indexed before encoding checks',
+    up: (db) => {
+      // Rows written before version 7 say "UTF-8" without the file having been checked, and the
+      // registry trusts rows whose mtime and size still match. An impossible mtime makes the next
+      // start read every file once more (ids and app data stay; found by the P15-04 upgrade check).
+      db.exec('UPDATE documents SET mtime_ms = -1');
+    },
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS.at(-1)?.version ?? 0;

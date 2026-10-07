@@ -31,3 +31,25 @@
 | 3       | Pinned documents                                           | all                  |
 | 4       | Administrator account and sessions                         | all                  |
 | 5       | Authenticator-app sign-in (MFA) and one-use recovery codes | all                  |
+| 6       | Documents read as plain text (`analysis_limited`)          | all                  |
+| 7       | Documents that are not UTF-8 (`not_utf8`)                  | all                  |
+
+Dev releases count as releases: `dev0.1.0` shipped version 5, `dev0.1.1` versions 6 and 7.
+Version 8 (re-read every document once after the update) is not released yet.
+
+## Upgrade check
+
+`scripts/upgrade-check.mjs` (P15-04) tests a real update between two Docker images: it uses the
+old image like an owner (account, authenticator app, documents with and without ids, a file that
+is not UTF-8, an attachment, pins, trash), stops it, starts the new image on the same data folder
+and checks that no file was rewritten and that sessions, sign-in, the library, pins, trash,
+attachments, backlinks, search and index issues are unchanged. It then starts the old image again:
+with a newer schema it must refuse and change no file; with the same schema it must still work.
+
+```bash
+docker build -f docker/Dockerfile -t leandocs:local .
+pnpm test:upgrade --from ghcr.io/pbuzdygan/leandocs:dev_latest --to leandocs:local
+```
+
+The release workflow runs it from the channel's current image (`dev_latest` or `latest`) to the
+image it is about to publish, and skips it for the first release of a channel.

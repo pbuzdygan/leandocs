@@ -6,14 +6,15 @@
 // package.json does not have to be edited before a release. The two channels never share a tag.
 //
 // Usage (in the release workflow): node scripts/release-tags.mjs <git tag> <image>
-// Writes `version`, `branch` and `tags` to $GITHUB_OUTPUT (or prints them).
+// Writes `version`, `branch`, `tags` and `previous` (the channel's current image, which the
+// upgrade check starts from) to $GITHUB_OUTPUT (or prints them).
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 /**
  * @param {string} tag Git tag of the GitHub release.
- * @returns {{ channel: 'main' | 'dev', branch: string, version: string, tags: string[] }}
+ * @returns {{ channel: 'main' | 'dev', branch: string, version: string, tags: string[], previous: string }}
  */
 export function resolveRelease(tag) {
   const match = /^(dev)?(\d+\.\d+\.\d+)$/.exec(tag);
@@ -22,8 +23,20 @@ export function resolveRelease(tag) {
   }
   const [, dev, number] = match;
   return dev
-    ? { channel: 'dev', branch: 'dev', version: tag, tags: [tag, 'dev_latest'] }
-    : { channel: 'main', branch: 'main', version: number, tags: [number, 'latest'] };
+    ? {
+        channel: 'dev',
+        branch: 'dev',
+        version: tag,
+        tags: [tag, 'dev_latest'],
+        previous: 'dev_latest',
+      }
+    : {
+        channel: 'main',
+        branch: 'main',
+        version: number,
+        tags: [number, 'latest'],
+        previous: 'latest',
+      };
 }
 
 function main() {
@@ -42,6 +55,7 @@ function main() {
   const output = [
     `version=${release.version}`,
     `branch=${release.branch}`,
+    `previous=${image}:${release.previous}`,
     'tags<<EOF',
     ...release.tags.map((name) => `${image}:${name}`),
     'EOF',

@@ -8,6 +8,7 @@ describe('release tags', () => {
       branch: 'main',
       version: '1.2.3',
       tags: ['1.2.3', 'latest'],
+      previous: 'latest',
     });
   });
 
@@ -17,6 +18,7 @@ describe('release tags', () => {
       branch: 'dev',
       version: 'dev1.2.3',
       tags: ['dev1.2.3', 'dev_latest'],
+      previous: 'dev_latest',
     });
   });
 

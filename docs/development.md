@@ -275,7 +275,7 @@ Images are published to GHCR only by the _Release_ workflow (`.github/workflows/
 
 1. Push the commit you want to release to `main` or `dev`.
 2. On GitHub, create a release with the new tag (`X.Y.Z` or `devX.Y.Z`) on that branch and publish it. No version file has to be changed first.
-3. The workflow verifies the code, checks the tag (`scripts/release-tags.mjs`), refuses to overwrite an existing `X.Y.Z`/`devX.Y.Z` image, starts the image and checks its reported version, then pushes `linux/amd64` and `linux/arm64` images.
+3. The workflow verifies the code, checks the tag (`scripts/release-tags.mjs`), refuses to overwrite an existing `X.Y.Z`/`devX.Y.Z` image, starts the image and checks its reported version, runs the upgrade check from the channel's current image ([migrations.md](migrations.md#upgrade-check)), then pushes `linux/amd64` and `linux/arm64` images.
 
 If the workflow refuses a release (malformed tag, wrong branch, version already published), nothing is published. Fix the cause and push it, delete the release **and** its tag on GitHub (re-running the workflow reuses the old commit), then create the release again.
 
