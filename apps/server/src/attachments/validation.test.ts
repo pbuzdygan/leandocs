@@ -19,6 +19,24 @@ describe('attachment type validation', () => {
       validateAttachment(name, 'application/octet-stream', bytes, 1024),
     ).resolves.toBeDefined();
   });
+  it('accepts a byte order mark and rejects text that is not UTF-8 or contains NUL', async () => {
+    const bom = Buffer.from([0xef, 0xbb, 0xbf]);
+    for (const name of ['config.json', 'note.txt'])
+      await expect(
+        validateAttachment(name, '', Buffer.concat([bom, Buffer.from('{}')]), 1024),
+      ).resolves.toBeDefined();
+    for (const name of ['note.txt', 'config.yaml', 'config.json', 'diagram.svg']) {
+      await expect(
+        validateAttachment(name, '', Buffer.from([0x7b, 0xff, 0x7d]), 1024),
+      ).rejects.toThrow('Expected a UTF-8 text file');
+      await expect(validateAttachment(name, '', Buffer.from('a\0b'), 1024)).rejects.toThrow(
+        'Expected a text file',
+      );
+    }
+    await expect(validateAttachment('config.json', '', Buffer.from('{'), 1024)).rejects.toThrow(
+      'Invalid JSON file',
+    );
+  });
   it('normalizes readable names and blocks Windows devices', () => {
     expect(attachmentName('  My: photo.PNG')).toBe('My- photo.png');
     for (const name of ['CON.txt', 'NUL.png', 'COM1.pdf'])

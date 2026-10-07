@@ -185,11 +185,13 @@ export function rewriteWikiTargets(
   newResolver: ReturnType<typeof createLinkResolver<LinkableDocument>>,
   after: (id: string) => LinkableDocument | undefined,
 ): string {
-  const literal = literalRanges(body);
+  // Parsed only when a link would change: most documents keep every wiki link (P15-07).
+  let literal: [number, number][] | undefined;
   return body.replace(WIKI_LINK, (whole, target: string, rest: string, offset: number) => {
-    if (literal.some(([from, to]) => offset >= from && offset < to)) return whole;
     const before = oldResolver.wiki(target);
     if (!before || newResolver.wiki(target)?.id === before.id) return whole;
+    literal ??= literalRanges(body);
+    if (literal.some(([from, to]) => offset >= from && offset < to)) return whole;
     const document = after(before.id);
     if (!document) return whole;
     const withoutExtension = document.path.replace(/\.md$/i, '');

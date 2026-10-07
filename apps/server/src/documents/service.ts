@@ -115,7 +115,7 @@ export class DocumentService {
         }
         throw error;
       }
-      await this.registry.refresh();
+      await this.sync.refreshWritten([toRelativePath(this.contentDir, target)]);
       return this.getDocument(id);
     });
   }
@@ -198,7 +198,7 @@ export class DocumentService {
         });
       }
       await atomicWriteFile(path.join(this.contentDir, entry.path), next);
-      await this.registry.refresh();
+      await this.sync.refreshWritten([entry.path]);
       // Provisional ids derive from the path, so the id is stable across an update.
       return this.getDocument(entry.id);
     });

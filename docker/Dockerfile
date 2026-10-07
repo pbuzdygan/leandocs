@@ -52,7 +52,7 @@ COPY --from=build --chown=1000:1000 /out/data /data
 USER 1000:1000
 VOLUME ["/data"]
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
   CMD ["/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 # The image's entrypoint is node. Source maps keep server stack traces readable in logs.
 CMD ["--enable-source-maps", "dist/main.js"]

@@ -143,6 +143,9 @@ export function containsPath(root: string, candidate: string): boolean {
   return root === '' || root === candidate || candidate.startsWith(`${root}/`);
 }
 
+/** Files stat'ed concurrently while walking one folder. */
+const STAT_BATCH = 32;
+
 async function walk(root: string, dir: string, result: ScanResult): Promise<void> {
   const parentRelative = toRelativePath(root, dir);
   let entries: Dirent<Buffer>[];
@@ -164,6 +167,8 @@ async function walk(root: string, dir: string, result: ScanResult): Promise<void
     }
     throw error;
   }
+  const documents: { absolutePath: string; relative: string }[] = [];
+  const folders: string[] = [];
   for (const entry of entries) {
     const name = entry.name.toString('utf8');
     if (!isUtf8(entry.name)) {
@@ -181,22 +186,36 @@ async function walk(root: string, dir: string, result: ScanResult): Promise<void
     const absolutePath = path.join(dir, name);
     if (entry.isSymbolicLink()) continue;
     if (isHiddenEntry(name, parentRelative, entry.isDirectory())) continue;
-    if (entry.isDirectory()) {
-      result.folders.push(toRelativePath(root, absolutePath));
-      await walk(root, absolutePath, result);
-    } else if (entry.isFile() && isDocumentFileName(name)) {
-      try {
-        const info = await stat(absolutePath);
+    if (entry.isDirectory()) folders.push(absolutePath);
+    else if (entry.isFile() && isDocumentFileName(name))
+      documents.push({ absolutePath, relative: toRelativePath(root, absolutePath) });
+  }
+  // One stat at a time made a full scan of 10,000 documents take ~270 ms (P15-07); a few in
+  // flight keep the thread pool busy without queuing thousands of requests at once.
+  for (let start = 0; start < documents.length; start += STAT_BATCH) {
+    const batch = documents.slice(start, start + STAT_BATCH);
+    const infos = await Promise.all(
+      batch.map(({ absolutePath }) =>
+        stat(absolutePath).catch((error: NodeJS.ErrnoException) => {
+          if (error.code === 'ENOENT') return undefined;
+          throw error;
+        }),
+      ),
+    );
+    batch.forEach(({ absolutePath, relative }, index) => {
+      const info = infos[index];
+      if (info)
         result.files.push({
-          path: toRelativePath(root, absolutePath),
+          path: relative,
           absolutePath,
           mtimeMs: info.mtimeMs,
           size: info.size,
           birthtimeMs: info.birthtimeMs,
         });
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-      }
-    }
+    });
+  }
+  for (const absolutePath of folders) {
+    result.folders.push(toRelativePath(root, absolutePath));
+    await walk(root, absolutePath, result);
   }
 }

@@ -14,6 +14,10 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 - A document that is too large or too complex to display safely no longer slows LeanDocs down. It is shown as plain text with an explanation, can still be found by search and can be edited as Markdown source. Settings › Index lists such documents.
 - Searching is instant even when a very long document contains the search word thousands of times.
 - If LeanDocs is not allowed to write its own database files, for example after restoring a backup with the wrong owner, it now says which files are affected and how to fix it. Fixing the permissions is then enough; before, LeanDocs could keep refusing to start.
+- Saving and creating documents stays quick in large libraries. With 10,000 documents a save is now about six times faster.
+- Downloading large attachments no longer holds up saving, and uses less memory.
+- Renaming or moving a document that many other documents link to is about twice as fast, and importing many files is a little faster.
+- When LeanDocs starts for the first time with a large library, Docker no longer reports it as unhealthy while it reads all documents.
 
 ### Bug fixes
 

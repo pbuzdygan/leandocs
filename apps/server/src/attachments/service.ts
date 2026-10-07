@@ -42,52 +42,54 @@ export class AttachmentService {
     });
   }
 
-  list(id: string): Promise<AttachmentDto[]> {
-    return this.lock.run(async () => {
-      const { folder, relative } = await this.directory(id, false);
-      const names = await readdir(folder).catch((error: NodeJS.ErrnoException) => {
-        if (error.code === 'ENOENT') return [];
+  // Reads do not take the MutationLock (KI-8, P15-07): `directory` waits for running mutations,
+  // and files are opened without following symlinks, as document reads are.
+  async list(id: string): Promise<AttachmentDto[]> {
+    const { folder, relative } = await this.directory(id, false);
+    const names = await readdir(folder).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return [];
+      throw error;
+    });
+    const items: AttachmentDto[] = [];
+    for (const name of names.sort()) {
+      if (name.startsWith('.') || !ATTACHMENT_TYPES[path.extname(name).toLowerCase()]) continue;
+      // A file deleted since the listing is skipped: reads can now run next to a delete.
+      const info = await lstat(path.join(folder, name)).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return undefined;
         throw error;
       });
-      const items: AttachmentDto[] = [];
-      for (const name of names.sort()) {
-        if (name.startsWith('.') || !ATTACHMENT_TYPES[path.extname(name).toLowerCase()]) continue;
-        const info = await lstat(path.join(folder, name));
-        if (info.isFile() && !info.isSymbolicLink())
-          items.push(this.dto(id, relative, name, info.size));
-      }
-      return items;
-    });
+      if (info?.isFile() && !info.isSymbolicLink())
+        items.push(this.dto(id, relative, name, info.size));
+    }
+    return items;
   }
 
-  get(id: string, name: string): Promise<{ item: AttachmentDto; bytes: Buffer }> {
-    return this.lock.run(async () => {
-      const { folder, relative } = await this.directory(id, false);
-      const target = this.target(folder, name);
-      let handle;
-      try {
-        handle = await open(target, constants.O_RDONLY | constants.O_NOFOLLOW);
-      } catch (error) {
-        if (['ENOENT', 'ELOOP'].includes((error as NodeJS.ErrnoException).code ?? ''))
-          throw new AppError(404, 'ATTACHMENT_NOT_FOUND', 'Attachment not found');
-        throw error;
-      }
-      try {
-        const info = await handle.stat();
-        if (!info.isFile()) throw new AppError(404, 'ATTACHMENT_NOT_FOUND', 'Attachment not found');
-        if (info.size > this.limit)
-          throw new AppError(
-            413,
-            'ATTACHMENT_TOO_LARGE',
-            'Attachment exceeds the configured size limit',
-          );
-        const bytes = await handle.readFile();
-        await validateAttachment(name, '', bytes, this.limit);
-        return { item: this.dto(id, relative, name, bytes.length), bytes };
-      } finally {
-        await handle.close();
-      }
-    });
+  async get(id: string, name: string): Promise<{ item: AttachmentDto; bytes: Buffer }> {
+    const { folder, relative } = await this.directory(id, false);
+    const target = this.target(folder, name);
+    let handle;
+    try {
+      handle = await open(target, constants.O_RDONLY | constants.O_NOFOLLOW);
+    } catch (error) {
+      if (['ENOENT', 'ELOOP'].includes((error as NodeJS.ErrnoException).code ?? ''))
+        throw new AppError(404, 'ATTACHMENT_NOT_FOUND', 'Attachment not found');
+      throw error;
+    }
+    try {
+      const info = await handle.stat();
+      if (!info.isFile()) throw new AppError(404, 'ATTACHMENT_NOT_FOUND', 'Attachment not found');
+      if (info.size > this.limit)
+        throw new AppError(
+          413,
+          'ATTACHMENT_TOO_LARGE',
+          'Attachment exceeds the configured size limit',
+        );
+      const bytes = await handle.readFile();
+      await validateAttachment(name, '', bytes, this.limit);
+      return { item: this.dto(id, relative, name, bytes.length), bytes };
+    } finally {
+      await handle.close();
+    }
   }
 
   delete(id: string, name: string): Promise<void> {

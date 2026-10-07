@@ -20,7 +20,8 @@
     "format:check": "prettier --check .",
     "test:e2e": "playwright test",
     "test:upgrade": "node scripts/upgrade-check.mjs",
-    "test:backup": "node scripts/backup-check.mjs"
+    "test:backup": "node scripts/backup-check.mjs",
+    "test:performance": "node scripts/performance-check.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

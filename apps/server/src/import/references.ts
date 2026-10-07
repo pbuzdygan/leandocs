@@ -63,16 +63,18 @@ export interface WikiFileReference {
 const WIKI = /(!?)\[\[([^[\]|#\n]+)(?:#([^[\]|\n]*))?(?:\|([^[\]\n]*))?\]\]/g;
 
 export function wikiFileReferences(body: string): WikiFileReference[] {
-  const literal = literalRanges(body);
+  // Parsed only for a candidate: most notes have no file references (P15-07).
+  let literal: [number, number][] | undefined;
   const references: WikiFileReference[] = [];
   for (const match of body.matchAll(WIKI)) {
     const from = match.index;
-    if (literal.some(([start, end]) => from >= start && from < end)) continue;
     const embed = match[1] === '!';
     const target = match[2]!.trim();
     const extension = /\.([a-z0-9]+)$/i.exec(target)?.[1]?.toLowerCase();
     const note = extension === undefined || extension === 'md';
     if (note && !embed) continue;
+    literal ??= literalRanges(body);
+    if (literal.some(([start, end]) => from >= start && from < end)) continue;
     const reference: WikiFileReference = { from, to: from + match[0].length, embed, note, target };
     if (match[3]?.trim()) reference.fragment = match[3].trim();
     if (match[4]?.trim()) reference.alias = match[4].trim();

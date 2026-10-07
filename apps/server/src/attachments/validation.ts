@@ -1,3 +1,4 @@
+import { isUtf8 } from 'node:buffer';
 import path from 'node:path';
 import { fileTypeFromBuffer } from 'file-type';
 import { AppError } from '../errors.js';
@@ -76,14 +77,14 @@ export async function validateAttachment(
   )
     throw new AppError(400, 'UNSUPPORTED_ATTACHMENT', 'Executable files are not allowed');
   if (['.txt', '.yaml', '.yml', '.json', '.svg'].includes(path.extname(name))) {
-    let text: string;
-    try {
-      text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-    } catch {
+    // Checked on the bytes: decoding a large text file needed twice its size again for every
+    // download (P15-07). Only JSON and SVG, which are parsed, are decoded.
+    if (!isUtf8(bytes))
       throw new AppError(400, 'ATTACHMENT_TYPE_MISMATCH', 'Expected a UTF-8 text file');
-    }
-    if (text.includes('\0'))
+    if (bytes.includes(0))
       throw new AppError(400, 'ATTACHMENT_TYPE_MISMATCH', 'Expected a text file');
+    const parsed = name.endsWith('.json') || name.endsWith('.svg');
+    const text = parsed ? new TextDecoder('utf-8').decode(bytes) : '';
     if (name.endsWith('.json')) {
       try {
         JSON.parse(text);

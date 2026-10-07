@@ -58,6 +58,15 @@ export class ContentSync {
     return changes;
   }
 
+  /**
+   * The index update after the app wrote `paths` itself, inside that mutation. A healthy watcher
+   * reports every other change, so only the written files are re-read; a full scan of 10,000
+   * documents made each save take ~300 ms (P15-07). Without a watcher the whole tree is reconciled.
+   */
+  async refreshWritten(paths: readonly string[]): Promise<void> {
+    await this.registry.refresh(this.watcherActive() ? paths : undefined);
+  }
+
   private report(changes: ContentChanges): void {
     this.logger.info(
       { documents: changes.documents.length, folders: changes.folders.length },

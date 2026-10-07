@@ -94,6 +94,32 @@ describe('ContentSync', () => {
     expect(listener).not.toHaveBeenCalled();
   });
 
+  it('re-reads only the written files while watching is healthy, everything otherwise', async () => {
+    const { root, registry, lock, sync, listener } = await setup();
+    let active = true;
+    sync.setWatcherActive(() => active);
+    await writeFile(path.join(root, 'External.md'), '# External\n');
+    await lock.run(async () => {
+      await writeFile(path.join(root, 'Mine.md'), '# Mine\n');
+      await sync.refreshWritten(['Mine.md']);
+    });
+    expect(registry.findByPath('Mine.md')).toBeDefined();
+    // Left to the watcher, which reports it as an external change instead of hiding it.
+    expect(registry.findByPath('External.md')).toBeUndefined();
+    expect((await sync.refresh(['External.md'])).documents).toMatchObject([
+      { kind: 'added', path: 'External.md' },
+    ]);
+    expect(listener).toHaveBeenCalledOnce();
+
+    active = false;
+    await writeFile(path.join(root, 'Later.md'), '# Later\n');
+    await lock.run(async () => {
+      await writeFile(path.join(root, 'Mine.md'), '# Mine again\n');
+      await sync.refreshWritten(['Mine.md']);
+    });
+    expect(registry.findByPath('Later.md')).toBeDefined();
+  });
+
   it('waits for a running mutation instead of reporting its half-done writes', async () => {
     const { root, registry, lock, sync, listener } = await setup();
     let release!: () => void;

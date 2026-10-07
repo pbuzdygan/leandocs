@@ -243,6 +243,10 @@ The setup token changes on server restart; reload an open setup form after resta
     node_modules/.bin/playwright test
   ```
 
+### Performance check
+
+`pnpm test:performance` (P15-07) generates 10,000 documents in a temporary folder, starts the built server (`pnpm build` first) and measures start-up, tree, search, opening, saving, creating, renaming a document linked from 500 others, an external edit, saves during large downloads, an import of 1,000 files, restart and memory. It prints a table and exits with 1 when a result exceeds its budget. `--documents <n>` changes the size (budgets for start-up and import scale with it), `--keep` keeps the folder. It takes about three minutes, needs Linux (memory is read from `/proc`) and is not part of CI because timings depend on the machine; run it after changes to indexing, the scanner, link rewriting or import. Budgets and the last results: [performance.md](performance.md).
+
 ## Docker
 
 ```bash
