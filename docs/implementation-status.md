@@ -402,6 +402,13 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 
 ## Work log
 
+### 2026-10-07 · @claude-code · E2E flake fix
+
+- **Done:** CI browser run: `editor-feedback.spec.ts` › "tables grow…" failed once and passed on retry: Ctrl+End/Enter sent while the visual editor was still settling were lost, so no empty paragraph appeared. `newParagraphAtEnd` now re-sends the keys until the empty last paragraph exists (never after it exists). Test-only change; no application defect.
+- **Files:** `e2e/editor-feedback.spec.ts`, this file.
+- **Verified:** spec ×3 in the Playwright container (16/16) and ×4 limited to one CPU (21/21); lint ✔ format ✔.
+- **Next:** P15-04.
+
 ### 2026-10-07 · @claude-code · P14-07 follow-up (release version from the tag)
 
 - **Done:** Release `dev0.1.1` was refused because `package.json` still said 0.1.0. Per the owner, the release tag is now the only release version (D-53): `scripts/release-tags.mjs` checks format and branch but no longer reads `package.json`; images already reported the tag through `LEANDOCS_VERSION`.
