@@ -1,0 +1,32 @@
+# Automated update pull requests (P15-11). They only propose changes; CI verifies them and the
+# owner merges. npm dependencies are updated by hand (docs/development.md › Dependencies).
+version: 2
+updates:
+  # Base images in docker/Dockerfile, pinned by digest: new digests for the same tag
+  # (security fixes in Debian and Node.js 24) and new Node.js 24 versions.
+  - package-ecosystem: docker
+    directory: /docker
+    target-branch: dev
+    schedule:
+      interval: weekly
+    groups:
+      base-images:
+        patterns: ['*']
+    ignore:
+      # Stay on Node.js 24 LTS and Debian 12; a major change is a deliberate task.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+    commit-message:
+      prefix: build(docker)
+
+  # Actions in .github/workflows, pinned by commit SHA.
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci

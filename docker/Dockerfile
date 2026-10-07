@@ -1,9 +1,13 @@
 # syntax=docker/dockerfile:1
 # LeanDocs — single-container image (PROJECT_SPEC §76–77, ADR-0024).
 # Build from the repository root:  docker build -f docker/Dockerfile -t leandocs .
+#
+# Base images are pinned by digest (multi-platform index), so a rebuild of the same commit uses the
+# same images. The tag stays for readability; Dependabot (.github/dependabot.yml) proposes digest
+# updates for it. Update both images together and run the full verification, including Docker.
 
 # ---- build: install, compile and assemble a production server folder -------------------------
-FROM node:24-bookworm-slim AS build
+FROM node:24-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS build
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 WORKDIR /repo
@@ -38,7 +42,7 @@ RUN set -eu; \
 RUN cd /out/server && node -e "new (require('better-sqlite3'))(':memory:').prepare('select 1').get()"
 
 # ---- runtime: Node.js only — no shell, no package manager ---------------------------------------
-FROM gcr.io/distroless/nodejs24-debian12:nonroot AS runtime
+FROM gcr.io/distroless/nodejs24-debian12:nonroot@sha256:14d42e2511532589a7c7e01a753667a74fcc96266e137e8125006b87b0c32d0a AS runtime
 ENV NODE_ENV=production \
     PORT=8080 \
     HOST=0.0.0.0 \
