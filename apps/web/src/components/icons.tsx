@@ -22,6 +22,7 @@ import {
   IconFolderPlus,
   IconInfoCircle,
   IconItalic,
+  IconLayoutSidebarRight,
   IconLink,
   IconList,
   IconListCheck,
@@ -93,6 +94,7 @@ export const ExpandWidthIcon = icon(IconViewportWide, 'ExpandWidthIcon');
 export const ShrinkWidthIcon = icon(IconViewportNarrow, 'ShrinkWidthIcon');
 export const MoreIcon = icon(IconDots, 'MoreIcon');
 export const CloseIcon = icon(IconX, 'CloseIcon');
+export const ContextPanelIcon = icon(IconLayoutSidebarRight, 'ContextPanelIcon');
 export const ExternalLinkIcon = icon(IconExternalLink, 'ExternalLinkIcon');
 
 // Documents, folders and actions

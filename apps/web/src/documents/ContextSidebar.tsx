@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '../components/icons';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Dialog as RadixDialog } from 'radix-ui';
+import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from '../components/icons';
 import { IconButton } from '../components/ui/IconButton';
 import type { TocHeading } from '../markdown/pipeline';
 import { readPreference, writePreference } from '../utils/storage';
@@ -14,28 +15,18 @@ const TABS: { value: ContextTab; label: string }[] = [
   { value: 'info', label: 'Info' },
 ];
 
-/**
- * Right context panel (UI_SPEC §43–48): "Contents", "Links" and "Info" tabs, one at a time.
- * Collapsed state and the chosen tab are remembered.
- */
-export function ContextSidebar({
-  headings,
-  document: current,
-  editing,
-}: {
+interface ContextProps {
   headings: TocHeading[];
   document: DocumentDto;
   editing: boolean;
-}) {
-  const documentId = current.id;
-  const [open, setOpen] = useState(() => readPreference('context.open', true));
-  const [tab, setTab] = useState<ContextTab>(() => {
-    const stored = readPreference<string>('context.tab', 'contents');
-    return TABS.find((item) => item.value === stored)?.value ?? 'contents';
-  });
-  const toc = tocEntries(headings);
-  const activeId = useScrollSpy(open && tab === 'contents' ? toc.map((heading) => heading.id) : []);
+}
 
+/**
+ * Right context panel (UI_SPEC §43–48) next to the document on wide screens. Collapsed state and
+ * the chosen tab are remembered.
+ */
+export function ContextSidebar(props: ContextProps) {
+  const [open, setOpen] = useState(() => readPreference('context.open', true));
   const toggle = (next: boolean) => {
     setOpen(next);
     writePreference('context.open', next);
@@ -53,6 +44,97 @@ export function ContextSidebar({
 
   return (
     <aside className="context" aria-label="Document context">
+      <ContextPanel
+        {...props}
+        close={
+          <IconButton label="Hide side panel" onClick={() => toggle(false)}>
+            <ChevronRightIcon size={16} />
+          </IconButton>
+        }
+      />
+    </aside>
+  );
+}
+
+/**
+ * The same panel as a drawer from the right on tablets and phones (UI_SPEC §100–101). Modal:
+ * focus stays inside, Esc or the backdrop closes it, and focus returns to the opening button.
+ * Choosing a heading closes it and moves focus to that heading.
+ */
+export function ContextDrawer({
+  open,
+  onOpenChange,
+  ...props
+}: ContextProps & { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const target = useRef<HTMLElement | null>(null);
+  // Opened from code, not from a Radix trigger, so Radix would not return focus by itself.
+  const opener = useRef<HTMLElement | null>(null);
+  return (
+    <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
+      <RadixDialog.Portal>
+        <RadixDialog.Overlay className="drawer-overlay" />
+        <RadixDialog.Content
+          className="context context--drawer"
+          aria-describedby={undefined}
+          onOpenAutoFocus={() => {
+            // Focus has not moved into the drawer yet.
+            const active = document.activeElement;
+            opener.current = active instanceof HTMLElement ? active : null;
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const heading = target.current;
+            target.current = null;
+            if (heading?.isConnected) {
+              // Focusing the opener would scroll back up to the document header.
+              if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+              heading.focus({ preventScroll: true });
+            } else if (opener.current?.isConnected) {
+              opener.current.focus();
+            }
+          }}
+        >
+          <RadixDialog.Title className="visually-hidden">Document context</RadixDialog.Title>
+          <ContextPanel
+            {...props}
+            onNavigate={(heading) => {
+              target.current = heading;
+              onOpenChange(false);
+            }}
+            close={
+              <RadixDialog.Close className="icon-btn" aria-label="Close">
+                <CloseIcon size={16} />
+              </RadixDialog.Close>
+            }
+          />
+        </RadixDialog.Content>
+      </RadixDialog.Portal>
+    </RadixDialog.Root>
+  );
+}
+
+/** "Contents", "Links" and "Info" tabs, one at a time; the chosen tab is remembered. */
+function ContextPanel({
+  headings,
+  document: current,
+  editing,
+  close,
+  onNavigate,
+}: ContextProps & {
+  close: ReactNode;
+  /** After a heading in "Contents" was scrolled into view. */
+  onNavigate?: (heading: HTMLElement) => void;
+}) {
+  const documentId = current.id;
+  const [tab, setTab] = useState<ContextTab>(() => {
+    const stored = readPreference<string>('context.tab', 'contents');
+    return TABS.find((item) => item.value === stored)?.value ?? 'contents';
+  });
+  const toc = tocEntries(headings);
+  const activeId = useScrollSpy(tab === 'contents' ? toc.map((heading) => heading.id) : []);
+
+  return (
+    <>
       <div className="context__header">
         <div className="context__tabs" role="tablist" aria-label="Context">
           {TABS.map(({ value, label }) => (
@@ -71,9 +153,7 @@ export function ContextSidebar({
             </button>
           ))}
         </div>
-        <IconButton label="Hide side panel" onClick={() => toggle(false)}>
-          <ChevronRightIcon size={16} />
-        </IconButton>
+        {close}
       </div>
       {tab === 'info' ? (
         <InfoPanel key={documentId} document={current} editing={editing} />
@@ -95,8 +175,10 @@ export function ContextSidebar({
                   aria-current={heading.id === activeId ? 'location' : undefined}
                   onClick={(event) => {
                     event.preventDefault();
-                    document.getElementById(heading.id)?.scrollIntoView({ block: 'start' });
+                    const target = document.getElementById(heading.id);
+                    target?.scrollIntoView({ block: 'start' });
                     window.history.replaceState(window.history.state, '', `#${heading.id}`);
+                    if (target) onNavigate?.(target);
                   }}
                 >
                   {heading.text}
@@ -106,7 +188,7 @@ export function ContextSidebar({
           </ul>
         </nav>
       )}
-    </aside>
+    </>
   );
 }
 

@@ -10,6 +10,8 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### Improvements
 
+- On tablets, phones and smaller laptop screens, the document's contents, links and info are now available from a button in the document header. Before, they were hidden on screens narrower than a large monitor.
+- On phones, the navigation menu closes when you open a page, closes with the Esc key and works properly with a keyboard. The editing bar now fits on narrow screens without controls ending up on a line of their own, and the reading-width button, which has no effect on phones, is no longer shown there.
 - Long documents, and documents with many quotes or nested lists, open, save and import much faster. Before, they could take minutes or even stop LeanDocs.
 - A document that is too large or too complex to display safely no longer slows LeanDocs down. It is shown as plain text with an explanation, can still be found by search and can be edited as Markdown source. Settings › Index lists such documents.
 - Searching is instant even when a very long document contains the search word thousands of times.

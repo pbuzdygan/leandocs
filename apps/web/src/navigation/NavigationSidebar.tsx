@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { AddIcon, NewFileIcon, NewFolderIcon } from '../components/icons';
-import { useMatch } from 'react-router';
+import { useLocation, useMatch } from 'react-router';
 import { errorMessage } from '../api/client';
 import { useTree } from '../api/queries';
 import { useContentActions } from '../actions/ContentActions';
@@ -9,8 +9,9 @@ import { Button } from '../components/ui/Button';
 import { IconButton } from '../components/ui/IconButton';
 import { DropdownMenuButton } from '../components/ui/Menu';
 import { SkeletonLines } from '../components/ui/States';
+import { MEDIA, useMediaQuery } from '../utils/media';
 import { readPreference, writePreference } from '../utils/storage';
-import { useNavigationState } from './NavigationContext';
+import { NAVIGATION_DRAWER_ID, useNavigationState } from './NavigationContext';
 import { NavigationTree, dropTargetProps } from './NavigationTree';
 import { PinnedSection } from './PinnedSection';
 import { findDocument } from './tree-utils';
@@ -37,6 +38,30 @@ export function NavigationSidebar() {
   const [dragging, setDragging] = useState<ItemTarget | null>(null);
   const [rootDrop, setRootDrop] = useState(false);
   const resize = useRef<{ startX: number; startWidth: number } | null>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const mobile = useMediaQuery(MEDIA.mobile);
+  const { pathname } = useLocation();
+
+  // Phones (UI_SPEC §101, §103): the drawer closes on every navigation; when it opens, focus moves
+  // to the current tree row (else the first control), and Esc returns focus to the menu button.
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname, setDrawerOpen]);
+  useEffect(() => {
+    if (!mobile || !drawerOpen) return;
+    const nav = navRef.current;
+    const target =
+      nav?.querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]') ??
+      nav?.querySelector<HTMLElement>('button, a[href]');
+    target?.focus();
+  }, [mobile, drawerOpen]);
+  const onDrawerKey = (event: KeyboardEvent<HTMLElement>) => {
+    // Menus opened from the drawer render in a portal and close themselves on Esc.
+    if (event.key !== 'Escape' || !mobile || !drawerOpen) return;
+    if (!(event.target instanceof Node) || !navRef.current?.contains(event.target)) return;
+    setDrawerOpen(false);
+    document.querySelector<HTMLElement>(`[aria-controls="${NAVIGATION_DRAWER_ID}"]`)?.focus();
+  };
 
   // Reveal the open document in the tree (expand its folders).
   const activePath = activeId && tree.data ? findDocument(tree.data, activeId)?.path : undefined;
@@ -75,9 +100,14 @@ export function NavigationSidebar() {
     <>
       {drawerOpen && <div className="drawer-backdrop" onClick={() => setDrawerOpen(false)} />}
       <nav
+        ref={navRef}
+        id={NAVIGATION_DRAWER_ID}
         className={drawerOpen ? 'sidebar sidebar--open' : 'sidebar'}
         style={{ width }}
         aria-label="Documentation navigation"
+        // A closed drawer is off-screen: keep it out of the tab order and the accessibility tree.
+        inert={mobile && !drawerOpen}
+        onKeyDown={onDrawerKey}
       >
         <div
           className={rootDrop ? 'sidebar__header sidebar__header--drop' : 'sidebar__header'}

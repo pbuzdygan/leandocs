@@ -339,9 +339,33 @@
   color: var(--accent);
 }
 
-/* Tablet/mobile: the context panel becomes an overlay in Phase 16 (P16-02). */
-@media (max-width: 1199px) {
-  .context {
+/* Below 1200 px (MEDIA.contextInline) the context panel is a drawer from the right (UI_SPEC
+   §100–101), opened from the document header. */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 40;
+}
+
+.context.context--drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(85vw, 320px);
+  max-height: none;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-popover);
+  z-index: 41;
+}
+
+.context--drawer:focus {
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  .doc__width-toggle {
     display: none;
   }
 }

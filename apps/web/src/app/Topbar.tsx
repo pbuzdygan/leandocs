@@ -8,7 +8,7 @@ import { AppLogo, Wordmark } from '../components/AppLogo';
 import { Button } from '../components/ui/Button';
 import '../search/search.css';
 import { IconButton } from '../components/ui/IconButton';
-import { useNavigationState } from '../navigation/NavigationContext';
+import { NAVIGATION_DRAWER_ID, useNavigationState } from '../navigation/NavigationContext';
 import { findDocument } from '../navigation/tree-utils';
 import { modifierLabel, useSearchControls } from '../search/SearchContext';
 import { parentPath } from '../utils/format';
@@ -34,6 +34,7 @@ export function Topbar() {
         className="topbar__menu"
         onClick={() => setDrawerOpen(!drawerOpen)}
         aria-expanded={drawerOpen}
+        aria-controls={NAVIGATION_DRAWER_ID}
       >
         <MenuIcon size={18} />
       </IconButton>

@@ -141,10 +141,16 @@ button.save-status:hover {
   border-bottom: 1px solid var(--border-default);
 }
 
-.doc-editbar__actions {
+.doc-editbar__actions,
+.doc-editbar__layout,
+.doc-edit-actions__group {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+.doc-editbar__actions {
+  margin-left: auto;
 }
 
 .doc-editbar__title {
@@ -162,11 +168,32 @@ button.save-status:hover {
 }
 
 @media (max-width: 767px) {
-  /* The bar wraps on phones, so its height varies: keep the bar sticky, let the toolbar scroll. */
+  /* Phones (UI_SPEC §102): title and layout buttons on the first row, editing controls below.
+     The height varies, so the bar stays sticky and the formatting toolbar scrolls. */
   .doc-editbar {
     flex-wrap: wrap;
+    row-gap: var(--space-1);
     height: auto;
     padding: var(--space-2) 0;
+  }
+
+  .doc-editbar__title {
+    flex: 1;
+  }
+
+  .doc-editbar__layout {
+    order: 1;
+  }
+
+  .doc-editbar__actions {
+    order: 2;
+    flex-basis: 100%;
+  }
+
+  .doc-edit-actions {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    row-gap: var(--space-1);
   }
 
   .doc--editing .visual-toolbar {

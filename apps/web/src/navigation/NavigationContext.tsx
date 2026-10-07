@@ -2,6 +2,9 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { readPreference, writePreference } from '../utils/storage';
 import { ancestorFolders } from './tree-utils';
 
+/** Id of the phone navigation drawer, referenced by the topbar menu button (`aria-controls`). */
+export const NAVIGATION_DRAWER_ID = 'navigation-drawer';
+
 interface NavigationState {
   expanded: ReadonlySet<string>;
   toggle: (folderPath: string) => void;

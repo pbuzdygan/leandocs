@@ -17,6 +17,10 @@ what the review in P15-08 (2026-10-07) found.
   indicator (an outline or a box shadow); dialogs move focus inside, keep it there, and return
   it to the button that opened them (or to the menu's button when opened from a menu); search
   works without a mouse.
+- **Layouts** (`e2e/responsive.spec.ts`, P16-02): the context drawer on tablets (axe scan, Esc
+  returns focus to its button, choosing a heading moves focus to that heading), and the phone
+  navigation drawer (inert while closed, so Tab never reaches it; focus moves to the current
+  tree row when it opens; Esc returns focus to the menu button).
 - **Reflow** (WCAG 1.4.10): at 320 CSS px the document, editor and Settings pages must not scroll
   sideways; only tables and code blocks scroll inside their own box.
 - **Unit tests** cover the tree's keyboard model (UI_SPEC §95), task-list checkbox names and page
@@ -36,6 +40,8 @@ Run them with the rest of the browser tests (`pnpm build && pnpm test:e2e`, see
 - Focus: keep the global `:focus-visible` ring (`--focus-ring`, solid accent). A component that
   replaces it needs another indicator with at least 3:1 contrast — an accent border, inset
   shadow or outline, not a faint background.
+- Off-screen panels (drawers) are `inert` while closed. A drawer that covers the page is a Radix
+  dialog (focus trap, Esc); one opened from code records its opener and returns focus to it.
 - A screen that replaces the whole page (empty, not found, error) has an `h1`: use
   `EmptyState`/`ErrorState` with `level={1}`. Set the tab title with `usePageTitle`.
 - Icon-only buttons need `aria-label`; when a button shows text, the label must contain it

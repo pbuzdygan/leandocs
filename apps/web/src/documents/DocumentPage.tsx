@@ -7,6 +7,7 @@ import {
   type TreeFolderNode,
 } from '@leandocs/shared';
 import {
+  ContextPanelIcon,
   ExpandWidthIcon,
   FileMissingIcon,
   MoreIcon,
@@ -41,7 +42,8 @@ import { useNavigationState } from '../navigation/NavigationContext';
 import { folderSegments, formatDate, formatRelativeTime, readingMinutes } from '../utils/format';
 import { readPreference, writePreference } from '../utils/storage';
 import { useSearchControls } from '../search/SearchContext';
-import { ContextSidebar } from './ContextSidebar';
+import { ContextDrawer, ContextSidebar } from './ContextSidebar';
+import { MEDIA, useMediaQuery } from '../utils/media';
 import { rememberLastDocument } from '../app/open-last-document';
 import './document.css';
 
@@ -179,8 +181,10 @@ function DocumentLayout({
   const search = useSearchControls();
   // Owner feedback 2026-10-02: use the available width by default; reading width is optional.
   const [wide, setWide] = useState(() => readPreference('layout.wide', true));
+  // Phones always use the full width (the toggle is hidden by CSS there).
   const widthToggle = (
     <IconButton
+      className="doc__width-toggle"
       label={wide ? 'Use reading width' : 'Use full width'}
       aria-pressed={wide}
       onClick={() => {
@@ -189,6 +193,19 @@ function DocumentLayout({
       }}
     >
       {wide ? <ShrinkWidthIcon size={16} /> : <ExpandWidthIcon size={16} />}
+    </IconButton>
+  );
+  // UI_SPEC §99–101: the context panel sits beside the document only where there is room.
+  const contextInline = useMediaQuery(MEDIA.contextInline);
+  const [contextOpen, setContextOpen] = useState(false);
+  if (contextInline && contextOpen) setContextOpen(false);
+  const contextButton = contextInline ? null : (
+    <IconButton
+      label="Contents, links and info"
+      aria-haspopup="dialog"
+      onClick={() => setContextOpen(true)}
+    >
+      <ContextPanelIcon size={16} />
     </IconButton>
   );
   const segments = folderSegments(document.path);
@@ -208,8 +225,9 @@ function DocumentLayout({
         {editBar && (
           <div className="doc-editbar" role="region" aria-label="Editing">
             <span className="doc-editbar__title">{document.title}</span>
-            <div className="doc-editbar__actions">
-              {editBar}
+            <div className="doc-editbar__actions">{editBar}</div>
+            <div className="doc-editbar__layout">
+              {contextButton}
               {widthToggle}
             </div>
           </div>
@@ -240,6 +258,7 @@ function DocumentLayout({
             {actions && (
               <div className="doc__actions">
                 {actions}
+                {contextButton}
                 {widthToggle}
               </div>
             )}
@@ -299,7 +318,17 @@ function DocumentLayout({
         {children}
         <AttachmentPanel id={document.id} />
       </article>
-      <ContextSidebar headings={headings} document={document} editing={Boolean(editBar)} />
+      {contextInline ? (
+        <ContextSidebar headings={headings} document={document} editing={Boolean(editBar)} />
+      ) : (
+        <ContextDrawer
+          open={contextOpen}
+          onOpenChange={setContextOpen}
+          headings={headings}
+          document={document}
+          editing={Boolean(editBar)}
+        />
+      )}
     </div>
   );
 }
@@ -506,37 +535,41 @@ function DocumentEditor({
 
   const actions = (
     <div className="doc-edit-actions">
-      <div className="doc__tabs" role="tablist" aria-label="Editor mode">
-        {(['visual', 'source'] as const).map((mode) => (
-          <button
-            key={mode}
-            type="button"
-            role="tab"
-            aria-selected={editorMode === mode}
-            disabled={uploadCount > 0 || (mode === 'visual' && Boolean(document.analysisLimited))}
-            className="doc__tab"
-            onClick={() => setEditorMode(mode)}
-          >
-            {mode === 'visual' ? 'Visual' : 'Source'}
-          </button>
-        ))}
+      <div className="doc-edit-actions__group">
+        <div className="doc__tabs" role="tablist" aria-label="Editor mode">
+          {(['visual', 'source'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              role="tab"
+              aria-selected={editorMode === mode}
+              disabled={uploadCount > 0 || (mode === 'visual' && Boolean(document.analysisLimited))}
+              className="doc__tab"
+              onClick={() => setEditorMode(mode)}
+            >
+              {mode === 'visual' ? 'Visual' : 'Source'}
+            </button>
+          ))}
+        </div>
+        <SaveStatus
+          state={state}
+          onRetry={() => void session.saveNow()}
+          onResolveConflict={() => setConflictRequested(true)}
+        />
       </div>
-      <SaveStatus
-        state={state}
-        onRetry={() => void session.saveNow()}
-        onResolveConflict={() => setConflictRequested(true)}
-      />
-      <Button
-        size="small"
-        onClick={() => void session.saveNow()}
-        disabled={state.status === 'saving'}
-      >
-        Save
-      </Button>
-      <Button size="small" variant="primary" onClick={doneSync}>
-        Done
-      </Button>
-      <MoreMenu document={document} />
+      <div className="doc-edit-actions__group">
+        <Button
+          size="small"
+          onClick={() => void session.saveNow()}
+          disabled={state.status === 'saving'}
+        >
+          Save
+        </Button>
+        <Button size="small" variant="primary" onClick={doneSync}>
+          Done
+        </Button>
+        <MoreMenu document={document} />
+      </div>
     </div>
   );
 

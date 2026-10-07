@@ -122,11 +122,6 @@
   accent-color: var(--accent);
   cursor: pointer;
 }
-@media (max-width: 767px) {
-  .doc-edit-actions {
-    flex-wrap: wrap;
-  }
-}
 
 .visual-toolbar button:nth-child(4),
 .visual-toolbar button:nth-child(8),
