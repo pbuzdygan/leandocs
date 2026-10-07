@@ -18,6 +18,10 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 - Documents with very deeply nested quotes or lists no longer disappear from the library.
 - Importing an HTML page that is too complex to convert no longer makes the whole import fail. That page is skipped and the preview says why.
+- Documents saved in an older text encoding (for example by old Windows editors) are no longer damaged when LeanDocs starts or when you move a linked document. They are shown read-only with an explanation, and Settings › Index lists them so you can convert them.
+- A folder LeanDocs is not allowed to read no longer empties the whole library. The other documents stay available, and Settings › Index names the folder.
+- Documents and folders whose names contain unusual characters that cannot be read no longer vanish without a trace. Settings › Index lists them so you can rename them.
+- A document whose header uses a very large number of repeated references is now listed with a header warning instead of disappearing from the library.
 
 ## 0.1.0
 

@@ -61,8 +61,13 @@ export function parseFile(source: string): ParsedFile {
   if (!isMap(doc.contents)) {
     return { ...base, data: {}, error: 'Front matter must be a YAML mapping (key: value)' };
   }
-  const data = doc.toJS() as Record<string, unknown>;
-  return { ...base, data };
+  try {
+    // toJS() throws on alias expansion beyond the yaml limit ("billion laughs").
+    const data = doc.toJS() as Record<string, unknown>;
+    return { ...base, data };
+  } catch (error) {
+    return { ...base, data: {}, error: error instanceof Error ? error.message : 'Invalid YAML' };
+  }
 }
 
 /** Serialises one `key: value` line exactly as YAML would (quoting when needed). */

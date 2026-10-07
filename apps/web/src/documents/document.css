@@ -95,8 +95,13 @@
   cursor: pointer;
 }
 
-.doc__tab:hover {
+.doc__tab:hover:not(:disabled) {
   color: var(--text-primary);
+}
+
+.doc__tab:disabled {
+  cursor: not-allowed;
+  color: var(--text-disabled);
 }
 
 .doc__tab[aria-selected='true'] {

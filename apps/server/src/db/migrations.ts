@@ -194,6 +194,14 @@ export const MIGRATIONS: readonly Migration[] = [
       db.exec('ALTER TABLE documents ADD COLUMN analysis_limited TEXT');
     },
   },
+  {
+    version: 7,
+    name: 'documents that are not UTF-8',
+    up: (db) => {
+      // 1 when the file is not valid UTF-8: listed, but never written by LeanDocs (P15-03).
+      db.exec('ALTER TABLE documents ADD COLUMN not_utf8 INTEGER NOT NULL DEFAULT 0');
+    },
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS.at(-1)?.version ?? 0;

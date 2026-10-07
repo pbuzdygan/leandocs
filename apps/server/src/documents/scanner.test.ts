@@ -11,7 +11,7 @@ async function put(root: string, relative: string, content = '# x\n'): Promise<v
 
 describe('scanContent', () => {
   it('returns nothing for an empty directory', async () => {
-    expect(await scanContent(await makeTempDir())).toEqual({ folders: [], files: [] });
+    expect(await scanContent(await makeTempDir())).toEqual({ folders: [], files: [], issues: [] });
   });
 
   it('finds nested folders and Markdown documents only', async () => {
@@ -58,6 +58,6 @@ describe('scanContent', () => {
     const root = await makeTempDir();
     await symlink(outside, path.join(root, 'linked'));
     await symlink(path.join(outside, 'Secret.md'), path.join(root, 'Secret.md'));
-    expect(await scanContent(root)).toEqual({ folders: [], files: [] });
+    expect(await scanContent(root)).toEqual({ folders: [], files: [], issues: [] });
   });
 });

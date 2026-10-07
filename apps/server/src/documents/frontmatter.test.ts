@@ -43,6 +43,21 @@ describe('parseFile', () => {
     expect(parsed.body).toBe('Body');
   });
 
+  it('reports exponential alias expansion as invalid instead of throwing', () => {
+    const levels = ['a: &a [x,x,x,x,x,x,x,x,x]'];
+    for (const [name, previous] of [
+      ['b', 'a'],
+      ['c', 'b'],
+      ['d', 'c'],
+      ['e', 'd'],
+    ])
+      levels.push(`${name}: &${name} [${Array(9).fill(`*${previous}`).join(',')}]`);
+    const parsed = parseFile(`---\n${levels.join('\n')}\n---\nBody`);
+    expect(parsed.data).toEqual({});
+    expect(parsed.error).toMatch(/alias/i);
+    expect(parsed.body).toBe('Body');
+  });
+
   it('reports non-mapping front matter', () => {
     expect(parseFile('---\n- a\n- b\n---\n').error).toMatch(/mapping/);
   });

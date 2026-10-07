@@ -43,6 +43,8 @@ const same = (a: string[], b: string[]) => a.join('\n') === b.join('\n');
  * so a save here cannot conflict with the open editor.
  */
 export function InfoPanel({ document, editing }: { document: DocumentDto; editing: boolean }) {
+  // Files that are not UTF-8 are never written by the server (P15-03).
+  const locked = editing || Boolean(document.notUtf8);
   const actions = useContentActions();
   const tags = useTags();
   const queryClient = useQueryClient();
@@ -134,33 +136,38 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
       {editing && (
         <p className="context__empty">Finish editing (Done) to change properties here.</p>
       )}
+      {document.notUtf8 && (
+        <p className="context__empty">
+          This file is not UTF-8 text, so its properties cannot be changed here.
+        </p>
+      )}
       <FormError message={error} />
       <TextField
         label="Title"
         value={draft.title}
-        disabled={editing}
+        disabled={locked}
         onChange={(event) => setDraft({ ...draft, title: event.target.value })}
       />
       <TextField
         label="Description"
         value={draft.description}
-        disabled={editing}
+        disabled={locked}
         onChange={(event) => setDraft({ ...draft, description: event.target.value })}
       />
       <TagInput
         label="Tags"
         values={draft.tags}
-        disabled={editing}
+        disabled={locked}
         suggestions={(tags.data?.items ?? []).map((tag) => tag.name)}
         onChange={(values) => setDraft({ ...draft, tags: values })}
       />
       <TagInput
         label="Aliases"
         values={draft.aliases}
-        disabled={editing}
+        disabled={locked}
         onChange={(values) => setDraft({ ...draft, aliases: values })}
       />
-      {!editing && (
+      {!locked && (
         <div className="info-panel__actions">
           <Button size="small" type="submit" variant="primary" disabled={!dirty || saving}>
             {saving ? 'Saving…' : 'Save properties'}

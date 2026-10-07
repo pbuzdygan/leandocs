@@ -1,3 +1,4 @@
+import { isUtf8 } from 'node:buffer';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -44,6 +45,8 @@ export interface DocumentEntry {
   size: number;
   /** Too large or complex to analyse (ADR-0025): why. Shown and indexed as plain text. */
   analysisLimited?: string;
+  /** Not valid UTF-8 (P15-03): listed and searchable, but never written by LeanDocs. */
+  notUtf8?: boolean;
 }
 
 /** One document that appeared, changed on disk or disappeared during a refresh. */
@@ -83,6 +86,7 @@ interface FileMeta {
   title: string;
   aliases: string[];
   analysisLimited?: string;
+  notUtf8?: boolean;
 }
 
 interface CacheEntry {
@@ -92,6 +96,13 @@ interface CacheEntry {
   readError?: string;
   contentHash?: string;
 }
+
+/** Issues found by the scan or by id assignment rather than derived from a cached file. */
+const KEPT_ISSUES = new Set<ScanIssue['code']>([
+  'ID_ASSIGNMENT_FAILED',
+  'UNREADABLE_FOLDER',
+  'INVALID_FILE_NAME',
+]);
 
 // Ids end up in URLs (UI_SPEC §127), so only URL-safe ids are accepted.
 const VALID_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
@@ -206,6 +217,7 @@ export class DocumentRegistry {
       };
       if (row.frontmatterError !== undefined) meta.frontmatterError = row.frontmatterError;
       if (row.analysisLimited !== undefined) meta.analysisLimited = row.analysisLimited;
+      if (row.notUtf8) meta.notUtf8 = true;
       this.indexed.set(row.path, { id: row.id, idSource: row.idSource });
       // A file still waiting for an id (e.g. ASSIGN_MISSING_IDS was off) must be read again.
       if (!this.needsId(meta))
@@ -260,9 +272,11 @@ export class DocumentRegistry {
     const scan = partial ?? (await scanContent(this.contentDir));
     const roots = partial?.roots ?? [''];
     const affected = (candidate: string) => roots.some((root) => containsPath(root, candidate));
-    const issues: ScanIssue[] = this.currentIssues.filter(
-      (issue) => issue.code === 'ID_ASSIGNMENT_FAILED' && !affected(issue.path),
-    );
+    // Issues that are not derived from cached files survive a refresh of other paths.
+    const issues: ScanIssue[] = [
+      ...this.currentIssues.filter((issue) => KEPT_ISSUES.has(issue.code) && !affected(issue.path)),
+      ...scan.issues,
+    ];
     const nextCache = new Map([...this.cache].filter(([relative]) => !affected(relative)));
     const fresh = new Map<string, FileContent>();
 
@@ -307,6 +321,13 @@ export class DocumentRegistry {
           message: meta.frontmatterError,
         });
       }
+      if (meta.notUtf8)
+        issues.push({
+          code: 'NOT_UTF8',
+          path: file.path,
+          message:
+            'The file is not saved as UTF-8 text. LeanDocs shows it but never changes it; convert it to UTF-8 to edit it.',
+        });
       if (meta.analysisLimited)
         issues.push({
           code: 'TOO_COMPLEX',
@@ -341,6 +362,7 @@ export class DocumentRegistry {
         size: cached.size,
       };
       if (meta.analysisLimited) entry.analysisLimited = meta.analysisLimited;
+      if (meta.notUtf8) entry.notUtf8 = true;
       byId.set(entry.id, entry);
     }
 
@@ -369,6 +391,7 @@ export class DocumentRegistry {
     return (
       this.options.assignMissingIds &&
       meta.hasValidFrontmatter &&
+      !meta.notUtf8 &&
       (meta.frontmatterId === undefined || meta.frontmatterId === null)
     );
   }
@@ -434,7 +457,10 @@ export class DocumentRegistry {
     issues: ScanIssue[],
   ): Promise<{ entry: CacheEntry; content: FileContent | undefined }> {
     try {
-      const source = await readFile(file.absolutePath, 'utf8');
+      const bytes = await readFile(file.absolutePath);
+      // Re-encoding a file that is not UTF-8 would replace its bytes (P15-03).
+      if (!isUtf8(bytes)) return read;
+      const source = bytes.toString('utf8');
       const parsed = parseFile(source);
       if (parsed.error || (parsed.data.id !== undefined && parsed.data.id !== null)) return read;
       const created = file.birthtimeMs > 0 ? file.birthtimeMs : file.mtimeMs;
@@ -541,6 +567,7 @@ async function analyse(
     aliases: stringList(parsed.data.aliases),
   };
   if (parsed.error) meta.frontmatterError = parsed.error;
+  if (!isUtf8(bytes)) meta.notUtf8 = true;
   const result = await analyseBody(parsed.body);
   // Too large or complex: still listed and searchable, with the raw text and no links.
   const analysis = result.ok ? result.analysis : { links: [], headings: [], text: parsed.body };
@@ -568,6 +595,7 @@ async function analyse(
       stem: documentStem(filename),
       body: analysis.text,
       analysisLimited: meta.analysisLimited,
+      notUtf8: meta.notUtf8 === true,
     },
   };
 }

@@ -12,6 +12,9 @@ const ISSUE_LABELS: Record<ScanIssueCode, string> = {
   ID_ASSIGNMENT_FAILED: 'Could not add an id',
   UNREADABLE: 'Unreadable file',
   TOO_COMPLEX: 'Read as plain text',
+  NOT_UTF8: 'Not UTF-8 text (read-only)',
+  UNREADABLE_FOLDER: 'Unreadable folder',
+  INVALID_FILE_NAME: 'Name is not UTF-8',
 };
 
 /** Search index status, problems found in the files, and the rebuild action. */

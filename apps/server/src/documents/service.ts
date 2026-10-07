@@ -1,3 +1,4 @@
+import { isUtf8 } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 import { constants } from 'node:fs';
 import { open, readFile } from 'node:fs/promises';
@@ -130,6 +131,7 @@ export class DocumentService {
       const currentRevision = revisionOf(bytes);
       if (currentRevision !== request.expectedRevision)
         throw new AppError(409, 'DOCUMENT_CONFLICT', 'Document has changed', { currentRevision });
+      assertUtf8(bytes);
       if (parseFile(source).error)
         throw new AppError(
           422,
@@ -173,6 +175,7 @@ export class DocumentService {
           currentRevision,
         });
       }
+      assertUtf8(bytes);
       const parsed = parseFile(source);
       let next: string;
       if (!parsed.hasFrontmatter) {
@@ -204,12 +207,13 @@ export class DocumentService {
   /** Renames the file (and its `.assets` folder) in place; optionally changes the title. */
   renameDocument(id: string, request: RenameDocumentRequest): Promise<DocumentDto> {
     return this.lock.run(async () => {
-      const { entry, source } = await this.readEntry(id);
+      const { entry, source, bytes } = await this.readEntry(id);
       const folder = parentOf(entry.path);
       let titleUpdate: string | undefined;
       if (request.title !== undefined) {
         const title = request.title.trim();
         if (title === '') throw new AppError(400, 'INVALID_TITLE', 'Title must not be empty');
+        assertUtf8(bytes);
         if (parseFile(source).error) {
           throw new AppError(
             422,
@@ -229,7 +233,10 @@ export class DocumentService {
       if (target !== entry.path || titleUpdate !== undefined) await updateLinks();
       if (titleUpdate !== undefined) {
         const absolute = path.join(this.contentDir, target);
-        const current = await readFile(absolute, 'utf8');
+        const currentBytes = await readFile(absolute);
+        // Checked again: the file may have been replaced since it was read above.
+        assertUtf8(currentBytes);
+        const current = currentBytes.toString('utf8');
         const next = updateFileFrontmatter(current, { title: titleUpdate });
         if (next !== current) await atomicWriteFile(absolute, next);
       }
@@ -391,6 +398,19 @@ export class DocumentService {
   }
 }
 
+/**
+ * Writing decoded text back would replace every byte that is not UTF-8 (P15-03), so such files
+ * are read-only until they are converted.
+ */
+function assertUtf8(bytes: Buffer): void {
+  if (!isUtf8(bytes))
+    throw new AppError(
+      422,
+      'NOT_UTF8',
+      'This file is not saved as UTF-8 text. Convert it to UTF-8 in another editor first; LeanDocs does not change it so that nothing is lost.',
+    );
+}
+
 function notFound(): AppError {
   return new AppError(404, 'DOCUMENT_NOT_FOUND', 'Document not found');
 }
@@ -421,6 +441,7 @@ function toDto(entry: DocumentEntry, source: string, bytes: Buffer): DocumentDto
   };
   if (parsed.error) dto.frontmatterError = parsed.error;
   if (entry.analysisLimited) dto.analysisLimited = entry.analysisLimited;
+  if (!isUtf8(bytes)) dto.notUtf8 = true;
   return dto;
 }
 

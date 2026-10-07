@@ -94,7 +94,8 @@ export function DocumentPage({ editing = false }: { editing?: boolean }) {
       />
     );
   }
-  return editing ? (
+  // A file that is not UTF-8 is never written (the server refuses), so it has no editor.
+  return editing && !document.data.notUtf8 ? (
     <EditDocument key={document.data.id} document={document.data} />
   ) : (
     <ViewDocument key={document.data.id} document={document.data} />
@@ -267,6 +268,14 @@ function DocumentLayout({
               be edited as Markdown source. Links and headings in it are not indexed.
             </p>
           )}
+          {document.notUtf8 && (
+            <p className="doc__warning" role="note">
+              <WarningIcon size={14} aria-hidden="true" />
+              This file is not saved as UTF-8 text, so some characters may look wrong and it cannot
+              be edited here. LeanDocs never changes it; convert it to UTF-8 in another editor to
+              edit it.
+            </p>
+          )}
           {document.frontmatterError && (
             <p className="doc__warning" role="note">
               <WarningIcon size={14} aria-hidden="true" />
@@ -313,7 +322,10 @@ function ViewDocument({ document }: { document: DocumentDto }) {
     const stored = localDraftStore.get(document.id);
     return stored && stored.content !== document.content ? stored : undefined;
   });
-  const edit = useCallback(() => void navigate(docUrl(document.id, true)), [navigate, document.id]);
+  const readOnly = Boolean(document.notUtf8);
+  const edit = useCallback(() => {
+    if (!readOnly) void navigate(docUrl(document.id, true));
+  }, [navigate, document.id, readOnly]);
   useToggleShortcut(edit);
 
   // Jump to `#heading` from links like [[Doc#Heading]] once the content is rendered.
@@ -337,7 +349,15 @@ function ViewDocument({ document }: { document: DocumentDto }) {
             {value === 'view' ? 'View' : 'Source'}
           </button>
         ))}
-        <button type="button" role="tab" aria-selected={false} className="doc__tab" onClick={edit}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={false}
+          className="doc__tab"
+          onClick={edit}
+          disabled={readOnly}
+          title={readOnly ? 'This file is not UTF-8 text and cannot be edited here' : undefined}
+        >
           Edit
         </button>
       </div>

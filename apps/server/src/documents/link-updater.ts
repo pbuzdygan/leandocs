@@ -1,3 +1,4 @@
+import { isUtf8 } from 'node:buffer';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -266,7 +267,13 @@ export class LinkUpdater {
         const newSource = mapPath(oldSource, moves) ?? oldSource;
         const absolute = path.join(this.contentDir, newSource);
         try {
-          const current = await readFile(absolute, 'utf8');
+          const bytes = await readFile(absolute);
+          // Rewriting decoded text would replace bytes that are not UTF-8 (P15-03).
+          if (!isUtf8(bytes)) {
+            this.logger.warn({ path: newSource }, 'Links not updated: the file is not UTF-8');
+            continue;
+          }
+          const current = bytes.toString('utf8');
           const { body } = parseFile(current);
           let next = rewriteRelativeLinks(body, oldSource, newSource, moves, (relative) =>
             existsSync(path.join(this.contentDir, relative)),

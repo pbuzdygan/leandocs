@@ -54,7 +54,15 @@ DATA_DIR/
 - **Duplicate ids:** the first path in code-point order keeps the id. Later copies get provisional ids and a `DUPLICATE_ID` issue. Files are never rewritten to fix duplicates.
 - **Title:** front matter `title`, otherwise the first `# H1`, otherwise the file name.
 
-Scan issues (`FRONTMATTER_INVALID`, `INVALID_ID`, `DUPLICATE_ID`, `ID_ASSIGNMENT_FAILED`, `UNREADABLE`) are logged as warnings and kept in the registry. They are returned by `GET /index/status`; showing them in the UI is a later UI task.
+Scan issues (`FRONTMATTER_INVALID`, `INVALID_ID`, `DUPLICATE_ID`, `ID_ASSIGNMENT_FAILED`, `UNREADABLE`, `TOO_COMPLEX`, `NOT_UTF8`, `UNREADABLE_FOLDER`, `INVALID_FILE_NAME`) are logged as warnings, kept in the registry, returned by `GET /index/status` and listed in Settings › Index.
+
+**Damaged content (P15-03, tests: `api/filesystem-corruption.test.ts`).** A damaged content folder never stops the server, never hides healthy documents and is never "repaired" by rewriting bytes:
+
+- **Not UTF-8** (`NOT_UTF8`, schema v7 `documents.not_utf8`): the file is listed and searchable with its text decoded lossily (U+FFFD), but nothing writes it: no id assignment, no link rewriting, and saves, property changes and retitling answer 422 `NOT_UTF8`. Renaming and moving the file keep its bytes. `DocumentDto.notUtf8` makes the web page read-only with an explanation. Import already rejects such files.
+- **Folder that cannot be listed** (`EACCES`/`EPERM`): `UNREADABLE_FOLDER`; its documents are left out and the rest of the scan continues. An unreadable content root still fails startup.
+- **Names that are not UTF-8**: the scanner reads raw names; such a document or folder is reported as `INVALID_FILE_NAME` (it cannot be opened through a decoded path) instead of disappearing silently.
+- **Front matter** that is invalid YAML, not a mapping, or expands too many aliases ("billion laughs", `yaml` limit) is `FRONTMATTER_INVALID`; the document stays listed and the header is never rewritten.
+- Unreadable files (`UNREADABLE`), interrupted atomic-write temp files (hidden dot-files), symlinks, folders named `*.md`, damaged trash metadata (item skipped and left on disk) and a content folder that disappears temporarily are covered by the same tests.
 
 ## Mutations and safety rules
 
@@ -201,6 +209,7 @@ AttachmentService uses the shared mutation lock, exclusive atomic file creation,
 - **Schema v1:** `documents` (§63 columns plus an explicit `key` INTEGER PRIMARY KEY, `id_source`, `size`, raw `frontmatter_id` and `frontmatter_error`), `tags` + `document_tags`, `document_aliases`, `documents_fts` (FTS5, `rowid` = `documents.key`: title, aliases, tags, headings, filename = file name without `.md`, path = folder, body = plain text from `extractPlainText`; `unicode61 remove_diacritics 2`, prefix indexes 2 and 3), `index_meta`, `settings`. Links come with Phase 9, users/sessions with Phase 11, each as a new migration.
 - **Indexing (P8-02):** `DocumentRegistry` keeps serving lookups from memory and mirrors every change into SQLite. On startup it seeds its cache from the stored rows (path, mtime, size, raw front matter id, title), so only files whose mtime/size changed while the server was stopped are re-read; there is no full rebuild on restart (§62). Each refresh deletes the rows of removed or changed paths and inserts the new ones (document, tags, aliases, FTS row) in **one transaction**, then drops orphaned tags. A row whose content is unchanged but whose resolved id changed (a duplicate disappeared) is re-read and re-keyed. `content_hash` is the same `sha256:` value as the document revision.
 - **Analysis limits (ADR-0025, schema v6):** bodies are analysed through the registry's `MarkdownAnalyser` (the server passes `ProcessAnalyser`). A body larger than 2 MiB, slower than 20 s or needing more than 512 MiB is indexed with its raw text and no links/headings; `documents.analysis_limited` stores why, the `TOO_COMPLEX` issue reports it, and `DocumentDto.analysisLimited` tells the web app to show plain text and edit in Source mode only. Link rewriting on move skips such documents; import checks every document before rewriting its links.
+- **Schema v7 (P15-03):** `documents.not_utf8` remembers files that are not UTF-8, so the `NOT_UTF8` issue survives a restart without re-reading unchanged files.
 - **Rebuild (§31):** `registry.rebuild()` clears every derived table (not `settings`), forgets the cache, re-indexes all files and records `index_meta.lastRebuildAt`. Authentication, sessions, MFA, settings and pins remain intact. Database deletion is not an index-repair procedure.
 - **Cost:** measured on 2,000 generated documents before P12-02: first index ≈ 5.4 s, restart/full reconciliation ≈ 80 ms. P12-02 avoids full reconciliation on healthy-watcher reads and confines filesystem work to event paths. Duplicate-id resolution still traverses cached metadata; broader performance measurements remain P15-07.
 

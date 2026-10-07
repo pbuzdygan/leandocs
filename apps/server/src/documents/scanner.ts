@@ -1,6 +1,8 @@
+import { isUtf8 } from 'node:buffer';
 import type { Dirent } from 'node:fs';
 import { lstat, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
+import type { ScanIssue } from '@leandocs/shared';
 import { AppError } from '../errors.js';
 import { ASSETS_SUFFIX, isDocumentFileName } from '../filesystem/file-name.js';
 import {
@@ -16,7 +18,9 @@ import {
  * - `_`-prefixed folders at the content root (`_templates`, `_trash`) are system folders and hidden;
  * - `*.assets` folders hold attachments and are not navigation folders;
  * - only `*.md` files are documents;
- * - symlinks are not followed (no escapes from the content root, no cycles).
+ * - symlinks are not followed (no escapes from the content root, no cycles);
+ * - a folder that cannot be listed, or a name that is not UTF-8, is reported as an issue instead
+ *   of failing the whole scan (P15-03).
  */
 
 export interface ScannedFile {
@@ -30,6 +34,8 @@ export interface ScannedFile {
 export interface ScanResult {
   folders: string[];
   files: ScannedFile[];
+  /** Folders and names the scan had to skip (`UNREADABLE_FOLDER`, `INVALID_FILE_NAME`). */
+  issues: ScanIssue[];
 }
 
 export function isHiddenEntry(name: string, parentRelative: string, isDirectory: boolean): boolean {
@@ -54,7 +60,7 @@ export function assertVisiblePath(folder: string): void {
 }
 
 export async function scanContent(contentDir: string): Promise<ScanResult> {
-  const result: ScanResult = { folders: [], files: [] };
+  const result: ScanResult = { folders: [], files: [], issues: [] };
   await walk(contentDir, contentDir, result);
   // Code-point order: deterministic across locales (duplicate-id resolution depends on it).
   result.folders.sort();
@@ -67,7 +73,12 @@ export async function scanContentPaths(
   contentDir: string,
   paths: readonly string[],
 ): Promise<ScanResult & { roots: string[] }> {
-  const result: ScanResult & { roots: string[] } = { folders: [], files: [], roots: [] };
+  const result: ScanResult & { roots: string[] } = {
+    folders: [],
+    files: [],
+    issues: [],
+    roots: [],
+  };
   const requested = [...new Set(paths.map(normalizeRelativePath))].sort();
   for (const requestedPath of requested) {
     if (result.roots.some((root) => containsPath(root, requestedPath))) continue;
@@ -133,23 +144,47 @@ export function containsPath(root: string, candidate: string): boolean {
 }
 
 async function walk(root: string, dir: string, result: ScanResult): Promise<void> {
-  let entries: Dirent[];
+  const parentRelative = toRelativePath(root, dir);
+  let entries: Dirent<Buffer>[];
   try {
-    entries = await readdir(dir, { withFileTypes: true });
+    // Raw names: a name that is not UTF-8 could not be opened through its decoded string.
+    entries = await readdir(dir, { withFileTypes: true, encoding: 'buffer' });
   } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
     // A folder removed during the scan is not an error.
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
+    if (code === 'ENOENT') return;
+    // One folder without read permission must not hide the rest of the library.
+    if ((code === 'EACCES' || code === 'EPERM') && parentRelative !== '') {
+      result.issues.push({
+        code: 'UNREADABLE_FOLDER',
+        path: parentRelative,
+        message: 'LeanDocs is not allowed to read this folder; its documents are not listed',
+      });
+      return;
+    }
     throw error;
   }
-  const parentRelative = toRelativePath(root, dir);
   for (const entry of entries) {
-    const absolutePath = path.join(dir, entry.name);
+    const name = entry.name.toString('utf8');
+    if (!isUtf8(entry.name)) {
+      if (
+        !isHiddenEntry(name, parentRelative, entry.isDirectory()) &&
+        (entry.isDirectory() || (entry.isFile() && isDocumentFileName(name)))
+      )
+        result.issues.push({
+          code: 'INVALID_FILE_NAME',
+          path: parentRelative ? `${parentRelative}/${name}` : name,
+          message: `The ${entry.isDirectory() ? 'folder' : 'file'} name is not valid UTF-8 text; rename it to show it`,
+        });
+      continue;
+    }
+    const absolutePath = path.join(dir, name);
     if (entry.isSymbolicLink()) continue;
-    if (isHiddenEntry(entry.name, parentRelative, entry.isDirectory())) continue;
+    if (isHiddenEntry(name, parentRelative, entry.isDirectory())) continue;
     if (entry.isDirectory()) {
       result.folders.push(toRelativePath(root, absolutePath));
       await walk(root, absolutePath, result);
-    } else if (entry.isFile() && isDocumentFileName(entry.name)) {
+    } else if (entry.isFile() && isDocumentFileName(name)) {
       try {
         const info = await stat(absolutePath);
         result.files.push({

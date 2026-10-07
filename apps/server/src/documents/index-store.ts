@@ -31,6 +31,8 @@ export interface IndexRecord {
   body: string;
   /** Set when the body was too large or complex to analyse (ADR-0025): why, for the issue. */
   analysisLimited: string | undefined;
+  /** The file is not valid UTF-8 (P15-03); its text was decoded with replacement characters. */
+  notUtf8: boolean;
 }
 
 /** The subset of a stored row needed to resume without re-reading unchanged files. */
@@ -46,6 +48,7 @@ export interface StoredDocument {
   contentHash: string;
   frontmatterError: string | undefined;
   analysisLimited: string | undefined;
+  notUtf8: boolean;
 }
 
 /** A stored link with its source document (P9-03/P9-04). */
@@ -77,6 +80,7 @@ interface DocumentRow {
   frontmatter_id: string | null;
   frontmatter_error: string | null;
   analysis_limited: string | null;
+  not_utf8: number;
   aliases: string;
 }
 
@@ -95,9 +99,10 @@ export class IndexStore {
       insertDocument: db.prepare(
         `INSERT INTO documents (id, id_source, path, filename, title, description, created_at,
            updated_at, mtime_ms, size, content_hash, frontmatter_id, frontmatter_error,
-           analysis_limited)
+           analysis_limited, not_utf8)
          VALUES (@id, @idSource, @path, @filename, @title, @description, @createdAt, @updatedAt,
-           @mtimeMs, @size, @contentHash, @frontmatterId, @frontmatterError, @analysisLimited)`,
+           @mtimeMs, @size, @contentHash, @frontmatterId, @frontmatterError, @analysisLimited,
+           @notUtf8)`,
       ),
       insertTag: db.prepare<[string]>('INSERT OR IGNORE INTO tags (name) VALUES (?)'),
       tagId: db.prepare<[string], { id: number }>('SELECT id FROM tags WHERE name = ?'),
@@ -131,7 +136,7 @@ export class IndexStore {
     const rows = this.db
       .prepare<[], DocumentRow>(
         `SELECT id, id_source, path, title, mtime_ms, size, content_hash, frontmatter_id, frontmatter_error,
-           analysis_limited,
+           analysis_limited, not_utf8,
            (SELECT json_group_array(alias) FROM document_aliases a WHERE a.document_key = d.key)
              AS aliases
          FROM documents d`,
@@ -149,6 +154,7 @@ export class IndexStore {
       frontmatterId: row.frontmatter_id === null ? undefined : JSON.parse(row.frontmatter_id),
       frontmatterError: row.frontmatter_error ?? undefined,
       analysisLimited: row.analysis_limited ?? undefined,
+      notUtf8: row.not_utf8 === 1,
     }));
   }
 
@@ -173,6 +179,7 @@ export class IndexStore {
               record.frontmatterId === undefined ? null : JSON.stringify(record.frontmatterId),
             frontmatterError: record.frontmatterError ?? null,
             analysisLimited: record.analysisLimited ?? null,
+            notUtf8: record.notUtf8 ? 1 : 0,
           }).lastInsertRowid,
         );
         for (const tag of record.tags) {

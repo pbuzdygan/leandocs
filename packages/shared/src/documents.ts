@@ -45,6 +45,11 @@ export interface DocumentDto {
    * ("larger than 2 MiB"). Show it as plain text and edit it in Source mode only.
    */
   analysisLimited?: string;
+  /**
+   * Set when the file is not valid UTF-8 text (for example an older Windows encoding). It is shown
+   * as decoded, but LeanDocs never writes it, so no byte is lost; convert it to UTF-8 to edit it.
+   */
+  notUtf8?: boolean;
 }
 
 export interface CreateDocumentRequest {
@@ -187,7 +192,13 @@ export type ScanIssueCode =
   | 'ID_ASSIGNMENT_FAILED'
   | 'UNREADABLE'
   /** Too large or complex to analyse; shown and searched as plain text (ADR-0025). */
-  | 'TOO_COMPLEX';
+  | 'TOO_COMPLEX'
+  /** Not valid UTF-8 text: listed and searchable, but never written by LeanDocs. */
+  | 'NOT_UTF8'
+  /** A folder that cannot be listed (permissions); its documents are missing from the library. */
+  | 'UNREADABLE_FOLDER'
+  /** A file or folder whose name is not valid UTF-8; it cannot be opened until it is renamed. */
+  | 'INVALID_FILE_NAME';
 
 export interface ScanIssue {
   code: ScanIssueCode;
