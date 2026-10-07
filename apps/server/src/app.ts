@@ -1,6 +1,8 @@
 import { AuthInitialization } from './auth/initialized.js';
 import { loadMfaKey, MfaStore } from './auth/mfa.js';
 import { registerSecurityHeaders } from './security/headers.js';
+import { importRoutes } from './api/import.js';
+import { ImportService } from './import/service.js';
 import { attachmentRoutes } from './api/attachments.js';
 import { AttachmentService } from './attachments/service.js';
 import { existsSync } from 'node:fs';
@@ -206,6 +208,11 @@ export async function buildApp(
     prefix: API_BASE_PATH,
     attachments: new AttachmentService(contentDir, registry, lock, config.maxUploadSize, sync),
     limit: config.maxUploadSize,
+  });
+  await app.register(importRoutes, {
+    prefix: API_BASE_PATH,
+    imports: new ImportService(contentDir, registry, lock, sync),
+    maxFileSize: config.maxUploadSize,
   });
   await app.register(healthRoutes, { prefix: API_BASE_PATH });
   await app.register(authRoutes, {

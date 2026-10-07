@@ -248,6 +248,13 @@ revision-checked overwrite resolves the conflict; missing documents can be recov
 - **Pins (`pins/service.ts`, migration 3):** `pins(document_id, pinned_at)` in `app.db`, not derived: rebuilds keep them. Pins of missing documents are kept but not listed, so a restored document is pinned again; a provisional id (D-13) changes when its file moves, which drops that pin.
 - **Web:** template select in the New document dialog; Info tab (Contents · Links · Info) with `TagInput` chips and tag autocomplete (`<datalist>` from `GET /tags`); header tags open the search palette with `tag:…`; Pin/Unpin in document menus; Pinned section above the tree and on Home; Home quick action Search.
 
+## Import (Phase 13, `import/`)
+
+- **Pipeline (ADR-0022):** `Importer` (`import/importer.ts`) implements `reads` / `detect` / `scan` / `convert` for one source format; `ImportService` (`import/service.ts`) implements the shared `preview` and `import`. Importers are registered by `ImporterKind` (`packages/shared/src/imports.ts`).
+- **API:** `POST /api/v1/import?importer=markdown-directory&destination=<folder>&dryRun=true|false`, multipart with one `files` part per selected file (file name = path in the selection). It returns an `ImportReport` with one item per document or skipped entry (`ready`/`imported`/`skipped`/`failed`, `destination`, `documentId`, `reason`, `notes`, `warnings`) and a summary.
+- **Markdown directory (`import/markdown-directory.ts`):** keeps folder paths and file bytes. It skips hidden entries, `.assets` folders, non-Markdown files, invalid UTF-8 and files over 10 MiB.
+- **Shared rules:** sanitised names, ` (n)` suffixes instead of overwriting, missing ids added (D-10 fields), duplicate ids replaced, invalid front matter kept unchanged. The import plans again under the `MutationLock`, uses `atomicCreateFile` and refreshes the index once.
+
 ## Authentication foundation
 
 Schema migration 4 adds `users` and `sessions` (P11-01, [ADR-0009](adr/0009-local-authentication-storage.md)).
