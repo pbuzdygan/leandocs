@@ -5,7 +5,7 @@
 |                   |                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------- |
 | **Current phase** | **Phase 14 — Deployment**                                                       |
-| **Last updated**  | 2026-10-07 by @claude-code (P14-02)                                             |
+| **Last updated**  | 2026-10-07 by @claude-code (P14-03)                                             |
 | **Spec versions** | PROJECT_SPEC 0.4 · UI_SPEC 1.8                                                  |
 | **Branding**      | Final and applied: **Folded Stack** mark + Inter wordmark; see `BRAND_SPEC.md`. |
 
@@ -17,7 +17,7 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 
 > Rewrite this block at the end of every session.
 
-1. **Phase 14 — Deployment. Next: P14-03** `docs/configuration.md`: every environment variable from `apps/server/src/config/config.ts` (defaults, allowed values, validation errors) plus the compose-only `LEANDOCS_*` variables (D-49), grouped by topic (storage, network/origin, authentication modes, uploads, watcher, logging). Link it from `.env.example`, both compose headers (they already point to it) and README. Then P14-04 `docs/deployment.md` (Nginx Proxy Manager first — owner plan — then Nginx, Traefik, Caddy; SSE needs proxy buffering off, see ADR-0021; backups of `./data`), P14-05 DB migrations, P14-06 version reporting (health says `0.0.0`), P14-07 GHCR release workflow (tags; pin base images by digest). **Owner's preview** still runs from the old `compose.yaml` (project `leandocs_dev`, port 8090, image `leandocs:local`). Recreate it with `docker compose -f compose_local_build.yaml up --build -d` (keeps `./data`); a plain `docker compose up` would now try to pull from GHCR. Image: distroless, UID 1000, no shell (ADR-0024). Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups.
+1. **Phase 14 — Deployment. Next: P14-04** `docs/deployment.md`: step-by-step deployment with `compose.yaml`, then reverse proxies. Owner plan first: Nginx Proxy Manager (proxy host to `http://<docker-host>:8080`, Force SSL, websockets not needed, SSE `/api/v1/events` must not be buffered; `X-Accel-Buffering: no` is sent; upload limits for imports). Then plain Nginx, Traefik and Caddy snippets, plus updates (pull new tag), backup/restore of `./data` (keep permissions; `auth.initialized`/`mfa.key` must stay 0600; see `docs/configuration.md` Storage) and troubleshooting (403 `CROSS_SITE_REQUEST` = missing `SESSION_COOKIE_SECURE=true`/`PUBLIC_ORIGIN`, verified empirically). `docs/configuration.md` already documents every variable; link it instead of repeating. Then P14-05 DB migrations, P14-06 version reporting, P14-07 GHCR release workflow. **Owner's preview** still runs from the old `compose.yaml`; recreate it with `docker compose -f compose_local_build.yaml up --build -d`. Image: distroless, UID 1000, no shell (ADR-0024); compose files: D-49. Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups.
 2. **Phase 10 summary:** templates (`templates/`, `GET /templates`, `template` on create), properties endpoint + `GET /tags`, pins (migration 3, `/pins`), web Info tab, TagInput, tag filter, Pinned sidebar/Home. See `docs/architecture.md` _Templates, properties and pins_.
 3. **Schema:** current version 5. Never edit migrations 1–5; add new ones. New password hashes use native Node Argon2id (64 MiB, three passes, parallelism one), and existing scrypt hashes upgrade after successful password verification (ADR-0011/0018). Session tokens are random, stored only as digests; cookies are HttpOnly/SameSite=Strict, and HTTPS proxy deployments must set `SESSION_COOKIE_SECURE=true` (ADR-0012). Keep the minimum 15-character password and 1024 UTF-8 byte maximum. One in-flight login bounds hash concurrency; legacy verification still uses ~128 MiB. Require Node >=24.7.0. Local browser tests create the account, sign in and reuse an ignored cookie-state file. A separate proxy project uses port 18766 and disposable `.e2e-proxy-data/`; The none project uses port 18767 and disposable `.e2e-none-data/`; the isolated MFA project uses port 18769 and `.e2e-mfa-data/`; `.e2e-data/` remains ordinary local-only. All test data/browser artifacts are ignored by Git/tooling and excluded from Docker build context. Await authenticated UI readiness before sending shortcuts.
 4. Open small issues: KI-7, KI-8 (attachments), KI-12 (intermittent unit test under full-suite load), KI-10 (raw HTML / cross-document attachment links on move). KI-9 is resolved by P12-02 for healthy-watcher reads; broader performance measurements remain P15-07.
@@ -237,7 +237,7 @@ Owner feedback 2026-10-02 (testing the preview), done before Phase 9 on the owne
 
 - [x] P14-01 Production Dockerfile hardening (image size, `NODE_ENV`, native deps) — @claude-code 2026-10-07 · `docker/Dockerfile` (distroless runtime, trimmed native module, build-time SQLite check), CI container health step; 425 → 252 MB; ADR-0024
 - [x] P14-02 Production `compose.yaml` (published image, healthcheck, volume) — @claude-code 2026-10-07 · `compose.yaml` runs `ghcr.io/pbuzdygan/leandocs:${LEANDOCS_TAG:-latest}` (read-only rootfs, `cap_drop: ALL`, `no-new-privileges`, tmpfs `/tmp`, image healthcheck); the local build is the owner's `compose_local_build.yaml` (aligned); verified with the local image in an isolated project
-- [ ] P14-03 `docs/configuration.md`
+- [x] P14-03 `docs/configuration.md` — @claude-code 2026-10-07 · every server and compose variable, storage/backup layout, HTTPS (`SESSION_COOKIE_SECURE`/`PUBLIC_ORIGIN`), auth modes, uploads, watcher, logging, Nginx Proxy Manager example; linked from README and `.env.example`
 - [ ] P14-04 `docs/deployment.md` incl. reverse proxy (Nginx, NPM, Traefik, Caddy)
 - [ ] P14-05 DB migration strategy documented and tested
 - [ ] P14-06 Version reporting (About page, health)
@@ -392,6 +392,15 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 ---
 
 ## Work log
+
+### 2026-10-07 · @claude-code · P14-03
+
+- **Done:** `docs/configuration.md` for people who run LeanDocs. It covers a quick-reference table of every server variable (defaults, allowed values), the compose-only `LEANDOCS_*` variables, the data folder layout and what to back up, HTTPS/reverse proxy settings, the three sign-in modes, upload and import limits, watcher modes, missing-id assignment, logging, and an Nginx Proxy Manager example. Linked from README and `.env.example`.
+- **Files:** `docs/configuration.md`, README, `.env.example`, status.
+- **Verified:** Every statement was checked against the code (`config/config.ts`, `auth/csrf.ts`, `auth/initialized.ts`, `api/events.ts`, watcher, import limits). Empirically, behind an HTTPS origin a save returns 403 without `SESSION_COOKIE_SECURE=true` and 201 with it. Prettier ✔. No code changes.
+- **Decisions:** none.
+- **Issues/notes:** The `auth.initialized` marker must keep mode 0600; restores must preserve permissions (documented).
+- **Next:** P14-04 `docs/deployment.md`.
 
 ### 2026-10-07 · @claude-code · P14-02
 

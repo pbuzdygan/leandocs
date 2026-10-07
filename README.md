@@ -24,6 +24,7 @@ LeanDocs is a lightweight, self-hosted documentation manager for technical peopl
 | [`UI_SPEC.md`](UI_SPEC.md)                                       | UI specification (how it looks and behaves)                 |
 | [`AGENTS.md`](AGENTS.md)                                         | Rules and workflow for AI coding agents and contributors    |
 | [`docs/implementation-status.md`](docs/implementation-status.md) | Current phase, task board, work log                         |
+| [`docs/configuration.md`](docs/configuration.md)                 | Every setting, storage layout, HTTPS and sign-in modes      |
 | [`docs/development.md`](docs/development.md)                     | Local development                                           |
 | [`docs/adr/`](docs/adr/)                                         | Architecture decision records                               |
 
