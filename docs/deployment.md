@@ -162,7 +162,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Database changes are applied automatically when the new version starts. To go back to the previous version, restore the backup taken before the update and set the old tag again.
+Database changes are applied automatically when the new version starts ([how](migrations.md)). They only go forward: an older version refuses to start on a database that a newer one has upgraded. To go back to the previous version, restore the backup taken before the update and set the old tag again.
 
 ## Backup and restore
 
@@ -203,15 +203,16 @@ Open LeanDocs right away and create the account again (step 2), before anyone el
 
 ## Troubleshooting
 
-| Symptom                                                                                | Cause and fix                                                                                                                                                                       |
-| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Saving fails with "Submit requests from this application" (403)                        | Behind HTTPS without `SESSION_COOKIE_SECURE=true`, a `PUBLIC_ORIGIN` that differs from the browser address, or a proxy that drops the port from `Host` (use `$http_host` in Nginx). |
-| Sign-in does not stick                                                                 | `SESSION_COOKIE_SECURE=true` while LeanDocs is opened over plain `http://`. Use HTTPS, or set it to `false` for local testing.                                                      |
-| The container stops at once with "Application database is missing, invalid or corrupt" | Partial restore: `auth.initialized` without its `app.db`. Restore the system files together (see above).                                                                            |
-| The container stops at once with "Data directory /data/content is not usable"          | `./data` belongs to another user. Set `LEANDOCS_UID`/`LEANDOCS_GID` to the owner of the folder, or `chown -R 1000:1000 data`.                                                       |
-| The container stops at once with `Invalid …`                                           | A setting has an unsupported value; the message names it. See [configuration.md](configuration.md).                                                                                 |
-| Changes made in another editor do not appear                                           | Network shares and some VM mounts do not report file events: set `WATCH_MODE=poll`. Behind a proxy that buffers responses, turn buffering off for `/api/v1/events`.                 |
-| Large imports fail with 413                                                            | The proxy's upload limit, e.g. Nginx `client_max_body_size`. LeanDocs itself accepts up to 10,000 files and 256 MiB of documents and attachments per import.                        |
-| `docker compose ps` shows "unhealthy"                                                  | `docker compose logs leandocs` shows why.                                                                                                                                           |
+| Symptom                                                                                                   | Cause and fix                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Saving fails with "Submit requests from this application" (403)                                           | Behind HTTPS without `SESSION_COOKIE_SECURE=true`, a `PUBLIC_ORIGIN` that differs from the browser address, or a proxy that drops the port from `Host` (use `$http_host` in Nginx). |
+| Sign-in does not stick                                                                                    | `SESSION_COOKIE_SECURE=true` while LeanDocs is opened over plain `http://`. Use HTTPS, or set it to `false` for local testing.                                                      |
+| The container stops at once with "Application database is missing, invalid or corrupt"                    | Partial restore: `auth.initialized` without its `app.db`. Restore the system files together (see above).                                                                            |
+| The container stops at once with "Data directory /data/content is not usable"                             | `./data` belongs to another user. Set `LEANDOCS_UID`/`LEANDOCS_GID` to the owner of the folder, or `chown -R 1000:1000 data`.                                                       |
+| The container stops at once with "Database schema version … is newer than this LeanDocs version supports" | An older version was started on data a newer version has upgraded. Run the newer version again, or restore the backup taken before the update.                                      |
+| The container stops at once with `Invalid …`                                                              | A setting has an unsupported value; the message names it. See [configuration.md](configuration.md).                                                                                 |
+| Changes made in another editor do not appear                                                              | Network shares and some VM mounts do not report file events: set `WATCH_MODE=poll`. Behind a proxy that buffers responses, turn buffering off for `/api/v1/events`.                 |
+| Large imports fail with 413                                                                               | The proxy's upload limit, e.g. Nginx `client_max_body_size`. LeanDocs itself accepts up to 10,000 files and 256 MiB of documents and attachments per import.                        |
+| `docker compose ps` shows "unhealthy"                                                                     | `docker compose logs leandocs` shows why.                                                                                                                                           |
 
 The image contains no shell: `docker exec … sh` does not work. Use `docker compose logs`, look at `./data` on the host, or run `docker compose exec leandocs /nodejs/bin/node -e "…"`.
