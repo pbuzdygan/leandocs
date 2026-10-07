@@ -52,6 +52,18 @@ preview with warnings before anything is written. Everything runs in the single 
   The preview sends other files by name only (parts typed `IMPORT_NAME_ONLY_TYPE`). The import
   then sends the content of the files the preview listed as attachments, so unused media is never
   uploaded. File contents are checked when the import runs.
+- **Obsidian vaults (P13-04, amendment 2026-10-07; owner: no separate dialog option):** the
+  Markdown directory importer also understands Obsidian file references. `![[file.ext]]` /
+  `![[file.ext|300]]` embeds and `[[file.ext|label]]` links are resolved like Obsidian does: by
+  vault path or by file name anywhere in the selection. When several files match, the one
+  closest to the note wins, with a warning. The file is copied like any attachment, and the
+  reference becomes standard Markdown (`![name](Doc.assets/file.png)` /
+  `[label](Doc.assets/file.pdf)`), so the document stays portable. Image sizes are dropped with
+  a warning. `![[Note]]` becomes the wiki link `[[Note]]`, with a warning, because LeanDocs has no
+  transclusion. Unresolvable or unattachable references stay as written. Ordinary wiki links,
+  code, raw HTML and all other text are untouched, so a non-Obsidian library is imported exactly
+  as before (regression test). Obsidian/GitHub callouts (`> [!note]`) are deliberately **not**
+  converted, because rewriting GitHub-style alerts would alter ordinary libraries (OQ-4).
 - **Limits and safety:** at most 10,000 files per request and 256 MiB of retained documents and
   attachments; other files are streamed and discarded. An unsafe or repeated path rejects the whole request.
   Normal authentication and CSRF rules apply. The import runs under the `MutationLock`, plans

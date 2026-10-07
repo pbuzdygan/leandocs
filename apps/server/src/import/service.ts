@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { lstat, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import type { ImportItem, ImportReport, ImporterKind } from '@leandocs/shared';
-import { attachmentName, validateAttachment } from '../attachments/validation.js';
+import { encodePathSegment, relativePath } from '@leandocs/shared';
+import { ATTACHMENT_TYPES, attachmentName, validateAttachment } from '../attachments/validation.js';
 import { rewriteRelativeLinks, type PathMove } from '../documents/link-updater.js';
 import { AppError } from '../errors.js';
 import { atomicCreateFile } from '../filesystem/atomic-write.js';
@@ -20,7 +21,7 @@ import { deriveTitle, isValidDocumentId, type DocumentRegistry } from '../docume
 import { assertVisiblePath } from '../documents/scanner.js';
 import type { ContentSync } from '../watcher/content-sync.js';
 import { ImportItemError, UNUSED_FILE, type ImportEntry, type Importer } from './importer.js';
-import { localReferences } from './references.js';
+import { findByName, localReferences, wikiFileReferences } from './references.js';
 import { htmlImporter } from './html.js';
 import { markdownDirectoryImporter } from './markdown-directory.js';
 
@@ -229,21 +230,22 @@ export class ImportService {
     const used = new Set<string>();
     const problems = new Map<string, string>();
 
+    // Files that are not documents, for Obsidian's lookup by name (P13-04).
+    const files = entries.map((entry) => entry.path).filter((file) => !importer.reads(file));
+
     for (const document of documents) {
       const { item, target } = document;
       const parsed = parseFile(document.text);
       const head = document.text.slice(0, document.text.length - parsed.body.length);
       const moves = [...renames];
       const names = new Set<string>();
+      const copies = new Map<string, string>();
       const missing: string[] = [];
-      for (const reference of localReferences(parsed.body, target)) {
-        if (documentTargets.has(reference.toLowerCase())) continue;
-        const entry = byPath.get(reference) ?? byLowerPath.get(reference.toLowerCase());
-        if (!entry) {
-          if (!/\.md$/i.test(reference)) missing.push(reference);
-          continue;
-        }
-        if (importer.reads(entry.path)) continue;
+
+      /** Plans the copy of `entry` into this document's `.assets` folder (once per file). */
+      const attachOne = async (entry: ImportEntry): Promise<string | undefined> => {
+        const planned = copies.get(entry.path);
+        if (planned) return planned;
         const name = attachmentNameOrUndefined(path.posix.basename(entry.path));
         const problem =
           name === undefined
@@ -252,11 +254,10 @@ export class ImportService {
         if (problem !== undefined) {
           problems.set(entry.path, problem);
           item.warnings.push(`Kept the link to ${entry.path}: ${problem}`);
-          continue;
+          return undefined;
         }
-        const unique = uniqueName(name!, names);
-        const assetPath = `${assetsDirFor(item.destination!)}/${unique}`;
-        moves.push({ from: reference, to: assetPath, prefix: false });
+        const assetPath = `${assetsDirFor(item.destination!)}/${uniqueName(name!, names)}`;
+        copies.set(entry.path, assetPath);
         document.attachments.push({
           item: {
             source: entry.path,
@@ -269,6 +270,72 @@ export class ImportService {
           bytes: entry.bytes,
         });
         used.add(entry.path);
+        return assetPath;
+      };
+
+      // Obsidian file embeds and links become ordinary Markdown pointing at the copies; note
+      // embeds become wiki links. Without this syntax the body is not changed here.
+      let body = parsed.body;
+      const edits: { from: number; to: number; text: string }[] = [];
+      let embeddedNotes = 0;
+      let sizes = false;
+      for (const reference of wikiFileReferences(body)) {
+        if (reference.note) {
+          edits.push({ from: reference.from, to: reference.from + 1, text: '' });
+          embeddedNotes++;
+          continue;
+        }
+        const found = findByName(reference.target, target, files);
+        if (!found) {
+          missing.push(reference.target);
+          continue;
+        }
+        if (found.ambiguous)
+          item.warnings.push(
+            `Several files match "${reference.target}"; the one closest to the note was used: ${found.path}`,
+          );
+        const assetPath = await attachOne(byPath.get(found.path)!);
+        if (!assetPath) continue;
+        const size = reference.alias !== undefined && /^\d+(?:x\d+)?$/.test(reference.alias);
+        if (size) sizes = true;
+        const label = escapeLabel(
+          size || reference.alias === undefined
+            ? path.posix.basename(found.path, path.posix.extname(found.path))
+            : reference.alias,
+        );
+        const image =
+          reference.embed &&
+          ATTACHMENT_TYPES[path.posix.extname(found.path).toLowerCase()]?.image === true;
+        const url = relativePath(item.destination!, assetPath)
+          .split('/')
+          .map((segment) => (segment === '..' ? segment : encodePathSegment(segment)))
+          .join('/');
+        edits.push({
+          from: reference.from,
+          to: reference.to,
+          text: `${image ? '!' : ''}[${label}](${url})`,
+        });
+      }
+      for (const edit of edits.sort((a, b) => b.from - a.from))
+        body = body.slice(0, edit.from) + edit.text + body.slice(edit.to);
+      if (edits.length > embeddedNotes)
+        item.notes.push('Turns Obsidian file embeds and links into standard Markdown');
+      if (embeddedNotes > 0)
+        item.warnings.push(
+          `${embeddedNotes === 1 ? 'An embedded note is' : `${embeddedNotes} embedded notes are`} shown as a link, because LeanDocs does not show one note inside another`,
+        );
+      if (sizes) item.warnings.push('Image sizes set in Obsidian were not kept');
+
+      for (const reference of localReferences(parsed.body, target)) {
+        if (documentTargets.has(reference.toLowerCase())) continue;
+        const entry = byPath.get(reference) ?? byLowerPath.get(reference.toLowerCase());
+        if (!entry) {
+          if (!/\.md$/i.test(reference)) missing.push(reference);
+          continue;
+        }
+        if (importer.reads(entry.path)) continue;
+        const assetPath = await attachOne(entry);
+        if (assetPath) moves.push({ from: reference, to: assetPath, prefix: false });
       }
       if (missing.length > 0)
         item.warnings.push(
@@ -279,8 +346,8 @@ export class ImportService {
           `Copies ${document.attachments.length === 1 ? '1 attachment' : `${document.attachments.length} attachments`} next to the document and updates the links`,
         );
       if (moves.length > 0)
-        document.text =
-          head + rewriteRelativeLinks(parsed.body, target, item.destination!, moves, () => false);
+        body = rewriteRelativeLinks(body, target, item.destination!, moves, () => false);
+      document.text = head + body;
     }
     return { used, problems };
   }
@@ -421,6 +488,11 @@ function checkDestination(destination: string): string {
     if (sanitizeName(segment) !== segment)
       throw new AppError(400, 'INVALID_NAME', `Invalid folder name: "${segment}"`);
   return folder;
+}
+
+/** Markdown link text: brackets and backslashes are escaped. */
+function escapeLabel(label: string): string {
+  return label.replace(/[\\[\]]/g, (character) => `\\${character}`);
 }
 
 function joinPath(folder: string, relative: string): string {

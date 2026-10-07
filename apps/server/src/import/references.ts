@@ -1,4 +1,5 @@
 import { folderOf, isExternalHref, parseMarkdown, resolveRelativePath } from '@leandocs/shared';
+import { literalRanges } from '../documents/link-updater.js';
 
 interface AstNode {
   type: string;
@@ -37,4 +38,74 @@ export function localReferences(body: string, documentPath: string): string[] {
   };
   walk(parseMarkdown(body) as unknown as AstNode);
   return [...found];
+}
+
+/**
+ * Obsidian-style references to files (PROJECT_SPEC §70): `![[image.png]]`, `![[image.png|300]]`,
+ * `![[Note]]` and `[[manual.pdf|Manual]]`. Ordinary wiki links to notes (`[[Note]]`,
+ * `[[Note#Heading|label]]`) are not listed: LeanDocs resolves them as they are. Code and raw
+ * HTML are skipped, so examples in code blocks stay literal.
+ */
+export interface WikiFileReference {
+  /** Source range of the whole `![[…]]` / `[[…]]`. */
+  from: number;
+  to: number;
+  embed: boolean;
+  /** Note embed (`![[Note]]`): no file extension, or `.md`. */
+  note: boolean;
+  target: string;
+  /** The part after `#` (heading, block or PDF page), without `#`. */
+  fragment?: string;
+  /** The part after `|`: a label, or an image size such as `300` or `300x200`. */
+  alias?: string;
+}
+
+const WIKI = /(!?)\[\[([^[\]|#\n]+)(?:#([^[\]|\n]*))?(?:\|([^[\]\n]*))?\]\]/g;
+
+export function wikiFileReferences(body: string): WikiFileReference[] {
+  const literal = literalRanges(body);
+  const references: WikiFileReference[] = [];
+  for (const match of body.matchAll(WIKI)) {
+    const from = match.index;
+    if (literal.some(([start, end]) => from >= start && from < end)) continue;
+    const embed = match[1] === '!';
+    const target = match[2]!.trim();
+    const extension = /\.([a-z0-9]+)$/i.exec(target)?.[1]?.toLowerCase();
+    const note = extension === undefined || extension === 'md';
+    if (note && !embed) continue;
+    const reference: WikiFileReference = { from, to: from + match[0].length, embed, note, target };
+    if (match[3]?.trim()) reference.fragment = match[3].trim();
+    if (match[4]?.trim()) reference.alias = match[4].trim();
+    references.push(reference);
+  }
+  return references;
+}
+
+/**
+ * Finds the file a wiki reference names the way Obsidian does: by vault path or by file name
+ * anywhere in the selection. With several matches, the one closest to the note wins (same
+ * folder, then the longest shared folder path, then the shortest path); `ambiguous` reports it.
+ */
+export function findByName(
+  target: string,
+  documentPath: string,
+  paths: readonly string[],
+): { path: string; ambiguous: boolean } | undefined {
+  const wanted = target.replace(/^\.?\//, '').toLowerCase();
+  const matches = paths.filter((candidate) => {
+    const lower = candidate.toLowerCase();
+    return lower === wanted || lower.endsWith(`/${wanted}`);
+  });
+  if (matches.length === 0) return undefined;
+  const folder = folderOf(documentPath).split('/').filter(Boolean);
+  const shared = (candidate: string) => {
+    const segments = folderOf(candidate).split('/');
+    let count = 0;
+    while (count < folder.length && segments[count] === folder[count]) count++;
+    return count;
+  };
+  const [best] = [...matches].sort(
+    (a, b) => shared(b) - shared(a) || a.length - b.length || (a < b ? -1 : a > b ? 1 : 0),
+  );
+  return { path: best!, ambiguous: matches.length > 1 };
 }

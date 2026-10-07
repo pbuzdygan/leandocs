@@ -159,7 +159,7 @@ export function rewriteRelativeLinks(
 const WIKI_LINK = /\[\[([^[\]|#\n]+)((?:#[^[\]|\n]+)?(?:\|[^[\]\n]+)?)\]\]/g;
 
 /** Source ranges where `[[…]]` is literal text (code and raw HTML). */
-function literalRanges(body: string): [number, number][] {
+export function literalRanges(body: string): [number, number][] {
   const ranges: [number, number][] = [];
   const walk = (node: AstNode) => {
     if (['code', 'inlineCode', 'html'].includes(node.type) && node.position) {

@@ -487,6 +487,99 @@ describe('POST /api/v1/import (Markdown directory)', () => {
     expect(await readFile(path.join(content, 'Site/page.assets/logo.png'))).toEqual(png);
   });
 
+  it('imports an Obsidian vault: file embeds become Markdown with copied attachments', async () => {
+    const { content, run } = await setup();
+    const daily = [
+      '# Daily',
+      '',
+      '![[Pasted image 1.png]]',
+      '![[diagram.png|300]]',
+      '![[Topology note]]',
+      '[[manual.pdf|Manual]] and [[Topology note|see topology]]',
+      '`![[code.png]]` ![[missing.png]] ![[clip.mp4]]',
+      '',
+      '```',
+      '![[diagram.png]]',
+      '```',
+      '',
+    ].join('\n');
+    const report = await run({
+      'Vault/.obsidian/app.json': '{}',
+      'Vault/Daily/2024-01-01.md': daily,
+      'Vault/Daily/diagram.png': { data: png, type: 'image/png' },
+      'Vault/attachments/diagram.png': { data: png, type: 'image/png' },
+      'Vault/attachments/Pasted image 1.png': { data: png, type: 'image/png' },
+      'Vault/manual.pdf': { data: pdf, type: 'application/pdf' },
+      'Vault/clip.mp4': { data: Buffer.from('video'), type: 'video/mp4' },
+      'Vault/Topology note.md': '# Topology\n',
+    });
+    const note = report.items.find((item) => item.source === 'Vault/Daily/2024-01-01.md')!;
+    expect(note.notes).toContain('Turns Obsidian file embeds and links into standard Markdown');
+    expect(note.warnings).toEqual([
+      'Several files match "diagram.png"; the one closest to the note was used: Vault/Daily/diagram.png',
+      'Kept the link to Vault/clip.mp4: this file type cannot be attached',
+      'An embedded note is shown as a link, because LeanDocs does not show one note inside another',
+      'Image sizes set in Obsidian were not kept',
+      'Linked file is not in the selection, so the link was kept: missing.png',
+    ]);
+    const written = await readFile(path.join(content, 'Vault/Daily/2024-01-01.md'), 'utf8');
+    expect(written.slice(written.indexOf('# Daily'))).toBe(
+      [
+        '# Daily',
+        '',
+        '![Pasted image 1](2024-01-01.assets/Pasted%20image%201.png)',
+        '![diagram](2024-01-01.assets/diagram.png)',
+        '[[Topology note]]',
+        '[Manual](2024-01-01.assets/manual.pdf) and [[Topology note|see topology]]',
+        '`![[code.png]]` ![[missing.png]] ![[clip.mp4]]',
+        '',
+        '```',
+        '![[diagram.png]]',
+        '```',
+        '',
+      ].join('\n'),
+    );
+    expect(await listFiles(path.join(content, 'Vault'))).toEqual([
+      'Daily/2024-01-01.assets/Pasted image 1.png',
+      'Daily/2024-01-01.assets/diagram.png',
+      'Daily/2024-01-01.assets/manual.pdf',
+      'Daily/2024-01-01.md',
+      'Topology note.md',
+    ]);
+    expect(report.summary).toMatchObject({ documents: 2, attachments: 3, failed: 0 });
+  });
+
+  it('leaves the text of an ordinary Markdown library unchanged', async () => {
+    const { content, run } = await setup();
+    // Everything an ordinary library uses: wiki links, links, images, code with look-alikes.
+    const body = [
+      '# Guide',
+      '',
+      'See [[Setup]], [[Setup|the setup]], [[Setup#Install]] and [setup](Setup.md#install).',
+      'Remote ![logo](https://example.com/logo.png) and [site](https://example.com).',
+      '> [!NOTE]',
+      '> GitHub-style note.',
+      '',
+      'Inline `![[not-an-embed.png]]` and `[[Setup]]`.',
+      '',
+      '```markdown',
+      '![[diagram.png]] [[file.pdf]]',
+      '```',
+      '',
+    ].join('\n');
+    const report = await run({ 'Lib/Guide.md': body, 'Lib/Setup.md': '# Setup\n' });
+    expect(report.items.map((item) => [item.source, item.status, item.warnings])).toEqual([
+      ['Lib/Guide.md', 'imported', []],
+      ['Lib/Setup.md', 'imported', []],
+    ]);
+    const written = await readFile(path.join(content, 'Lib/Guide.md'), 'utf8');
+    // Only the generated front matter is new; the Markdown is byte-for-byte the original.
+    expect(written).toMatch(
+      /^---\nid: [0-9a-f-]{36}\ntitle: Guide\ncreated: \S+\nupdated: \S+\n---\n\n/,
+    );
+    expect(written.slice(written.indexOf('# Guide'))).toBe(body);
+  });
+
   it('keeps links between imported documents working when one has to be renamed', async () => {
     const { content, run } = await setup();
     await writeFile(path.join(content, 'Other.md'), '# Existing other\n');

@@ -7,7 +7,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 ### New features
 
 - **Import HTML pages.** Old notes saved as HTML can be imported too. They are converted to Markdown, and the preview lists anything that could not be carried over, such as scripts, embedded videos or coloured text, before you import.
-- **Import Markdown.** Bring an existing folder of Markdown notes, or individual Markdown files, into your documentation from the start page. A preview shows where each file will go and lists anything to check before you import. Folders and file contents are kept, and existing documents are never overwritten. Pictures and files your notes link to come along as attachments of the documents that use them, and the links are updated. Files no document uses are listed but left out.
+- **Import Markdown.** Bring an existing folder of Markdown notes, or individual Markdown files, into your documentation from the start page. A preview shows where each file will go and lists anything to check before you import. Folders and file contents are kept, and existing documents are never overwritten. Pictures and files your notes link to come along as attachments of the documents that use them, and the links are updated. Files no document uses are listed but left out. Obsidian vaults work the same way: pictures and files embedded with Obsidian's `![[…]]` syntax are imported too and turned into standard Markdown.
 
 - Documents refresh automatically when their files change elsewhere. While editing, your text is preserved so you can review the other version, reload it or save your work as a copy.
 
