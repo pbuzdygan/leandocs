@@ -199,7 +199,7 @@ mv data data.old && mv data.new data
 docker compose start
 ```
 
-Moving to another server is the same: copy `compose.yaml`, `.env` and the archive, then restore. The account, pins, search index and documents come along. The search index can also be rebuilt from the documents at any time (Settings › Index).
+Moving to another server is the same: copy `compose.yaml`, `.env` and the archive, then restore. The account, pins, settings, search index and documents come along. The search index can also be rebuilt from the documents at any time (Settings › Index).
 
 This procedure is tested on every release (`scripts/backup-check.mjs`, `pnpm test:backup --image <image>`): a full restore into an empty folder brings back the account, the authenticator app, sessions, pins, the trash, search and every file as it was at backup time. A copy of `data/content` alone, even taken while LeanDocs runs, gives a new installation with the same documents, links, attachments and search; only the account, pins and settings have to be set up again.
 

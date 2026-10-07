@@ -9,3 +9,4 @@ export * from './search.js';
 export * from './links.js';
 export * from './events.js';
 export * from './imports.js';
+export * from './settings.js';

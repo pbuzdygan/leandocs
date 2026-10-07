@@ -6,7 +6,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### New features
 
-- Nothing yet.
+- Settings has two new pages, General and Editor. You can choose which editor opens when you start editing (Visual or Source), turn autosave off or change how long it waits, and set line numbers, word wrap and tab size for the source editor. You can also pick the folder new documents go to, and have LeanDocs open the document you viewed last when it starts. Settings are stored with your data, so they apply in every browser and are kept in backups. Switching between Visual and Source while editing no longer changes the editor you start with next time.
 
 ### Improvements
 

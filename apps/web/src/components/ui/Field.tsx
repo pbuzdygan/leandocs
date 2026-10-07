@@ -83,6 +83,41 @@ export function SelectField({
   );
 }
 
+/** Native checkbox with its label on the right (UI_SPEC §121: minimal, accent when checked). */
+export function CheckboxField({
+  label,
+  hint,
+  error,
+  ...input
+}: FieldProps & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+  const id = useId();
+  return (
+    <div className="field field--checkbox">
+      <input
+        id={id}
+        type="checkbox"
+        className="checkbox"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        {...input}
+      />
+      <label className="field__label" htmlFor={id}>
+        {label}
+      </label>
+      {hint && (
+        <div className="field__hint" id={`${id}-hint`}>
+          {hint}
+        </div>
+      )}
+      {error && (
+        <div className="field__error" id={`${id}-error`}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Inline error for dialogs/forms; announced to screen readers. */
 export function FormError({ message }: { message: string | null | undefined }) {
   if (!message) return null;

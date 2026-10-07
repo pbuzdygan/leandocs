@@ -6,10 +6,12 @@ import { ContentActionsProvider } from '../actions/ContentActions';
 import { NavigationProvider } from '../navigation/NavigationContext';
 import { SearchProvider } from '../search/SearchContext';
 import { useExternalChanges } from '../api/external-changes';
+import { useOpenLastDocument } from './open-last-document';
 
 /** UI_SPEC §14: Topbar + Navigation + Document. The context sidebar arrives with the TOC (P4-04). */
 export function AppShell() {
   useExternalChanges();
+  useOpenLastDocument();
   return (
     <NavigationProvider>
       <ContentActionsProvider>

@@ -89,7 +89,7 @@ export function NavigationSidebar() {
               {
                 label: 'New document',
                 icon: <NewFileIcon size={15} />,
-                onSelect: () => actions.newDocument(''),
+                onSelect: () => actions.newDocument(),
               },
               {
                 label: 'New folder',
@@ -120,7 +120,7 @@ export function NavigationSidebar() {
           {tree.data && tree.data.children.length === 0 && (
             <div className="sidebar__message">
               <p>No documents yet.</p>
-              <Button size="small" onClick={() => actions.newDocument('')}>
+              <Button size="small" onClick={() => actions.newDocument()}>
                 New document
               </Button>
             </div>

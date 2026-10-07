@@ -55,6 +55,14 @@
   font-weight: 650;
 }
 
+.settings__form {
+  max-width: 480px;
+}
+
+.settings__form .settings__subtitle:first-child {
+  margin-top: 0;
+}
+
 .settings__facts {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);

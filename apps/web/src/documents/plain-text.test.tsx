@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { documentDto, mockApi, renderApp, sampleTree } from '../test/render';
+import { documentDto, mockApi, renderApp, sampleTree, setTestSettings } from '../test/render';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -36,7 +36,7 @@ describe('documents read as plain text', () => {
   });
 
   it('edits in Source mode only', async () => {
-    localStorage.setItem('leandocs.editor.mode', JSON.stringify('visual'));
+    setTestSettings({ editor: { defaultMode: 'visual' } });
     api();
     renderApp('/doc/id-vlan/edit');
     expect(await screen.findByRole('tab', { name: 'Visual' })).toBeDisabled();

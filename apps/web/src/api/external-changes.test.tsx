@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { EditorView } from '@codemirror/view';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { documentDto, mockApi, renderApp, sampleTree } from '../test/render';
+import { documentDto, mockApi, renderApp, sampleTree, setTestSettings } from '../test/render';
 
 class EventSourceMock extends EventTarget {
   static CLOSED = 2;
@@ -26,7 +26,7 @@ const change = (kind = 'changed') => ({ documents: [{ kind, id: ID, path: PATH }
 beforeEach(() => {
   EventSourceMock.instances = [];
   vi.stubGlobal('EventSource', EventSourceMock);
-  window.localStorage.setItem('leandocs.editor.mode', JSON.stringify('source'));
+  setTestSettings({ editor: { defaultMode: 'source' } });
 });
 function setup() {
   let current = documentDto(ID, PATH, { content: '# Before view\n', revision: 'rev-1' });

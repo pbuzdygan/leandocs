@@ -2,6 +2,9 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { test, expect } from './document-fixture';
 import { csrfRequest } from './csrf-request';
+import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+
+restoreSettingsAfterEach();
 
 const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
@@ -124,9 +127,7 @@ test('a clean visual editor preserves its version until an external conflict is 
 });
 
 test('external deletion retains unsaved text and saves a recoverable copy', async ({ page }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem('leandocs.editor.mode', JSON.stringify('source')),
-  );
+  await setDefaultEditor(page, 'source');
   const response = await csrfRequest(page.request).post('/api/v1/documents', {
     data: { name: 'External Deletion', content: 'Original recovery text.\n' },
   });

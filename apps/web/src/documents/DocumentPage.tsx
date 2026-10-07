@@ -1,5 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { type DocumentDto, type TreeFolderNode } from '@leandocs/shared';
+import {
+  DEFAULT_SETTINGS,
+  type AppSettings,
+  type DocumentDto,
+  type EditorMode,
+  type TreeFolderNode,
+} from '@leandocs/shared';
 import {
   ExpandWidthIcon,
   FileMissingIcon,
@@ -9,7 +15,7 @@ import {
 } from '../components/icons';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, ApiError, errorMessage } from '../api/client';
-import { useDocument, useTree } from '../api/queries';
+import { useDocument, useSettings, useTree } from '../api/queries';
 import { useContentActions } from '../actions/ContentActions';
 import { itemMenuEntries } from '../actions/menu-entries';
 import { Button } from '../components/ui/Button';
@@ -36,6 +42,7 @@ import { folderSegments, formatDate, formatRelativeTime, readingMinutes } from '
 import { readPreference, writePreference } from '../utils/storage';
 import { useSearchControls } from '../search/SearchContext';
 import { ContextSidebar } from './ContextSidebar';
+import { rememberLastDocument } from '../app/open-last-document';
 import './document.css';
 
 const VisualEditor = lazy(() =>
@@ -53,6 +60,10 @@ export function DocumentPage({ editing = false }: { editing?: boolean }) {
   const document = useDocument(id);
 
   usePageTitle(document.data?.title);
+  const loadedId = document.isSuccess ? document.data.id : undefined;
+  useEffect(() => {
+    if (loadedId) rememberLastDocument(loadedId);
+  }, [loadedId]);
 
   if (document.isPending) {
     return (
@@ -400,10 +411,34 @@ function ViewDocument({ document }: { document: DocumentDto }) {
   );
 }
 
-function EditDocument({ document, missing = false }: { document: DocumentDto; missing?: boolean }) {
+/** The editor starts from the settings (mode, autosave), so it waits for them; usually cached. */
+function EditDocument(props: { document: DocumentDto; missing?: boolean }) {
+  const settings = useSettings();
+  if (settings.isPending)
+    return (
+      <article className="doc" aria-busy="true">
+        <p role="status">Loading editor…</p>
+      </article>
+    );
+  // Editing must not depend on the settings: fall back to the defaults when they fail to load.
+  return <DocumentEditor {...props} settings={settings.data ?? DEFAULT_SETTINGS} />;
+}
+
+function DocumentEditor({
+  document,
+  missing = false,
+  settings,
+}: {
+  document: DocumentDto;
+  missing?: boolean;
+  settings: AppSettings;
+}) {
   const navigate = useNavigate();
   const notify = useNotify();
-  const { session, state } = useEditorSession(document, localDraftStore, missing);
+  const { session, state } = useEditorSession(document, localDraftStore, missing, {
+    enabled: settings.general.autosave,
+    delay: settings.editor.autosaveDelay,
+  });
   const queryClient = useQueryClient();
   const tree = useTree();
   const [uploadCount, setUploadCount] = useState(0);
@@ -438,9 +473,8 @@ function EditDocument({ document, missing = false }: { document: DocumentDto; mi
         ...collectTargets(tree.data),
       ],
     });
-  const [preferredMode, setEditorMode] = useState<'visual' | 'source'>(() =>
-    readPreference<string>('editor.mode', 'visual') === 'source' ? 'source' : 'visual',
-  );
+  // Starts in the default editor; switching applies to this editing session only.
+  const [preferredMode, setEditorMode] = useState<EditorMode>(settings.editor.defaultMode);
   // The visual editor parses the whole document: not for documents read as plain text.
   const editorMode = document.analysisLimited ? 'source' : preferredMode;
   const rendered = useRendered(document);
@@ -454,9 +488,6 @@ function EditDocument({ document, missing = false }: { document: DocumentDto; mi
     const stored = localDraftStore.get(document.id);
     return stored && stored.content !== document.content ? stored : undefined;
   });
-  const [showLineNumbers] = useState(() =>
-    readPreference('editor.lineNumbers', !window.matchMedia?.('(max-width: 767px)').matches),
-  );
 
   /** "Done" / Esc / Ctrl+E: save first, then return to the view; stay if the save fails. */
   const done = useCallback(async () => {
@@ -484,10 +515,7 @@ function EditDocument({ document, missing = false }: { document: DocumentDto; mi
             aria-selected={editorMode === mode}
             disabled={uploadCount > 0 || (mode === 'visual' && Boolean(document.analysisLimited))}
             className="doc__tab"
-            onClick={() => {
-              setEditorMode(mode);
-              writePreference('editor.mode', mode);
-            }}
+            onClick={() => setEditorMode(mode)}
           >
             {mode === 'visual' ? 'Visual' : 'Source'}
           </button>
@@ -550,7 +578,9 @@ function EditDocument({ document, missing = false }: { document: DocumentDto; mi
             onChange={(value) => session.setContent(value)}
             onSave={() => void session.saveNow()}
             onExit={doneSync}
-            lineNumbers={showLineNumbers}
+            lineNumbers={settings.editor.lineNumbers}
+            wordWrap={settings.editor.wordWrap}
+            tabSize={settings.editor.tabSize}
             onUpload={upload}
             linkTargets={linkTargets}
             documentId={document.id}

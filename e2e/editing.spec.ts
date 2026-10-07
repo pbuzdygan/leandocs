@@ -2,11 +2,12 @@ import { csrfRequest } from './csrf-request';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+
+restoreSettingsAfterEach();
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem('leandocs.editor.mode', JSON.stringify('source')),
-  );
+  await setDefaultEditor(page, 'source');
 });
 
 const content = path.resolve(import.meta.dirname, '../.e2e-data/content');

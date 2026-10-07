@@ -13,6 +13,7 @@ import {
   bracketMatching,
   HighlightStyle,
   indentOnInput,
+  indentUnit,
   syntaxHighlighting,
 } from '@codemirror/language';
 import {
@@ -109,6 +110,10 @@ export interface SourceEditorProps {
   /** Esc (when no editor panel such as search is open) */
   onExit: () => void;
   lineNumbers?: boolean;
+  /** Wrap long lines (default) instead of scrolling horizontally. */
+  wordWrap?: boolean;
+  /** Spaces inserted by Tab, and the display width of a tab character. */
+  tabSize?: number;
   autoFocus?: boolean;
   onUpload?: UploadFiles;
   /** Documents for `[[` suggestions (P9-06). */
@@ -127,6 +132,8 @@ export function SourceEditor({
   onSave,
   onExit,
   lineNumbers: showLineNumbers = true,
+  wordWrap = true,
+  tabSize = 2,
   autoFocus = true,
   onUpload,
   linkTargets = [],
@@ -190,7 +197,8 @@ export function SourceEditor({
       search({ top: true }),
       markdown({ base: markdownLanguage, codeLanguages: languages }),
       syntaxHighlighting(markdownHighlight),
-      EditorView.lineWrapping,
+      EditorState.tabSize.of(tabSize),
+      indentUnit.of(' '.repeat(tabSize)),
       placeholder('Start writing Markdown…'),
       EditorView.contentAttributes.of({ 'aria-label': 'Markdown source', spellcheck: 'true' }),
       keymap.of([
@@ -228,6 +236,7 @@ export function SourceEditor({
       }),
     ];
     if (showLineNumbers) extensions.push(lineNumbers(), highlightActiveLineGutter());
+    if (wordWrap) extensions.push(EditorView.lineWrapping);
 
     const view = new EditorView({
       state: EditorState.create({ doc: initialValue, extensions }),
@@ -239,7 +248,7 @@ export function SourceEditor({
       attach.current = () => undefined;
       view.destroy();
     };
-    // initialValue/showLineNumbers are read once on mount by design (remount via `key`).
+    // initialValue and the display options are read once on mount by design (remount via `key`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

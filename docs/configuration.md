@@ -53,7 +53,7 @@ data/
     mfa.key          encryption key for authenticator-app sign-in
 ```
 
-`content/` is the source of truth. You can read, edit, copy or put it under Git with any tool, and LeanDocs notices the changes (see `WATCH_MODE`). The search index in `app.db` can be rebuilt from `content/` at any time (Settings › Index). The account, sessions and pins in `app.db` cannot be rebuilt.
+`content/` is the source of truth. You can read, edit, copy or put it under Git with any tool, and LeanDocs notices the changes (see `WATCH_MODE`). The search index in `app.db` can be rebuilt from `content/` at any time (Settings › Index). The account, sessions, pins and settings in `app.db` cannot be rebuilt.
 
 **Back up the whole data folder.** Keep `app.db`, `auth.initialized` and `mfa.key` from the same moment together. If `auth.initialized` exists without its `app.db`, LeanDocs refuses to start instead of offering a new administrator account to whoever opens the page first. Restore with file permissions kept (`cp -a`, `rsync -a`, `tar -p`): `auth.initialized` and `mfa.key` must stay readable only by their owner.
 

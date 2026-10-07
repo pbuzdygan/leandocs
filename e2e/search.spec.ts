@@ -1,10 +1,11 @@
 import { csrfRequest } from './csrf-request';
 import { expect, test, type Page } from '@playwright/test';
+import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+
+restoreSettingsAfterEach();
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem('leandocs.editor.mode', JSON.stringify('source')),
-  );
+  await setDefaultEditor(page, 'source');
 });
 
 async function createDocument(page: Page, name: string, body: string): Promise<string> {
@@ -81,7 +82,8 @@ test('Ctrl+P quick open works from inside the editor instead of printing', async
 test('Settings › Index rebuilds the search index', async ({ page }) => {
   await createDocument(page, 'Rebuild Survivor', 'kept after rebuild: ocelot\n');
   await page.goto('/settings');
-  await expect(page).toHaveURL(/\/settings\/storage$/);
+  await expect(page).toHaveURL(/\/settings\/general$/);
+  await page.getByRole('link', { name: 'Storage' }).click();
   await expect(page.getByText('Data directory')).toBeVisible();
   await page.getByRole('link', { name: 'Index' }).click();
   await page.getByRole('button', { name: 'Rebuild index' }).click();

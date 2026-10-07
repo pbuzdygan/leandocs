@@ -15,7 +15,7 @@ import { RenameDialog } from './dialogs/RenameDialog';
 import { targetLabel, type ItemTarget } from './targets';
 
 type DialogState =
-  | { type: 'new-document'; folder: string }
+  | { type: 'new-document'; folder?: string }
   | { type: 'new-folder'; parent: string }
   | { type: 'import'; folder: string }
   | { type: 'rename' | 'move' | 'delete'; target: ItemTarget }
@@ -23,6 +23,7 @@ type DialogState =
 
 export interface ContentActions {
   editDocument: (id: string) => void;
+  /** Without a folder, the dialog preselects the default location (Settings › General). */
   newDocument: (folder?: string) => void;
   newFolder: (parent?: string) => void;
   /** UI_SPEC §134: import Markdown into `folder` (default: the content root). */
@@ -91,7 +92,7 @@ export function ContentActionsProvider({ children }: { children: ReactNode }) {
           .finally(() => void queryClient.invalidateQueries({ queryKey: queryKeys.pins }));
       },
       editDocument: (id) => void navigate(`/doc/${encodeURIComponent(id)}/edit`),
-      newDocument: (folder = '') => setDialog({ type: 'new-document', folder }),
+      newDocument: (folder) => setDialog({ type: 'new-document', folder }),
       newFolder: (parent = '') => setDialog({ type: 'new-folder', parent }),
       importDocuments: (folder = '') => setDialog({ type: 'import', folder }),
       rename: (target) => setDialog({ type: 'rename', target }),

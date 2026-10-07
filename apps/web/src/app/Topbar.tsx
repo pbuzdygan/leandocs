@@ -54,7 +54,9 @@ export function Topbar() {
       <Button
         variant="primary"
         size="small"
-        onClick={() => actions.newDocument(openDocument ? parentPath(openDocument.path) : '')}
+        onClick={() =>
+          actions.newDocument(openDocument ? parentPath(openDocument.path) : undefined)
+        }
       >
         <AddIcon size={15} />
         New

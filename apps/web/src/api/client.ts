@@ -15,6 +15,7 @@ import {
   type BacklinksResponse,
   type BrokenLinksResponse,
   type ApiErrorBody,
+  type AppSettings,
   type CreateDocumentRequest,
   type CreateFolderRequest,
   type DeleteFolderResponse,
@@ -40,6 +41,7 @@ import {
   type TrashItem,
   type TreeResponse,
   type UpdateDocumentRequest,
+  type UpdateSettingsRequest,
 } from '@leandocs/shared';
 import { documentMutation } from './document-mutations';
 
@@ -171,6 +173,9 @@ export const api = {
   pin: (id: string) => request<void>(`/pins/${enc(id)}`, { method: 'PUT' }),
   unpin: (id: string) => request<void>(`/pins/${enc(id)}`, { method: 'DELETE' }),
   tags: () => request<TagsResponse>('/tags'),
+  settings: () => request<AppSettings>('/settings'),
+  updateSettings: (body: UpdateSettingsRequest) =>
+    request<AppSettings>('/settings', json('PATCH', body)),
   updateProperties: (id: string, body: UpdatePropertiesRequest) =>
     documentMutation(request<DocumentDto>(`/documents/${enc(id)}/properties`, json('POST', body))),
   outgoingLinks: (id: string) => request<OutgoingLinksResponse>(`/documents/${enc(id)}/links`),

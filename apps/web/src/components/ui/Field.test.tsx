@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { SelectField, TextField } from './Field';
+import { CheckboxField, SelectField, TextField } from './Field';
 
 describe('form fields', () => {
   it('read the hint and the error when the field is focused (WCAG 1.3.1, 3.3.1)', () => {
@@ -22,5 +22,12 @@ describe('form fields', () => {
       </SelectField>,
     );
     expect(screen.getByLabelText('Template')).toHaveAccessibleDescription('Template not found.');
+  });
+
+  it('labels checkboxes and reads their hint', () => {
+    render(<CheckboxField label="Autosave" hint="Saves while you type." defaultChecked />);
+    const checkbox = screen.getByRole('checkbox', { name: 'Autosave' });
+    expect(checkbox).toBeChecked();
+    expect(checkbox).toHaveAccessibleDescription('Saves while you type.');
   });
 });

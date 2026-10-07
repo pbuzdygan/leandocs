@@ -167,8 +167,7 @@ describe('settings', () => {
       }
       return undefined;
     });
-    const { user, location } = renderApp('/settings');
-    await waitFor(() => expect(location()).toBe('/settings/storage'));
+    const { user } = renderApp('/settings/storage');
     expect(await screen.findByText('/data/content')).toBeInTheDocument();
     expect(screen.getByText('482')).toBeInTheDocument();
     expect(screen.getByText('5.0 MB')).toBeInTheDocument();
@@ -187,7 +186,7 @@ describe('settings', () => {
     api((request) => (request.path === '/index/status' ? { body: indexStatus() } : undefined));
     const { user, location } = renderApp('/');
     await user.click(await screen.findByRole('button', { name: 'Settings' }));
-    await waitFor(() => expect(location()).toBe('/settings/storage'));
+    await waitFor(() => expect(location()).toBe('/settings/general'));
     await user.click(await screen.findByRole('link', { name: 'Index' }));
     expect(await screen.findByText('Duplicate id')).toBeInTheDocument();
     expect(screen.getByText('Copy.md')).toBeInTheDocument();

@@ -28,7 +28,7 @@ export function Home() {
         level={1}
         actions={
           <>
-            <Button variant="primary" onClick={() => actions.newDocument('')}>
+            <Button variant="primary" onClick={() => actions.newDocument()}>
               New document
             </Button>
             <button
@@ -55,7 +55,7 @@ export function Home() {
           Quick actions
         </h2>
         <div className="home__actions">
-          <Button onClick={() => actions.newDocument('')}>
+          <Button onClick={() => actions.newDocument()}>
             <NewFileIcon size={15} /> New document
           </Button>
           <Button onClick={() => actions.newFolder('')}>

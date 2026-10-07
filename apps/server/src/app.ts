@@ -29,6 +29,8 @@ import { linkRoutes } from './api/links.js';
 import { templateRoutes } from './api/templates.js';
 import { pinRoutes } from './api/pins.js';
 import { PinService } from './pins/service.js';
+import { settingsRoutes } from './api/settings.js';
+import { SettingsService } from './settings/service.js';
 import { TemplateService } from './templates/service.js';
 import { LinkService } from './links/service.js';
 import { searchRoutes } from './api/search.js';
@@ -254,6 +256,10 @@ export async function buildApp(
     prefix: API_BASE_PATH,
     sync,
     pins: new PinService(registry),
+  });
+  await app.register(settingsRoutes, {
+    prefix: API_BASE_PATH,
+    settings: new SettingsService(db, contentDir),
   });
   await app.register(linkRoutes, {
     prefix: API_BASE_PATH,

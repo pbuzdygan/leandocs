@@ -2,11 +2,14 @@ import { useEffect } from 'react';
 import { render } from '@testing-library/react';
 import { QueryClient } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
-import type { TreeFolderNode, TreeNode } from '@leandocs/shared';
+import type { TreeFolderNode, TreeNode, UpdateSettingsRequest } from '@leandocs/shared';
 import { MemoryRouter, useLocation } from 'react-router';
 import { vi } from 'vitest';
 import { AppRoutes } from '../app/App';
 import { Providers } from '../app/Providers';
+import { getTestSettings, setTestSettings } from './settings';
+
+export { setTestSettings };
 
 export interface MockRequest {
   method: string;
@@ -54,6 +57,10 @@ export function mockApi(routes: Record<string, unknown> | Handler) {
         : undefined) ??
       (method === 'GET' && path === '/auth/setup'
         ? { body: { required: false, contentDir: '/data/content' } }
+        : undefined) ??
+      (path === '/settings' && method === 'GET' ? { body: getTestSettings() } : undefined) ??
+      (path === '/settings' && method === 'PATCH'
+        ? (setTestSettings(body as UpdateSettingsRequest), { body: getTestSettings() })
         : undefined);
     if (!result) {
       return Response.json({ error: { code: 'NOT_FOUND', message: 'Not found' } }, { status: 404 });

@@ -26,6 +26,11 @@ export interface SessionOptions {
   drafts: DraftStore;
   /** Debounce before autosave (PROJECT_SPEC §46). */
   autosaveDelay?: number;
+  /**
+   * Off: save only on `saveNow` (Save, Ctrl/Cmd+S, Done) and when leaving the editor. Drafts are
+   * still written, so nothing is lost on a crash or a closed tab.
+   */
+  autosave?: boolean;
   onSaved?: (document: DocumentDto) => void;
   onReload?: (document: DocumentDto) => void;
 }
@@ -234,6 +239,7 @@ export class EditorSession {
 
   private scheduleAutosave(): void {
     this.clearAutosave();
+    if (this.options.autosave === false) return;
     this.autosaveTimer = setTimeout(() => {
       this.autosaveTimer = undefined;
       if (this.state.status === 'unsaved' || this.state.status === 'error') void this.saveNow();

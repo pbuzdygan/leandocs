@@ -17,6 +17,7 @@ test('explicit none mode opens documents anonymously and warns across Settings s
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Authentication disabled');
   await expect(page.getByRole('alert')).toContainText('read, edit and delete');
+  await page.getByRole('link', { name: 'Storage', exact: true }).click();
   await expect(page.getByText('Data directory', { exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('settings-auth-warning.png') });
   await page.getByRole('link', { name: 'Index', exact: true }).click();

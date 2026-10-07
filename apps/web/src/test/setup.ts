@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
+import { resetTestSettings } from './settings';
 
 // jsdom lacks a few browser APIs that Radix primitives use.
 class ResizeObserverStub {
@@ -36,4 +37,5 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   window.localStorage.clear();
+  resetTestSettings();
 });

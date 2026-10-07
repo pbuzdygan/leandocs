@@ -3,12 +3,14 @@ import { usePageTitle } from '../utils/page-title';
 import './settings.css';
 import { useSession } from '../auth/Login';
 
-/** Settings sections that exist so far; the rest arrive with their phases (UI_SPEC §81, D-22). */
+/** UI_SPEC §81 order. Appearance arrives with dark mode (P16-03, D-22). */
 const SECTIONS = [
+  { to: 'general', label: 'General' },
+  { to: 'editor', label: 'Editor' },
+  { to: 'security', label: 'Security' },
   { to: 'storage', label: 'Storage' },
   { to: 'index', label: 'Index' },
   { to: 'links', label: 'Broken links' },
-  { to: 'security', label: 'Security' },
   { to: 'about', label: 'About' },
 ];
 

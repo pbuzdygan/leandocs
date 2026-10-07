@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api, errorMessage } from '../../api/client';
-import { useContentMutation, useTemplates, useTree } from '../../api/queries';
+import { useContentMutation, useSettings, useTemplates, useTree } from '../../api/queries';
 import { Button } from '../../components/ui/Button';
 import { Dialog } from '../../components/ui/Dialog';
 import { FormError, SelectField, TextField } from '../../components/ui/Field';
@@ -9,17 +9,25 @@ import { useNavigationState } from '../../navigation/NavigationContext';
 import { collectFolders } from '../../navigation/tree-utils';
 import { displayFolder } from '../../utils/format';
 
-/** UI_SPEC §64: name, location and template (PROJECT_SPEC §37). */
-export function NewDocumentDialog({ folder, onClose }: { folder: string; onClose: () => void }) {
+/**
+ * UI_SPEC §64: name, location and template (PROJECT_SPEC §37). Without a `folder`, the location
+ * starts at the default from Settings › General, or the top level if that folder is gone.
+ */
+export function NewDocumentDialog({ folder, onClose }: { folder?: string; onClose: () => void }) {
   const tree = useTree();
+  const settings = useSettings();
   const navigate = useNavigate();
   const { reveal } = useNavigationState();
   const [name, setName] = useState('');
-  const [location, setLocation] = useState(folder);
+  const [location, setLocation] = useState(() => {
+    if (folder !== undefined) return folder;
+    const preferred = settings.data?.general.newDocumentFolder ?? '';
+    return tree.data && collectFolders(tree.data).includes(preferred) ? preferred : '';
+  });
   const [template, setTemplate] = useState('');
   const templates = useTemplates();
   const create = useContentMutation(api.createDocument);
-  const folders = tree.data ? collectFolders(tree.data) : [folder];
+  const folders = tree.data ? collectFolders(tree.data) : [location];
 
   const submit = () => {
     if (name.trim() === '' || create.isPending) return;

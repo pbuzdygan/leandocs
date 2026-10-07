@@ -13,6 +13,7 @@ export function useEditorSession(
   document: DocumentDto,
   drafts: DraftStore = localDraftStore,
   missing = false,
+  autosave: { enabled: boolean; delay: number } = { enabled: true, delay: 1500 },
 ) {
   const queryClient = useQueryClient();
   const [session] = useState(
@@ -22,6 +23,8 @@ export function useEditorSession(
         content: document.content,
         revision: document.revision,
         drafts,
+        autosave: autosave.enabled,
+        autosaveDelay: autosave.delay,
         save: (content, expectedRevision) =>
           api.updateDocument(document.id, { content, expectedRevision }),
         onReload: (loaded) => {

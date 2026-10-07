@@ -2,6 +2,9 @@ import { csrfRequest } from './csrf-request';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+
+restoreSettingsAfterEach();
 
 /** Phase 9 acceptance: a reference is visible from both sides and survives a rename. */
 
@@ -64,9 +67,7 @@ test('[[ suggests documents in the visual and the source editor', async ({ page 
   await createDocument(page, 'Autocomplete Target', 'Target body.\n', '');
   const id = await createDocument(page, 'Autocomplete Source', 'Intro.\n');
 
-  await page.addInitScript(() =>
-    localStorage.setItem('leandocs.editor.mode', JSON.stringify('visual')),
-  );
+  await setDefaultEditor(page, 'visual');
   await page.goto(`/doc/${id}/edit`);
   const visual = page.locator('[aria-label="Visual document"]');
   await visual.locator('p').last().click();

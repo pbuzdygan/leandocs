@@ -1,7 +1,14 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { EditorView } from '@codemirror/view';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { documentDto, mockApi, renderApp, sampleTree, type MockRequest } from '../test/render';
+import {
+  documentDto,
+  mockApi,
+  renderApp,
+  sampleTree,
+  setTestSettings,
+  type MockRequest,
+} from '../test/render';
 
 const ID = 'id-buzhulk';
 const PATH = 'Infrastructure/Servers/BUZHULK.md';
@@ -46,7 +53,7 @@ const saved = (request: MockRequest, revision = 'rev-2') => ({
 });
 
 describe('editing a document (Phase 5)', () => {
-  beforeEach(() => window.localStorage.setItem('leandocs.editor.mode', JSON.stringify('source')));
+  beforeEach(() => setTestSettings({ editor: { defaultMode: 'source' } }));
   it('opens the source editor from the Edit tab without leaving the page layout', async () => {
     api((request) => saved(request));
     const { user, location } = renderApp(`/doc/${ID}`);

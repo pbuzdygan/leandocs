@@ -5,6 +5,8 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import type { AppSettings, UpdateSettingsRequest } from '@leandocs/shared';
 import { ApiError, api } from './client';
 
 /** Server state lives in TanStack Query (UI_SPEC §141); no global store for documents. */
@@ -20,6 +22,7 @@ export const queryKeys = {
   templates: ['templates'] as const,
   tags: ['tags'] as const,
   pins: ['pins'] as const,
+  settings: ['settings'] as const,
   links: ['links'] as const,
   outgoingLinks: (id: string) => ['links', 'outgoing', id] as const,
   backlinks: (id: string) => ['links', 'backlinks', id] as const,
@@ -136,4 +139,44 @@ export function useTags() {
 /** Pinned documents (PROJECT_SPEC §40, P10-05). */
 export function usePins() {
   return useQuery({ queryKey: queryKeys.pins, queryFn: api.pins });
+}
+
+/** App settings (UI_SPEC §81–83). Changed only through this app, so they rarely refetch. */
+export function useSettings() {
+  return useQuery({ queryKey: queryKeys.settings, queryFn: api.settings, staleTime: 60_000 });
+}
+
+const settingsMutation = ['update-settings'] as const;
+
+/**
+ * Saves partial updates. The cache takes the new value synchronously, so controlled inputs
+ * (checkboxes) never flick back while the request runs. Responses can arrive out of order when
+ * several changes are made quickly, so none of them is applied directly: once the last pending
+ * save has settled (saved or failed), the stored settings are fetched again.
+ */
+export function useUpdateSettings() {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationKey: settingsMutation,
+    mutationFn: api.updateSettings,
+    onSettled: () => {
+      // This save still counts as pending while its callbacks run.
+      if (queryClient.isMutating({ mutationKey: settingsMutation }) <= 1)
+        return queryClient.invalidateQueries({ queryKey: queryKeys.settings });
+    },
+  });
+  const { mutate } = mutation;
+  const save = useCallback(
+    (update: UpdateSettingsRequest) => {
+      const current = queryClient.getQueryData<AppSettings>(queryKeys.settings);
+      if (current)
+        queryClient.setQueryData<AppSettings>(queryKeys.settings, {
+          general: { ...current.general, ...update.general },
+          editor: { ...current.editor, ...update.editor },
+        });
+      mutate(update);
+    },
+    [queryClient, mutate],
+  );
+  return { save, error: mutation.error };
 }

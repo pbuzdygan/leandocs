@@ -17,7 +17,12 @@ function doc(content: string, revision: string): DocumentDto {
   };
 }
 
-function setup(overrides: { save?: (content: string, rev: string) => Promise<DocumentDto> } = {}) {
+function setup(
+  overrides: {
+    save?: (content: string, rev: string) => Promise<DocumentDto>;
+    autosave?: boolean;
+  } = {},
+) {
   let counter = 1;
   const save = vi.fn(
     overrides.save ?? (async (content: string) => doc(content, `rev-${++counter}`)),
@@ -32,6 +37,7 @@ function setup(overrides: { save?: (content: string, rev: string) => Promise<Doc
     drafts,
     onSaved,
     autosaveDelay: 1000,
+    autosave: overrides.autosave,
   });
   return { session, save, drafts, onSaved };
 }
@@ -86,6 +92,24 @@ describe('EditorSession', () => {
     expect(session.getState().status).toBe('unsaved');
     session.setContent('v1');
     expect(session.getState().status).toBe('saved');
+  });
+
+  it('with autosave off, keeps a draft and saves only on request or when leaving', async () => {
+    const { session, save, drafts } = setup({ autosave: false });
+    session.setContent('a');
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(save).not.toHaveBeenCalled();
+    expect(session.getState().status).toBe('unsaved');
+    expect(drafts.get('doc-1')?.content).toBe('a');
+    await session.saveNow();
+    expect(save).toHaveBeenCalledWith('a', 'rev-1');
+    session.setContent('ab');
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(save).toHaveBeenCalledTimes(1);
+    session.flushOnLeave();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(save).toHaveBeenLastCalledWith('ab', 'rev-2');
   });
 
   it('autosaves once after the debounce, with the expected revision', async () => {

@@ -125,6 +125,31 @@
   color: var(--text-muted);
 }
 
+/* Checkbox first, label beside it; hint and error line up under the label. */
+.field--checkbox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--space-2);
+}
+
+.field--checkbox .field__label {
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.field--checkbox .field__hint,
+.field--checkbox .field__error {
+  grid-column: 2;
+}
+
+.checkbox {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 .field__error,
 .form-error {
   font-size: var(--font-size-meta);

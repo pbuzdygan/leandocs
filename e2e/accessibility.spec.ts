@@ -1,5 +1,8 @@
 import { expectAccessible } from './axe';
 import { expect, newParagraphAtEnd, test } from './document-fixture';
+import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+
+restoreSettingsAfterEach();
 
 /**
  * P15-08 accessibility review (UI_SPEC §97, WCAG AA): automated axe scans of every screen,
@@ -101,9 +104,7 @@ test('editors have no WCAG AA violations', async ({ page, createDocument }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const id = await createDocument('Accessible Editing', RICH);
 
-  await page.addInitScript(() =>
-    localStorage.setItem('leandocs.editor.mode', JSON.stringify('visual')),
-  );
+  await setDefaultEditor(page, 'visual');
   await page.goto(`/doc/${id}/edit`);
   await expect(page.getByRole('status', { name: 'Save status' })).toHaveText('Saved');
   await expect(page.locator('.ProseMirror')).toContainText('Careful.');
@@ -123,7 +124,7 @@ test('editors have no WCAG AA violations', async ({ page, createDocument }) => {
 });
 
 test('settings, not found and the mobile layout have no WCAG AA violations', async ({ page }) => {
-  for (const section of ['storage', 'index', 'links', 'security', 'about']) {
+  for (const section of ['general', 'editor', 'storage', 'index', 'links', 'security', 'about']) {
     await page.goto(`/settings/${section}`);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expectAccessible(page, `settings: ${section}`);

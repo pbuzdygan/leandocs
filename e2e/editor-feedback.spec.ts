@@ -1,15 +1,16 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, newParagraphAtEnd, test, type Page } from './document-fixture';
+import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+
+restoreSettingsAfterEach();
 
 /** Owner feedback 2026-10-02 on the visual editor (P6-06…P6-12, P4-12). */
 
 const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 async function openVisual(page: Page, id: string) {
-  await page.addInitScript(() =>
-    localStorage.setItem('leandocs.editor.mode', JSON.stringify('visual')),
-  );
+  await setDefaultEditor(page, 'visual');
   await page.goto(`/doc/${id}/edit`);
   const editor = page.locator('[aria-label="Visual document"]');
   await expect(editor).toBeVisible();

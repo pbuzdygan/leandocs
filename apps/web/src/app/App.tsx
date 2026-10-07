@@ -11,6 +11,12 @@ import { AuthGate, LoginPage } from '../auth/Login';
 const SettingsLayout = lazy(() =>
   import('../settings/SettingsLayout').then((module) => ({ default: module.SettingsLayout })),
 );
+const GeneralSettings = lazy(() =>
+  import('../settings/PreferenceSettings').then((module) => ({ default: module.GeneralSettings })),
+);
+const EditorSettings = lazy(() =>
+  import('../settings/PreferenceSettings').then((module) => ({ default: module.EditorSettings })),
+);
 const StorageSettings = lazy(() =>
   import('../settings/StorageSettings').then((module) => ({ default: module.StorageSettings })),
 );
@@ -76,7 +82,9 @@ export function AppRoutes() {
                 </Suspense>
               }
             >
-              <Route index element={<Navigate to="storage" replace />} />
+              <Route index element={<Navigate to="general" replace />} />
+              <Route path="general" element={<GeneralSettings />} />
+              <Route path="editor" element={<EditorSettings />} />
               <Route path="storage" element={<StorageSettings />} />
               <Route path="index" element={<IndexSettings />} />
               <Route path="links" element={<BrokenLinksSettings />} />
