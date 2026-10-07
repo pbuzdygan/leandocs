@@ -47,9 +47,6 @@ jobs:
     # @playwright/test version; a mismatch fails with "Executable doesn't exist".
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
-      # Firefox refuses to start as root unless HOME belongs to root.
-      env:
-        HOME: /root
     strategy:
       # Report every engine, not just the first one that fails (P15-09).
       fail-fast: false
@@ -69,9 +66,14 @@ jobs:
           COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm test:e2e
+      # The Playwright binary directly: with HOME changed, pnpm (corepack) would look for itself
+      # in another cache folder.
+      - run: node_modules/.bin/playwright test
         env:
           E2E_BROWSER: ${{ matrix.browser }}
+          # Firefox refuses to start as root unless HOME belongs to root. Actions sets HOME to
+          # /github/home for every container step, so it is overridden here, on the step.
+          HOME: /root
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: failure()
         with:
