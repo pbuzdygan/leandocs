@@ -6,6 +6,8 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### New features
 
+- Documents refresh automatically when their files change elsewhere. While editing, your text is preserved so you can review the other version, reload it or save your work as a copy.
+
 - Protect local sign-in with an authenticator app and single-use recovery codes from Settings › Security.
 
 - You can deliberately disable login for a private installation; Settings clearly warns that anyone with access can read, edit and delete documents.

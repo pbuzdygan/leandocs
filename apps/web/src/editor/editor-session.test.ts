@@ -47,6 +47,38 @@ afterEach(() => {
 });
 
 describe('EditorSession', () => {
+  it('accepts in-app metadata revisions while preserving unsaved text and its recovery revision', async () => {
+    const { session, drafts, save } = setup();
+    session.syncFromApp(doc('v1', 'rev-renamed'));
+    expect(session.getState()).toMatchObject({ status: 'saved', revision: 'rev-renamed' });
+    session.setContent('local work');
+    session.syncFromApp(doc('v1', 'rev-moved'));
+    expect(session.getState()).toMatchObject({
+      status: 'unsaved',
+      content: 'local work',
+      revision: 'rev-moved',
+    });
+    expect(drafts.get('doc-1')?.baseRevision).toBe('rev-moved');
+    await session.saveNow();
+    expect(save).toHaveBeenCalledWith('local work', 'rev-moved');
+  });
+
+  it('never clears an external conflict or silently adopts a changed body after an app mutation', () => {
+    const { session } = setup();
+    session.syncFromApp(doc('outside body', 'rev-2'));
+    expect(session.getState()).toMatchObject({
+      status: 'conflict',
+      content: 'v1',
+      revision: 'rev-1',
+    });
+    session.syncFromApp(doc('v1', 'rev-3'));
+    expect(session.getState()).toMatchObject({
+      status: 'conflict',
+      revision: 'rev-1',
+      conflictRevision: 'rev-2',
+    });
+  });
+
   it('starts clean and becomes unsaved on change', () => {
     const { session } = setup();
     expect(session.getState()).toMatchObject({ status: 'saved', content: 'v1', revision: 'rev-1' });
@@ -188,13 +220,69 @@ describe('EditorSession', () => {
     });
   });
 
-  it('follows the server only while there are no local changes', () => {
+  it('preserves clean and dirty editor content when an external revision arrives (UI_SPEC §70)', () => {
     const { session } = setup();
     expect(session.syncFromServer(doc('outside edit', 'rev-9'))).toBe(true);
-    expect(session.getState()).toMatchObject({ content: 'outside edit', revision: 'rev-9' });
+    expect(session.getState()).toMatchObject({
+      content: 'v1',
+      revision: 'rev-1',
+      status: 'conflict',
+      conflictRevision: 'rev-9',
+    });
     session.setContent('local');
-    expect(session.syncFromServer(doc('another', 'rev-10'))).toBe(false);
+    expect(session.syncFromServer(doc('another', 'rev-10'))).toBe(true);
     expect(session.getState().content).toBe('local');
+  });
+
+  it('pauses autosave and retains the draft immediately, before a revision fetch completes', async () => {
+    const { session, save, drafts } = setup();
+    session.setContent('mine');
+    session.markExternalChange();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(save).not.toHaveBeenCalled();
+    expect(drafts.get('doc-1')).toMatchObject({ content: 'mine', baseRevision: 'rev-1' });
+    expect(session.getState().status).toBe('conflict');
+  });
+
+  it('keeps a conflict when an older successful save response arrives after an external event', async () => {
+    let resolve!: (document: DocumentDto) => void;
+    const { session, drafts } = setup({
+      save: () =>
+        new Promise((done) => {
+          resolve = done;
+        }),
+    });
+    session.setContent('mine');
+    const save = session.saveNow();
+    session.markExternalChange('rev-external');
+    resolve(doc('mine', 'rev-2'));
+    await save;
+    expect(session.getState()).toMatchObject({
+      content: 'mine',
+      status: 'conflict',
+      conflictRevision: 'rev-external',
+    });
+    expect(drafts.get('doc-1')?.content).toBe('mine');
+  });
+
+  it('does not undo an explicit reload when a previous save response arrives', async () => {
+    let resolve!: (document: DocumentDto) => void;
+    const { session } = setup({
+      save: () =>
+        new Promise((done) => {
+          resolve = done;
+        }),
+    });
+    session.setContent('mine');
+    const save = session.saveNow();
+    session.reload(doc('disk', 'rev-3'));
+    resolve(doc('mine', 'rev-2'));
+    await save;
+    expect(session.getState()).toMatchObject({
+      content: 'disk',
+      revision: 'rev-3',
+      status: 'saved',
+    });
   });
 
   it('does not erase an unaccepted recovery draft when a clean editor unmounts', () => {

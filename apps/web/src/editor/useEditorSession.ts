@@ -5,9 +5,15 @@ import { api } from '../api/client';
 import { queryKeys } from '../api/queries';
 import { localDraftStore, type DraftStore } from './drafts';
 import { EditorSession } from './editor-session';
+import { subscribeExternalChanges } from '../api/external-changes';
+import { subscribeDocumentMutations } from '../api/document-mutations';
 
 /** One EditorSession per opened document; saved documents update the query cache. */
-export function useEditorSession(document: DocumentDto, drafts: DraftStore = localDraftStore) {
+export function useEditorSession(
+  document: DocumentDto,
+  drafts: DraftStore = localDraftStore,
+  missing = false,
+) {
   const queryClient = useQueryClient();
   const [session] = useState(
     () =>
@@ -29,8 +35,22 @@ export function useEditorSession(document: DocumentDto, drafts: DraftStore = loc
       }),
   );
   const state = useSyncExternalStore(session.subscribe, session.getState);
+  useEffect(() => subscribeDocumentMutations((changed) => session.syncFromApp(changed)), [session]);
+  useEffect(
+    () =>
+      subscribeExternalChanges((changes) => {
+        if (
+          changes.documents.some((change) => change.id === document.id && change.kind !== 'added')
+        )
+          session.markExternalChange();
+      }),
+    [session, document.id],
+  );
+  useEffect(() => {
+    if (missing) session.markExternalChange();
+  }, [session, missing]);
 
-  // Follow the server version while there are no local changes (e.g. refetch after an outside edit).
+  // Refetched revisions resolve the conflict target without replacing editor content.
   useEffect(() => {
     session.syncFromServer(document);
   }, [session, document]);

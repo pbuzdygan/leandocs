@@ -38,6 +38,7 @@ import {
   type TreeResponse,
   type UpdateDocumentRequest,
 } from '@leandocs/shared';
+import { documentMutation } from './document-mutations';
 
 /** Error from the API with the stable `code` from the standard error body (PROJECT_SPEC §59). */
 export class ApiError extends Error {
@@ -141,7 +142,7 @@ export const api = {
   unpin: (id: string) => request<void>(`/pins/${enc(id)}`, { method: 'DELETE' }),
   tags: () => request<TagsResponse>('/tags'),
   updateProperties: (id: string, body: UpdatePropertiesRequest) =>
-    request<DocumentDto>(`/documents/${enc(id)}/properties`, json('POST', body)),
+    documentMutation(request<DocumentDto>(`/documents/${enc(id)}/properties`, json('POST', body))),
   outgoingLinks: (id: string) => request<OutgoingLinksResponse>(`/documents/${enc(id)}/links`),
   backlinks: (id: string) => request<BacklinksResponse>(`/documents/${enc(id)}/backlinks`),
   brokenLinks: () => request<BrokenLinksResponse>('/links/broken'),
@@ -159,9 +160,9 @@ export const api = {
   updateDocument: (id: string, body: UpdateDocumentRequest) =>
     request<DocumentDto>(`/documents/${enc(id)}`, json('PUT', body)),
   renameDocument: (id: string, body: RenameDocumentRequest) =>
-    request<DocumentDto>(`/documents/${enc(id)}/rename`, json('POST', body)),
+    documentMutation(request<DocumentDto>(`/documents/${enc(id)}/rename`, json('POST', body))),
   moveDocument: (id: string, body: MoveDocumentRequest) =>
-    request<DocumentDto>(`/documents/${enc(id)}/move`, json('POST', body)),
+    documentMutation(request<DocumentDto>(`/documents/${enc(id)}/move`, json('POST', body))),
   trashDocument: (id: string) => request<TrashItem>(`/documents/${enc(id)}`, { method: 'DELETE' }),
   restoreTrashItem: (trashId: string) =>
     request<RestoreResponse>(`/trash/${enc(trashId)}/restore`, { method: 'POST' }),

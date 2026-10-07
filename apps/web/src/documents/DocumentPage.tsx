@@ -64,6 +64,15 @@ export function DocumentPage({ editing = false }: { editing?: boolean }) {
       </article>
     );
   }
+  if (document.isError && editing && document.data) {
+    return (
+      <EditDocument
+        key={document.data.id}
+        document={document.data}
+        missing={document.error instanceof ApiError && document.error.status === 404}
+      />
+    );
+  }
   if (document.isError) {
     if (document.error instanceof ApiError && document.error.status === 404) {
       return (
@@ -358,10 +367,10 @@ function ViewDocument({ document }: { document: DocumentDto }) {
   );
 }
 
-function EditDocument({ document }: { document: DocumentDto }) {
+function EditDocument({ document, missing = false }: { document: DocumentDto; missing?: boolean }) {
   const navigate = useNavigate();
   const notify = useNotify();
-  const { session, state } = useEditorSession(document);
+  const { session, state } = useEditorSession(document, localDraftStore, missing);
   const queryClient = useQueryClient();
   const tree = useTree();
   const [uploadCount, setUploadCount] = useState(0);

@@ -55,15 +55,14 @@ test('a change made on disk while editing shows the conflict dialog and never ov
   await page.goto(`/doc/${id}/edit`);
   await expect(page.getByRole('status', { name: 'Save status' })).toHaveText('Saved');
 
-  // Someone edits the same file in another editor.
-  const file = path.join(content, 'Conflict Me.md');
-  const external = readFileSync(file, 'utf8').replace('Original.', 'Edited in VS Code.');
-  writeFileSync(file, external);
-
   await page.locator('.cm-content').click();
   await page.keyboard.press('ControlOrMeta+End');
   await page.keyboard.type('\nMy browser edit.');
-  await page.keyboard.press('ControlOrMeta+s');
+
+  // External notification must pause autosave without requiring a manual save attempt.
+  const file = path.join(content, 'Conflict Me.md');
+  const external = readFileSync(file, 'utf8').replace('Original.', 'Edited in VS Code.');
+  writeFileSync(file, external);
 
   const dialog = page.getByRole('dialog', { name: 'Document changed outside the editor' });
   await expect(dialog).toBeVisible();

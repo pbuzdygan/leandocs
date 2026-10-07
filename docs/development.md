@@ -221,7 +221,7 @@ No additional database migration is required for the hash change.
 The setup token changes on server restart; reload an open setup form after restarting.
 
 - **Unit tests** sit next to the code: `foo.ts` → `foo.test.ts`.
-- **Server/API tests** use `buildApp(config)` + `app.inject()`. They never start a real server.
+- **Server/API tests** normally use `buildApp(config)` + `app.inject()`. SSE integration tests use temporary loopback ports to verify real streaming responses and shutdown.
 - **Filesystem tests** use a real temp directory (`mkdtemp(os.tmpdir())`) and clean it up in `afterEach`.
 - **Web tests** use jsdom + Testing Library (`apps/web/src/test/setup.ts`).
 - **End-to-end tests** (Playwright) live in `e2e/` and run against the production build with a fresh data directory (`.e2e-data/`):
@@ -282,7 +282,10 @@ Listen for `ready` to refetch current data and `content-changed` for external in
 Reconnect gaps are not replayed. See [ADR-0021](adr/0021-external-change-events.md) for payloads,
 authentication renewal and resource limits. Reverse proxies should disable response buffering for
 this route and allow idle timeouts longer than the 15-second heartbeat. The response sets
-`X-Accel-Buffering: no` for Nginx/Nginx Proxy Manager. Frontend subscription is implemented in P12-04.
+`X-Accel-Buffering: no` for Nginx/Nginx Proxy Manager. The authenticated frontend owns one stream,
+refreshes affected views, and resyncs after reconnection. Viewing updates show a notification;
+editing updates pause autosave and preserve text in the conflict dialog. If a document was deleted
+outside LeanDocs, save a copy to recover the editor text in the content root.
 
 ## Optional local two-factor authentication
 

@@ -41,6 +41,8 @@ export class EditorSession {
   private listeners = new Set<() => void>();
   private autosaveTimer: ReturnType<typeof setTimeout> | undefined;
   private inFlight: Promise<void> | undefined;
+  private externalChanges = 0;
+  private reloads = 0;
   private readonly autosaveDelay: number;
 
   constructor(private readonly options: SessionOptions) {
@@ -100,8 +102,9 @@ export class EditorSession {
   }
 
   /** Explicit "keep my version" after reviewing a conflict: save against the revision on disk. */
-  async overwrite(): Promise<void> {
-    const revision = this.state.conflictRevision;
+  async overwrite(reviewedRevision = this.state.conflictRevision): Promise<void> {
+    if (this.inFlight) await this.inFlight;
+    const revision = reviewedRevision;
     if (!revision) return;
     this.update({ status: 'unsaved', revision, conflictRevision: undefined });
     await this.runSave(revision);
@@ -109,6 +112,7 @@ export class EditorSession {
 
   /** Replace the editor content with the version on disk and drop local changes. */
   reload(document: DocumentDto): void {
+    this.reloads++;
     this.clearAutosave();
     this.savedContent = document.content;
     this.options.drafts.remove(this.options.id);
@@ -123,11 +127,32 @@ export class EditorSession {
     this.options.onReload?.(document);
   }
 
-  /** The server document changed while this editor has no local changes: follow it. */
+  /** An outside edit is a conflict even in a clean editor (UI_SPEC §70). */
   syncFromServer(document: DocumentDto): boolean {
-    if (this.isDirty || this.inFlight || document.revision === this.state.revision) return false;
-    this.reload(document);
+    if (document.revision === this.state.revision) return false;
+    this.markExternalChange(document.revision);
     return true;
+  }
+
+  /** In-app rename/move responses may advance metadata without discarding local edits. */
+  syncFromApp(document: DocumentDto): void {
+    if (document.id !== this.options.id || this.inFlight || this.state.status === 'conflict')
+      return;
+    if (document.content !== this.savedContent) {
+      // A move can rewrite links, or another editor may have changed the body before the mutation.
+      this.markExternalChange(document.revision);
+    } else {
+      this.update({ revision: document.revision });
+      if (this.isDirty) this.flushDraft();
+    }
+  }
+
+  /** Pause immediately on notification, retaining the editor's base revision and local draft. */
+  markExternalChange(revision?: string): void {
+    this.externalChanges++;
+    this.clearAutosave();
+    this.update({ status: 'conflict', conflictRevision: revision });
+    this.flushDraft();
   }
 
   /** Restore a local draft. It saves against the draft's base revision, so a newer disk version shows as a conflict. */
@@ -159,29 +184,37 @@ export class EditorSession {
   }
 
   private async runSave(expectedRevision: string): Promise<void> {
+    const externalChanges = this.externalChanges;
+    const reloads = this.reloads;
     const content = this.state.content;
     this.update({ status: 'saving', error: undefined });
     const run = (async () => {
       try {
         const document = await this.options.save(content, expectedRevision);
+        if (reloads !== this.reloads) return;
         this.savedContent = content;
         const clean = this.state.content === content;
 
         this.update({
-          status: clean ? 'saved' : 'unsaved',
+          status:
+            externalChanges !== this.externalChanges ? 'conflict' : clean ? 'saved' : 'unsaved',
           revision: document.revision,
-          conflictRevision: undefined,
+          conflictRevision:
+            externalChanges !== this.externalChanges ? this.state.conflictRevision : undefined,
         });
         this.flushDraft(true);
         this.options.onSaved?.(document);
-        if (!clean) this.scheduleAutosave();
+        if (!clean && this.state.status !== 'conflict') this.scheduleAutosave();
       } catch (error) {
+        if (reloads !== this.reloads) return;
         if (error instanceof ApiError && error.code === 'DOCUMENT_CONFLICT') {
           const current = error.details?.currentRevision;
           this.update({
             status: 'conflict',
             conflictRevision: typeof current === 'string' ? current : undefined,
           });
+        } else if (externalChanges !== this.externalChanges) {
+          this.update({ status: 'conflict' });
         } else {
           this.update({
             status: 'error',
@@ -213,7 +246,7 @@ export class EditorSession {
   }
 
   private flushDraft(removeClean = false): void {
-    if (!this.isDirty) {
+    if (!this.isDirty && this.state.status !== 'conflict') {
       if (removeClean) this.options.drafts.remove(this.options.id);
       return;
     }

@@ -3,7 +3,7 @@ import type { DocumentDto } from '@leandocs/shared';
 import { useQuery } from '@tanstack/react-query';
 import { diffLines } from 'diff';
 import { useNavigate } from 'react-router';
-import { api, errorMessage } from '../api/client';
+import { api, errorMessage, ApiError } from '../api/client';
 import { useContentMutation } from '../api/queries';
 import { Button } from '../components/ui/Button';
 import { Dialog } from '../components/ui/Dialog';
@@ -48,7 +48,10 @@ export function ConflictDialog({
   const saveCopy = useContentMutation(() =>
     api.createDocument({
       name: copyName(document.path),
-      folder: parentPath(document.path),
+      folder:
+        disk.error instanceof ApiError && disk.error.status === 404
+          ? ''
+          : parentPath(document.path),
       title: `${document.title} (conflict copy)`,
       content: state.content,
     }),
@@ -65,7 +68,7 @@ export function ConflictDialog({
   const copy = () =>
     saveCopy.mutate(undefined, {
       onSuccess: (created) => {
-        if (disk.data) session.reload(disk.data);
+        session.reload(disk.data ?? created);
         notify.info(`Your version was saved as "${created.title}"`);
         onClose();
         void navigate(`/doc/${encodeURIComponent(created.id)}/edit`);
@@ -74,7 +77,7 @@ export function ConflictDialog({
 
   const overwrite = async () => {
     setOverwriteError(null);
-    await session.overwrite();
+    await session.overwrite(disk.data?.revision);
     const next = session.getState();
     if (next.status === 'saved' || next.status === 'unsaved') {
       notify.info('Your version was saved');
@@ -178,7 +181,12 @@ export function ConflictDialog({
         <dt>Your editor</dt>
         <dd>unsaved changes</dd>
       </dl>
-      <Button variant="primary" onClick={() => setReviewing(true)} data-autofocus>
+      <Button
+        variant="primary"
+        onClick={() => setReviewing(true)}
+        disabled={!disk.data}
+        data-autofocus
+      >
         Review changes
       </Button>
     </Dialog>

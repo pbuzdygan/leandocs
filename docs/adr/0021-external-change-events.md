@@ -33,7 +33,27 @@ authentication, survive reverse proxies, avoid unbounded buffering and release r
   connections with 503. A slow client or oversized batch is disconnected and resyncs on reconnect.
   Heartbeats never scan disk. Disabled/failed watching emits changes found by fallback read scans.
 - Clean up client timers on disconnect and unsubscribe/close streams in `preClose`, before request
-  draining and SQLite shutdown. Keep frontend subscription and conflict UI in P12-04.
+  draining and SQLite shutdown.
+
+### Frontend consumer (P12-04)
+
+- Mount one same-origin EventSource inside the authenticated app shell; navigation retains it,
+  while logout/unmount closes it and cancels retries. Native reconnection handles interrupted
+  streams. A closed source is reopened after three seconds; session checks on errors return
+  revoked local sessions to sign-in. A failed session check also permits retrying the transport.
+- Treat events as invalidation hints for TanStack Query. Refetch navigation/index views and
+  affected documents/attachments on changes, and all current content queries after every `ready`.
+  A changed viewed revision shows `Document updated externally.` after refresh.
+- Notify editor sessions synchronously before refetching. Pause autosave, retain the content and
+  draft, and enter the existing conflict flow even in a clean editor (UI_SPEC §70). Refetched
+  revisions resolve the conflict target without replacing text. A late save response cannot clear
+  an external conflict or undo an explicit reload; explicit overwrite uses the reviewed revision.
+- Successful in-app document rename/move/property responses advance the editor's base revision
+  only when their body matches its saved base and no conflict/save is pending. Local text and
+  draft revisions are preserved. A changed body or an existing external conflict remains blocked.
+- Keep an existing editor mounted when its file disappears. Reload/review require a disk version;
+  saving a copy remains possible and uses the content root if the original document is missing,
+  so deletion of its parent does not prevent recovery. Clear the old draft only after recovery.
 
 ## Alternatives considered
 
@@ -47,10 +67,11 @@ authentication, survive reverse proxies, avoid unbounded buffering and release r
 Clients reconnect and refresh after any gap, including large batches and server restarts. Individual
 missed notifications are not delivered later. Index-read consistency still follows ADR-0020, and app
 mutations are not external changes. Gateway revocation during an existing response requires gateway
-connection termination or the next forced reconnect. P12-03 adds the transport only; visible automatic
-refresh and editing-conflict behavior remain P12-04.
+connection termination or the next forced reconnect. P12-03 implements the transport and P12-04
+implements automatic viewing refresh and editing conflicts. No dependency or schema changes are needed.
 
 References checked on 2026-10-07:
 
 - [Fastify streaming replies](https://fastify.dev/docs/v5.12.x/Reference/Reply/#streams)
 - [Fastify shutdown lifecycle](https://fastify.dev/docs/latest/Reference/Lifecycle/#shutdown-lifecycle)
+- [TanStack Query invalidation](https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation)

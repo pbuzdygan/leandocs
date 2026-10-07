@@ -218,7 +218,11 @@ clients refetch after connecting/reconnecting. Nonempty external batches emit `c
 the shared `ContentChanges` contract. There are no event ids or replay. Heartbeats run every 15 seconds;
 local-session access is rechecked before each write. Five-minute connection lifetimes renew gateway
 authentication, and disconnect/shutdown releases timers and streams. Limits are 32 connections and
-64 KiB queued per stream; a disconnected client resyncs. Frontend consumption remains P12-04.
+64 KiB queued per stream; a disconnected client resyncs. The authenticated app shell owns one
+EventSource and invalidates affected TanStack Query data, with a full content resync on `ready`.
+Viewed documents refresh with a notification. Editing sessions pause autosave immediately and
+retain their text/drafts in the conflict flow, including external deletion. Explicit reload or
+revision-checked overwrite resolves the conflict; missing documents can be recovered as copies.
 
 ## Search (Phase 8, `search/`)
 
