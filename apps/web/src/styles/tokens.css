@@ -15,7 +15,7 @@
 
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-muted: #5f6f86;
   --text-disabled: #94a3b8;
 
   --accent: #2563eb;
@@ -26,13 +26,20 @@
   --warning: #d97706;
   --danger: #dc2626;
   --info: #0284c7;
+  /* Status colours for text: the base colours are for borders and icons (3:1) and are too
+     light for text (WCAG AA 4.5:1, P15-08). */
+  --success-text: #15803d;
+  --warning-text: #b45309;
+  --danger-text: #b91c1c;
+  --info-text: #0369a1;
 
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
 
   --shadow-popover: 0 8px 24px rgba(15, 23, 42, 0.1);
-  --focus-ring: 2px solid rgba(37, 99, 235, 0.5);
+  /* Solid accent: the earlier 50% tint had 2.2:1 contrast, below WCAG AA's 3:1 (P15-08). */
+  --focus-ring: 2px solid var(--accent);
 
   --font-sans:
     'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
@@ -112,6 +119,10 @@
   --accent: #60a5fa;
   --accent-hover: #93c5fd;
   --accent-soft: #1e3a8a;
+  --success-text: #4ade80;
+  --warning-text: #fbbf24;
+  --danger-text: #f87171;
+  --info-text: #38bdf8;
   --overlay: rgba(2, 6, 23, 0.6);
   --brand-card-back: #1e3a8a;
   --code-bg: #020617;

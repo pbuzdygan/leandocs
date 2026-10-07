@@ -28,16 +28,20 @@ export function EmptyState({
   title,
   children,
   actions,
+  level = 2,
 }: {
   icon?: ReactNode;
   title: string;
   children?: ReactNode;
   actions?: ReactNode;
+  /** 1 when the state replaces the whole page, so the page still has a top-level heading. */
+  level?: 1 | 2;
 }) {
+  const Heading = level === 1 ? 'h1' : 'h2';
   return (
     <div className="empty-state">
       {icon && <div className="empty-state__icon">{icon}</div>}
-      <h2 className="empty-state__title">{title}</h2>
+      <Heading className="empty-state__title">{title}</Heading>
       {children && <div className="empty-state__text">{children}</div>}
       {actions && <div className="empty-state__actions">{actions}</div>}
     </div>
@@ -50,15 +54,21 @@ export function ErrorState({
   message,
   details,
   onRetry,
+  level,
 }: {
   title: string;
   message: string;
   details?: string;
   onRetry?: () => void;
+  level?: 1 | 2;
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <EmptyState title={title} actions={onRetry && <Button onClick={onRetry}>Retry</Button>}>
+    <EmptyState
+      title={title}
+      level={level}
+      actions={onRetry && <Button onClick={onRetry}>Retry</Button>}
+    >
       <p>{message}</p>
       {details && (
         <div className="error-details">

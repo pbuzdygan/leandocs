@@ -1,4 +1,4 @@
-import { expect, test as base } from '@playwright/test';
+import { expect, test as base, type Page } from '@playwright/test';
 import { csrfRequest } from './csrf-request';
 
 /** Remove documents even after a failed assertion so retries can reuse their filenames. */
@@ -23,5 +23,22 @@ export const test = base.extend<{
   },
 });
 
+/**
+ * Puts the caret at the end of the document and starts a new paragraph. Keys pressed while the
+ * editor is still settling after load can be lost (flaky on CI), so the keys are sent again until
+ * the empty paragraph exists; once it does, nothing more is typed.
+ */
+export async function newParagraphAtEnd(page: Page) {
+  const editor = page.getByRole('textbox', { name: 'Visual document', exact: true });
+  const last = editor.locator(':scope > p').last();
+  await expect(async () => {
+    if ((await last.textContent()) !== '') {
+      await editor.press('ControlOrMeta+End');
+      await editor.press('Enter');
+    }
+    await expect(last).toHaveText('', { timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+}
+
 export { expect };
-export type { Page } from '@playwright/test';
+export type { Page };

@@ -105,11 +105,22 @@ describe('document page', () => {
   it('shows "Document not found" for unknown ids', async () => {
     mockApi({ 'GET /tree': { root: sampleTree() } });
     renderApp('/doc/missing');
-    expect(await screen.findByText('Document not found')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Document not found' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to documentation' })).toHaveAttribute(
       'href',
       '/',
     );
+  });
+
+  it('gives unknown addresses a page heading and title', async () => {
+    mockApi({ 'GET /tree': { root: sampleTree() }, 'GET /documents/recent?limit=10': recent });
+    renderApp('/no-such-page');
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Page not found' }),
+    ).toBeInTheDocument();
+    expect(document.title).toBe('Page not found — LeanDocs');
   });
 
   it('shows an error state with retry for server errors', async () => {

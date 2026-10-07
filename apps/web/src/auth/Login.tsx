@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { TextField, FormError } from '../components/ui/Field';
 import { ErrorState, SkeletonLines } from '../components/ui/States';
 import { DropdownMenuButton } from '../components/ui/Menu';
+import { usePageTitle } from '../utils/page-title';
 import './setup.css';
 
 export const sessionKey = ['auth', 'session'] as const;
@@ -47,6 +48,7 @@ export function AuthGate() {
       <main className="setup">
         <ErrorState
           title="Unable to check session"
+          level={1}
           message={errorMessage(session.error)}
           onRetry={() => void session.refetch()}
         />
@@ -58,6 +60,7 @@ export function AuthGate() {
 }
 
 export function LoginPage() {
+  usePageTitle('Sign in');
   const session = useSession();
   const client = useQueryClient();
   const location = useLocation();
@@ -231,8 +234,15 @@ export function UserMenu() {
     <div>
       <DropdownMenuButton
         trigger={
-          <Button size="small" variant="ghost" aria-label="User menu" disabled={saving}>
-            {session.data.user.username}
+          <Button
+            size="small"
+            variant="ghost"
+            className="user-menu"
+            // The visible name is part of the label (WCAG 2.5.3) so voice control can target it.
+            aria-label={`User menu (${session.data.user.username})`}
+            disabled={saving}
+          >
+            <span className="user-menu__name">{session.data.user.username}</span>
           </Button>
         }
         entries={[{ label: 'Sign out', onSelect: () => void logout() }]}

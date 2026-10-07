@@ -75,7 +75,7 @@
 }
 
 .palette__mode:focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: var(--focus-ring);
   outline-offset: 1px;
 }
 
@@ -131,6 +131,8 @@
 
 .palette__item[aria-selected='true'] {
   background: var(--bg-selected);
+  /* Not by background alone: the tint is too faint to see on its own (WCAG 1.4.11). */
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .palette__title {

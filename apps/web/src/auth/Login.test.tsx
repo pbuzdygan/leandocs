@@ -141,7 +141,7 @@ describe('local login UI', () => {
     const { user, client, location } = renderApp('/');
     await screen.findByText('No documentation yet');
     client.setQueryData(['document', 'private'], { content: 'private content' });
-    await user.click(screen.getByRole('button', { name: 'User menu' }));
+    await user.click(screen.getByRole('button', { name: /^User menu/ }));
     await user.click(screen.getByRole('menuitem', { name: 'Sign out' }));
     await waitFor(() => expect(location()).toBe('/login'));
     expect(await screen.findByLabelText('Username')).toBeInTheDocument();
@@ -205,7 +205,7 @@ describe('proxy authentication UI', () => {
     expect(await screen.findByRole('heading', { name: 'Guide' })).toBeInTheDocument();
     expect(location()).toBe('/doc/a');
     expect(screen.getByText('owner@example.com')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'User menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^User menu/ })).not.toBeInTheDocument();
     expect(requests.some((request) => ['/auth/login', '/auth/logout'].includes(request.path))).toBe(
       false,
     );

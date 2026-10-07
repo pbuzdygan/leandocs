@@ -44,7 +44,7 @@ describe('unauthenticated mode UI', () => {
     const requests = installation();
     renderApp('/');
     expect(await screen.findByText('No documentation yet')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'User menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^User menu/ })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Password')).not.toBeInTheDocument();
     expect(
       requests.some((request) => request.method === 'POST' && request.path.startsWith('/auth/')),

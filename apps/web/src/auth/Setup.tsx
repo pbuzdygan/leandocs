@@ -7,6 +7,7 @@ import { AppLogo, Wordmark } from '../components/AppLogo';
 import { Button } from '../components/ui/Button';
 import { FormError, TextField } from '../components/ui/Field';
 import { ErrorState, SkeletonLines } from '../components/ui/States';
+import { usePageTitle } from '../utils/page-title';
 import './setup.css';
 
 const setupKey = ['auth', 'setup'] as const;
@@ -29,6 +30,7 @@ export function SetupGate() {
       <main className="setup">
         <ErrorState
           title="Unable to check setup"
+          level={1}
           message={errorMessage(status.error)}
           onRetry={() => void status.refetch()}
         />
@@ -39,6 +41,7 @@ export function SetupGate() {
 }
 
 export function SetupPage() {
+  usePageTitle('Setup');
   const status = useSetupStatus();
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -87,6 +90,7 @@ export function SetupPage() {
         ) : status.isError ? (
           <ErrorState
             title="Unable to load setup"
+            level={1}
             message={errorMessage(status.error)}
             onRetry={() => void status.refetch()}
           />

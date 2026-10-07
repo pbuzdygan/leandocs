@@ -78,8 +78,8 @@ All styling uses CSS custom properties (`apps/web/src/styles/tokens.css`).
 
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-disabled: #94a3b8;
+  --text-muted: #5f6f86; /* 4.5:1 on --bg-subtle too (WCAG AA) */
+  --text-disabled: #94a3b8; /* disabled controls and decoration only */
 
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
@@ -89,6 +89,11 @@ All styling uses CSS custom properties (`apps/web/src/styles/tokens.css`).
   --warning: #d97706;
   --danger: #dc2626;
   --info: #0284c7;
+  /* Status colours as text (4.5:1); the colours above are for borders and icons */
+  --success-text: #15803d;
+  --warning-text: #b45309;
+  --danger-text: #b91c1c;
+  --info-text: #0369a1;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -472,6 +477,8 @@ Light: header background `#f8fafc`, weight 600; borders `#e2e8f0`; cell padding 
 | Warning | `#d97706`                        |
 | Danger  | `#dc2626`                        |
 
+The colour is the border; the title uses the matching `--*-text` token so it stays readable (WCAG AA).
+
 ## 56. Mermaid
 
 Neutral container: border, white background, 16–24 px padding. Optional actions: _Open source_, _Fullscreen_.
@@ -832,7 +839,7 @@ Topbar may have `← →` (like a browser / VS Code) to move between recently op
 Every interactive element has a visible focus state:
 
 ```css
-outline: 2px solid rgba(37, 99, 235, 0.5);
+outline: 2px solid var(--accent); /* solid: at least 3:1 against the background (WCAG AA) */
 outline-offset: 2px;
 ```
 
@@ -841,6 +848,8 @@ Never remove the focus ring without an alternative.
 ## 97. Accessibility
 
 Minimum **WCAG AA**: keyboard navigation, focus states, sufficient contrast, ARIA labels, semantic HTML, correct heading levels, labelled form fields, status communicated by more than colour.
+
+How this is checked, the colour and focus rules for new UI, and the review results: [`docs/accessibility.md`](docs/accessibility.md).
 
 ---
 

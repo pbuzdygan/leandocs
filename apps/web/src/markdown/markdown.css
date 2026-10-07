@@ -303,7 +303,7 @@
 }
 
 .callout--info .callout__title {
-  color: var(--info);
+  color: var(--info-text);
 }
 
 .callout--tip {
@@ -311,7 +311,7 @@
 }
 
 .callout--tip .callout__title {
-  color: var(--success);
+  color: var(--success-text);
 }
 
 .callout--warning {
@@ -319,7 +319,7 @@
 }
 
 .callout--warning .callout__title {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .callout--danger {
@@ -327,7 +327,7 @@
 }
 
 .callout--danger .callout__title {
-  color: var(--danger);
+  color: var(--danger-text);
 }
 
 /* Mermaid (UI_SPEC §56) */
@@ -360,7 +360,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--danger);
+  color: var(--danger-text);
   font-size: var(--font-size-sidebar);
 }
 

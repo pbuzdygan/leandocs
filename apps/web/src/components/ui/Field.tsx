@@ -7,6 +7,12 @@ interface FieldProps {
   error?: string | null;
 }
 
+/** Hint and error ids for `aria-describedby`, so both are read when the field is focused. */
+function describedBy(id: string, hint: ReactNode, error: string | null | undefined) {
+  const ids = [hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ');
+  return ids || undefined;
+}
+
 /** Labelled text input (UI_SPEC §120; WCAG: every field has a label). */
 export function TextField({
   label,
@@ -24,7 +30,7 @@ export function TextField({
         id={id}
         className="input"
         aria-invalid={error ? true : undefined}
-        aria-describedby={hint ? `${id}-hint` : undefined}
+        aria-describedby={describedBy(id, hint, error)}
         {...input}
       />
       {hint && (
@@ -32,7 +38,11 @@ export function TextField({
           {hint}
         </div>
       )}
-      {error && <div className="field__error">{error}</div>}
+      {error && (
+        <div className="field__error" id={`${id}-error`}>
+          {error}
+        </div>
+      )}
     </div>
   );
 }
@@ -50,11 +60,25 @@ export function SelectField({
       <label className="field__label" htmlFor={id}>
         {label}
       </label>
-      <select id={id} className="input select" {...select}>
+      <select
+        id={id}
+        className="input select"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        {...select}
+      >
         {children}
       </select>
-      {hint && <div className="field__hint">{hint}</div>}
-      {error && <div className="field__error">{error}</div>}
+      {hint && (
+        <div className="field__hint" id={`${id}-hint`}>
+          {hint}
+        </div>
+      )}
+      {error && (
+        <div className="field__error" id={`${id}-error`}>
+          {error}
+        </div>
+      )}
     </div>
   );
 }

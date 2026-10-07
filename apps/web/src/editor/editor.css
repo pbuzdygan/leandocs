@@ -25,12 +25,12 @@ button.save-status:hover {
 }
 
 .save-status--warning {
-  color: var(--warning);
+  color: var(--warning-text);
   font-weight: 600;
 }
 
 .save-status--danger {
-  color: var(--danger);
+  color: var(--danger-text);
   font-weight: 600;
 }
 

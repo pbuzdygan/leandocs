@@ -71,9 +71,37 @@ function rehypeFixFragments() {
 }
 
 /**
+ * Task-list checkboxes have no label of their own; name each one after its item's text
+ * (nested lists excluded) so screen readers announce what is done (WCAG 4.1.2, P15-08).
+ */
+function rehypeTaskListLabels() {
+  return (tree: HastRoot) => {
+    visit(tree, 'element', (node: Element) => {
+      if (node.tagName !== 'li') return;
+      const checkbox = node.children.find(
+        (child): child is Element =>
+          child.type === 'element' &&
+          child.tagName === 'input' &&
+          child.properties.type === 'checkbox',
+      );
+      if (!checkbox) return;
+      const text = node.children
+        .filter((child) => !(child.type === 'element' && /^(ul|ol)$/.test(child.tagName)))
+        .map((child) => hastToString(child))
+        .join('')
+        .slice(0, 1000)
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 200);
+      checkbox.properties = { ...checkbox.properties, ariaLabel: text || 'Task' };
+    });
+  };
+}
+
+/**
  * Markdown → safe HTML tree (PROJECT_SPEC §65):
  * parse (shared) → render context → hast (raw HTML kept) → raw → **sanitize** → highlight →
- * heading ids. Nothing after sanitisation copies user-controlled markup.
+ * heading ids, task labels. Nothing after sanitisation copies user-controlled markup.
  */
 export function renderMarkdown(markdown: string, context: RenderContext): RenderedMarkdown {
   const mdast = parseMarkdown(markdown);
@@ -89,7 +117,8 @@ export function renderMarkdown(markdown: string, context: RenderContext): Render
       plainText: ['mermaid', 'text', 'txt', 'plain'],
     })
     .use(rehypeHeadingIds, headings)
-    .use(rehypeFixFragments);
+    .use(rehypeFixFragments)
+    .use(rehypeTaskListLabels);
   const tree = processor.runSync(mdast) as HastRoot;
   return { tree, headings };
 }

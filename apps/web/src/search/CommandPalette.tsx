@@ -166,7 +166,7 @@ export function CommandPalette({
           </div>
 
           {filters.length > 0 && (
-            <div className="palette__filters" aria-label="Filters">
+            <div className="palette__filters" role="group" aria-label="Filters">
               {filters.map((filter, index) => (
                 <span key={index} className="palette__filter">
                   {filter.key}: <strong>{filter.value}</strong>

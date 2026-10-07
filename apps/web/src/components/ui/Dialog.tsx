@@ -1,4 +1,4 @@
-import type { FormEvent, ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { Dialog as RadixDialog } from 'radix-ui';
 import { CloseIcon } from '../icons';
 import './ui.css';
@@ -16,6 +16,24 @@ interface DialogProps {
   width?: number;
 }
 
+/**
+ * Where focus goes back to when a dialog closes (WCAG 2.4.3). Dialogs here are opened from
+ * code, not from a Radix trigger, so Radix would drop focus on the page body. A dialog chosen
+ * from a menu was focused from a menu item that no longer exists; its menu's button stands in.
+ * Editors are skipped: focusing a text surface from code would move its caret, so they restore
+ * focus themselves.
+ */
+function returnFocusTarget(): HTMLElement | null {
+  const active = document.activeElement;
+  if (!(active instanceof HTMLElement) || active === document.body || active.isContentEditable)
+    return null;
+  const menu = active.closest<HTMLElement>('[role="menu"]');
+  const trigger = menu?.id
+    ? document.querySelector<HTMLElement>(`[aria-controls="${CSS.escape(menu.id)}"]`)
+    : null;
+  return trigger ?? active;
+}
+
 /** Modal dialog (UI_SPEC §123): white, border, 8px radius, shadow, no blur. */
 export function Dialog({
   open,
@@ -27,6 +45,13 @@ export function Dialog({
   onSubmit,
   width = 520,
 }: DialogProps) {
+  // Remember the opener while focus is still on it: at the render that opens the dialog.
+  const [opener, setOpener] = useState(() => (open ? returnFocusTarget() : null));
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setOpener(returnFocusTarget());
+  }
   const body = (
     <>
       <div className="dialog__header">
@@ -61,6 +86,15 @@ export function Dialog({
             if (preferred) {
               event.preventDefault();
               preferred.focus();
+            }
+          }}
+          onCloseAutoFocus={(event) => {
+            // Only when nothing else took focus (an editor may already have refocused itself).
+            const active = document.activeElement;
+            const unclaimed = !active || active === document.body || !active.isConnected;
+            if (unclaimed && opener?.isConnected) {
+              event.preventDefault();
+              opener.focus();
             }
           }}
         >

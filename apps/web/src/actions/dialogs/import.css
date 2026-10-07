@@ -92,7 +92,7 @@
 }
 
 .import-table__warning {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .import-table__warning svg {
@@ -108,7 +108,7 @@
 
 .import-status--ready,
 .import-status--imported {
-  color: var(--success);
+  color: var(--success-text);
 }
 
 .import-status--skipped {
@@ -116,5 +116,5 @@
 }
 
 .import-status--failed {
-  color: var(--danger);
+  color: var(--danger-text);
 }

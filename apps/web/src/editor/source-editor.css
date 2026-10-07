@@ -7,7 +7,7 @@
 }
 
 .source-editor:focus-within {
-  border-color: var(--border-strong);
+  border-color: var(--accent);
 }
 
 .source-editor .cm-editor {
@@ -38,7 +38,7 @@
 .source-editor .cm-gutters {
   border-right: 1px solid var(--border-default);
   background: var(--bg-app);
-  color: var(--text-disabled);
+  color: var(--text-muted);
 }
 
 .source-editor .cm-activeLineGutter {
@@ -65,7 +65,7 @@
 }
 
 .source-editor .cm-placeholder {
-  color: var(--text-disabled);
+  color: var(--text-muted);
 }
 
 /* Search & replace panel (top, sticky while scrolling) */
@@ -151,11 +151,11 @@
 }
 
 .source-editor .cm-code-string {
-  color: var(--success);
+  color: var(--success-text);
 }
 
 .source-editor .cm-code-number {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .source-editor .cm-code-comment {

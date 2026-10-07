@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { expect, test, type Page } from './document-fixture';
+import { expect, newParagraphAtEnd, test, type Page } from './document-fixture';
 
 /** Owner feedback 2026-10-02 on the visual editor (P6-06…P6-12, P4-12). */
 
@@ -16,23 +16,6 @@ async function openVisual(page: Page, id: string) {
   await expect(page.getByText('Loading editor…', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Code block', exact: true })).toBeEnabled();
   return editor;
-}
-
-/**
- * Puts the caret at the end of the document and starts a new paragraph. Keys pressed while the
- * editor is still settling after load can be lost (flaky on CI), so the keys are sent again until
- * the empty paragraph exists; once it does, nothing more is typed.
- */
-async function newParagraphAtEnd(page: Page) {
-  const editor = page.getByRole('textbox', { name: 'Visual document', exact: true });
-  const last = editor.locator(':scope > p').last();
-  await expect(async () => {
-    if ((await last.textContent()) !== '') {
-      await editor.press('ControlOrMeta+End');
-      await editor.press('Enter');
-    }
-    await expect(last).toHaveText('', { timeout: 1000 });
-  }).toPass({ timeout: 15_000 });
 }
 
 async function slash(page: Page, item: string) {

@@ -57,9 +57,7 @@
   z-index: 5;
 }
 
-.sidebar__resizer:hover,
-.sidebar__resizer:focus-visible {
-  outline: none;
+.sidebar__resizer:hover {
   background: linear-gradient(
     to right,
     transparent 2px,
@@ -67,6 +65,12 @@
     var(--accent-soft) 4px,
     transparent 4px
   );
+}
+
+/* Keyboard focus: the faint hover line is not enough (WCAG 1.4.11). */
+.sidebar__resizer:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .tree-row {

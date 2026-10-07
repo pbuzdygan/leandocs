@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { APP_NAME, type DocumentDto, type TreeFolderNode } from '@leandocs/shared';
+import { type DocumentDto, type TreeFolderNode } from '@leandocs/shared';
 import {
   ExpandWidthIcon,
   FileMissingIcon,
@@ -30,6 +30,7 @@ import { AttachmentPanel, attachmentKey } from '../attachments/AttachmentPanel';
 import { HastContent } from '../markdown/MarkdownView';
 import { renderMarkdown, type TocHeading } from '../markdown/pipeline';
 import { SourceView } from '../markdown/SourceView';
+import { usePageTitle } from '../utils/page-title';
 import { useNavigationState } from '../navigation/NavigationContext';
 import { folderSegments, formatDate, formatRelativeTime, readingMinutes } from '../utils/format';
 import { readPreference, writePreference } from '../utils/storage';
@@ -51,9 +52,7 @@ export function DocumentPage({ editing = false }: { editing?: boolean }) {
   const { id = '' } = useParams();
   const document = useDocument(id);
 
-  useEffect(() => {
-    window.document.title = document.data ? `${document.data.title} — ${APP_NAME}` : APP_NAME;
-  }, [document.data]);
+  usePageTitle(document.data?.title);
 
   if (document.isPending) {
     return (
@@ -79,6 +78,7 @@ export function DocumentPage({ editing = false }: { editing?: boolean }) {
         <EmptyState
           icon={<FileMissingIcon size={32} />}
           title="Document not found"
+          level={1}
           actions={<Link to="/">Back to documentation</Link>}
         >
           It may have been moved, renamed or deleted.
@@ -88,6 +88,7 @@ export function DocumentPage({ editing = false }: { editing?: boolean }) {
     return (
       <ErrorState
         title="Unable to load document"
+        level={1}
         message="The file could not be read."
         details={errorMessage(document.error)}
         onRetry={() => void document.refetch()}

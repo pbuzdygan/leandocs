@@ -18,6 +18,8 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 - Downloading large attachments no longer holds up saving, and uses less memory.
 - Renaming or moving a document that many other documents link to is about twice as fast, and importing many files is a little faster.
 - When LeanDocs starts for the first time with a large library, Docker no longer reports it as unhealthy while it reads all documents.
+- LeanDocs is easier to use with a keyboard, a screen reader or low vision. Grey and coloured text is easier to read, the keyboard focus is always clearly visible, closing a dialog puts you back where you were, checkboxes in documents and error messages in forms are read aloud, and every page has its own tab title.
+- On very narrow phone screens the top bar now fits without scrolling sideways.
 
 ### Bug fixes
 

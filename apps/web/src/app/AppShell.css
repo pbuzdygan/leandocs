@@ -50,6 +50,13 @@
   background: var(--bg-app);
 }
 
+.user-menu__name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 767px) {
   .topbar {
     padding: 0 var(--space-2);
@@ -57,5 +64,20 @@
 
   .topbar__menu {
     display: inline-flex;
+  }
+}
+
+/* Reflow down to 320 px (WCAG 1.4.10): the logo stays, the wordmark and long names give way. */
+@media (max-width: 479px) {
+  .topbar {
+    gap: var(--space-1);
+  }
+
+  .topbar .wordmark {
+    display: none;
+  }
+
+  .user-menu__name {
+    max-width: 72px;
   }
 }

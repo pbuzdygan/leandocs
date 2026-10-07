@@ -128,7 +128,7 @@
 .field__error,
 .form-error {
   font-size: var(--font-size-meta);
-  color: var(--danger);
+  color: var(--danger-text);
 }
 
 .form-error {
@@ -241,6 +241,12 @@
   background: var(--bg-subtle);
 }
 
+/* Keyboard focus needs more than the faint highlight (WCAG 2.4.7, 1.4.11). */
+.menu__item:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+
 .menu__item[data-disabled] {
   color: var(--text-disabled);
   cursor: default;
@@ -248,7 +254,7 @@
 
 .menu__item--danger,
 .menu__item--danger svg {
-  color: var(--danger);
+  color: var(--danger-text);
 }
 
 .menu__separator {
@@ -430,7 +436,7 @@
 }
 
 .tag-input__remove:hover {
-  color: var(--danger);
+  color: var(--danger-text);
 }
 
 .tag-input__input {

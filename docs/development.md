@@ -227,6 +227,7 @@ The setup token changes on server restart; reload an open setup form after resta
 - **End-to-end tests** (Playwright) live in `e2e/` and run against the production build with a fresh data directory (`.e2e-data/`):
   The `setup` project completes first run and login, then writes cookie state under ignored
   `test-results/` before the `chromium` content tests. A separate `proxy` project checks gateway-mode access on port 18766 using disposable `.e2e-proxy-data/`. A `none` project on port 18767 uses `.e2e-none-data/` to verify anonymous access and the Settings warning. Never commit this state file.
+  `e2e/accessibility.spec.ts` scans every screen with axe-core (WCAG AA) and checks focus, keyboard use and reflow; give new screens, menus and dialogs an `expectAccessible` call (see [accessibility.md](accessibility.md)).
 
   ```bash
   pnpm build

@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
-import { APP_NAME } from '@leandocs/shared';
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, useLocation } from 'react-router';
+import { usePageTitle } from '../utils/page-title';
 import './settings.css';
 import { useSession } from '../auth/Login';
 
@@ -16,9 +15,9 @@ const SECTIONS = [
 /** UI_SPEC §81: left mini-sidebar + main panel. */
 export function SettingsLayout() {
   const session = useSession();
-  useEffect(() => {
-    document.title = `Settings · ${APP_NAME}`;
-  }, []);
+  const { pathname } = useLocation();
+  const section = SECTIONS.find((item) => pathname.endsWith(`/${item.to}`));
+  usePageTitle(section ? `${section.label} · Settings` : 'Settings');
   return (
     <div className="settings">
       <nav className="settings__nav" aria-label="Settings">

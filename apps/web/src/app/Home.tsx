@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-import { APP_NAME } from '@leandocs/shared';
 import { FileIcon, ImportIcon, NewFileIcon, NewFolderIcon, SearchIcon } from '../components/icons';
 import { Link } from 'react-router';
 import { errorMessage } from '../api/client';
@@ -8,6 +6,7 @@ import { useSearchControls } from '../search/SearchContext';
 import { useContentActions } from '../actions/ContentActions';
 import { Button } from '../components/ui/Button';
 import { EmptyState, ErrorState, SkeletonLines } from '../components/ui/States';
+import { usePageTitle } from '../utils/page-title';
 import { displayFolder, folderSegments, formatRelativeTime } from '../utils/format';
 import './home.css';
 
@@ -19,15 +18,14 @@ export function Home() {
   const pins = usePins();
   const search = useSearchControls();
 
-  useEffect(() => {
-    document.title = APP_NAME;
-  }, []);
+  usePageTitle();
 
   if (tree.data && tree.data.children.length === 0) {
     return (
       <EmptyState
         icon={<FileIcon size={32} />}
         title="No documentation yet"
+        level={1}
         actions={
           <>
             <Button variant="primary" onClick={() => actions.newDocument('')}>

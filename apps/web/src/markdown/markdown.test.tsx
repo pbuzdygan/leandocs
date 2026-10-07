@@ -45,8 +45,14 @@ describe('Markdown rendering', () => {
   it('renders GFM: tables (wrapped for scrolling), task lists, strikethrough', () => {
     const out = html('| a | b |\n|---|---|\n| 1 | 2 |\n\n- [x] done\n- [ ] todo\n\n~~old~~\n');
     expect(out).toContain('<div class="table-wrap"><table>');
-    expect(out).toContain('<input type="checkbox" disabled="" checked=""/> done');
+    expect(out).toContain('<input type="checkbox" disabled="" aria-label="done" checked=""/> done');
     expect(out).toContain('<del>old</del>');
+  });
+
+  it('names task-list checkboxes after their item, without nested items', () => {
+    const out = html('- [ ] Back up **disks**\n  - [x] nested\n');
+    expect(out).toContain('aria-label="Back up disks"');
+    expect(out).toContain('aria-label="nested"');
   });
 
   it('gives headings stable ids and returns the table of contents', () => {
