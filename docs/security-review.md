@@ -1,10 +1,47 @@
-# Phase 11 security review
+# Security reviews
+
+## Second pass (P15-02)
+
+**Date:** 2026-10-07 · **Reviewer:** @claude-code · **Task:** P15-02 · **Scope:** everything added after P11-09 (content watcher and change events, import pipeline, deployment image, release workflow, version reporting) and the cost of handling untrusted content on the server's single JavaScript thread. Areas reviewed in P11-09 (authentication, sessions, MFA, CSRF, headers, attachments, rendering) have had no security-relevant changes since; their route guard and headers were re-read.
+
+This is an implementation review with regression tests and measurements, not an external penetration test.
+
+### Findings and corrections
+
+| Finding                                                        | Effect and correction                                                                                                                                                                                                                                                                                                                                                                                                          | Evidence                                                                                                                      |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| A: quadratic Markdown parsing of block containers              | Every closed quote or list item made micromark rebuild the whole event list: 400 KiB of short quotes took 106 s, and a realistic 5 MiB document exhausted the heap, which stops the server. Patched `micromark-util-edit-map` (identical output, tail-only cost; upstream is at its latest version).                                                                                                                           | `markdown/performance.test.ts` (fails without the patch); `patches/`                                                          |
+| B: unbounded parsing of untrusted content on the server thread | Crafted Markdown (runs of `*` or `[`, deep nesting) and large HTML imports blocked all requests for seconds to minutes; running out of memory killed the server; deep nesting made a document "unreadable" so it vanished from the library; a deeply nested HTML file failed the whole import. Parsing now runs in a child process with time and memory limits; such documents are read as plain text and reported (ADR-0025). | `markdown/process-analyser.test.ts`, `api/analysis-limits.test.ts`, `api/import.test.ts`, web `documents/plain-text.test.tsx` |
+| C: backtracking and repeated work on long text                 | The heading-title pattern (40 KiB line: 4.5 s, run for every document), the folded-word search pattern (long words such as hex dumps), trailing-character trimming of names and paths, unclosed tags in HTML blocks and the 200-byte name truncation (reachable through import file names) were quadratic. Rewritten in linear time with identical results.                                                                    | `text.test.ts` (hangs on the old code)                                                                                        |
+| D: quadratic search snippets                                   | FTS5 `snippet()` (and `highlight()`) are quadratic in the matches inside one document: a search over one 2 MiB document took 22 s and blocked the server. Snippets are now built in linear time from a bounded prefix, for returned results only.                                                                                                                                                                              | `search/snippet.test.ts`, `api/analysis-limits.test.ts`                                                                       |
+| E: checkout credentials in workflows                           | `actions/checkout` left the job token in `.git/config` for later steps. The Docker context already excludes `.git`; credentials are no longer persisted (defence in depth).                                                                                                                                                                                                                                                    | `.github/workflows/`                                                                                                          |
+
+### Reviewed without findings
+
+| Surface                      | Controls reviewed                                                                                                                                                                                                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| External change events (SSE) | Not a public route; origin check on connect; authorization re-checked before every event and heartbeat; bounded clients, buffer and connection lifetime; refetch instead of replaying content                                                                                                           |
+| Content watcher              | Does not follow symbolic links; events only trigger the same validated refresh as other changes                                                                                                                                                                                                         |
+| Import                       | Paths normalised and validated; hidden entries and attachment folders skipped; reserved top-level folders refused; never overwrites (`link`/`wx` creation); attachments pass the upload validation; HTML is parsed and never rendered or executed, with active URLs removed; memory per request bounded |
+| Route guard and headers      | Canonical route (not the raw URL) decides authentication; CSP and security headers unchanged                                                                                                                                                                                                            |
+| Deployment image             | Distroless, non-root, read-only root filesystem, no shell; `.git`, `.env` and data excluded from the build context                                                                                                                                                                                      |
+| Release workflow             | Runs only on releases published by the owner; tag, version and branch verified; packages permission only in the publishing job; actions pinned by commit; user-controlled values reach the shell only through environment variables; published versions are never overwritten                           |
+| Version reporting            | Health shows only name and version; no build paths or secrets                                                                                                                                                                                                                                           |
+
+### Remaining constraints
+
+- Documents beyond the limits lose link tracking and formatted display until they are simplified; Settings › Index lists them.
+- Each problematic file adds up to 20 seconds to startup or the refresh that reads it.
+- Search `path:` filters and other short inputs keep simple patterns because their length is bounded (queries: 500 characters).
+- The browser still parses ordinary large documents to display them; the server flags only those beyond the limits.
+
+## Phase 11 review
 
 **Date:** 2026-10-04 · **Reviewer:** @codex · **Task:** P11-09 · **Scope:** PROJECT_SPEC §52 and completed local MFA.
 
 This is an implementation review with regression tests, not an external penetration test or release certification. Production deployment and the broader dependency, performance, upgrade and browser audits remain in Phases 14–15. No owner data, environment or running preview was changed.
 
-## Findings and corrections
+### Findings and corrections
 
 | Finding                                            | Effect and correction                                                                                                                                                                                                                                       | Evidence                                                     |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -15,7 +52,7 @@ This is an implementation review with regression tests, not an external penetrat
 
 Authentication recovery deliberately changes the old corrupt-database and critical-test-B expectations. Those tests now verify preserved evidence and index rebuilding without discarding accounts. Fresh isolated index tests retain the filesystem-portability guarantee. No failing test was skipped or removed.
 
-## Reviewed surfaces
+### Reviewed surfaces
 
 | Surface                          | Controls reviewed                                                                                                                                                                                         | Validation                                                                               |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
@@ -31,7 +68,7 @@ Authentication recovery deliberately changes the old corrupt-database and critic
 
 The recorded verification totals and commands are in the P11-09 work-log entry in [implementation status](implementation-status.md), the single task tracker.
 
-## Trust and deployment constraints
+### Trust and deployment constraints
 
 - Complete first-run owner setup on a private connection before publishing the application. Initial setup intentionally has no existing owner credentials.
 - Ordinary Nginx Proxy Manager provides HTTPS/routing. Keep local application authentication, enable secure cookies and preserve application headers. Proxy identity authentication is a separate explicit mode, not required for NPM.
@@ -42,7 +79,7 @@ The recorded verification totals and commands are in the P11-09 work-log entry i
 - Large allowed uploads, buffered attachment downloads under the mutation lock (KI-8), per-request tree scans (KI-9), and cold-start database checks have availability costs. Phase 15 performance review must measure them; upstream request/body limits can supplement application limits.
 - This review adds no service, proxy server, remote reset endpoint or production test bypass. Schema remains version 5. Further dependency and release audits remain required by the existing plan.
 
-## References
+### References
 
 - [ADR-0019: authentication recovery](adr/0019-fail-closed-authentication-recovery.md)
 - [SQLite database header and recovery files](https://www.sqlite.org/fileformat.html)

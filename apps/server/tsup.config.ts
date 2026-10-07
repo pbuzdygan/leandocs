@@ -4,7 +4,8 @@ import { defineConfig } from 'tsup';
 const releaseVersion = process.env.LEANDOCS_VERSION;
 
 export default defineConfig({
-  entry: ['src/main.ts'],
+  // The Markdown analysis process (ADR-0025) is a separate entry next to main.js.
+  entry: { main: 'src/main.ts', 'analysis-process': 'src/markdown/analysis-process.ts' },
   format: ['esm'],
   platform: 'node',
   target: 'node24',

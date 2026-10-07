@@ -2,6 +2,23 @@
 
 What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in `AGENTS.md` §8.
 
+## [Unreleased]
+
+### New features
+
+- Nothing yet.
+
+### Improvements
+
+- Long documents, and documents with many quotes or nested lists, open, save and import much faster. Before, they could take minutes or even stop LeanDocs.
+- A document that is too large or too complex to display safely no longer slows LeanDocs down. It is shown as plain text with an explanation, can still be found by search and can be edited as Markdown source. Settings › Index lists such documents.
+- Searching is instant even when a very long document contains the search word thousands of times.
+
+### Bug fixes
+
+- Documents with very deeply nested quotes or lists no longer disappear from the library.
+- Importing an HTML page that is too complex to convert no longer makes the whole import fail. That page is skipped and the preview says why.
+
 ## 0.1.0
 
 ### New features

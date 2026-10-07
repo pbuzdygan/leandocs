@@ -2,10 +2,6 @@ import { createHash, randomUUID } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  extractHeadings,
-  extractLinks,
-  extractPlainText,
-  parseMarkdown,
   type ScanIssue,
   type TreeFolderNode,
   type TreeNode,
@@ -22,6 +18,11 @@ import { IndexStore, type IndexRecord } from './index-store.js';
 import { revisionOf } from './revision.js';
 import { containsPath, scanContent, scanContentPaths, type ScannedFile } from './scanner.js';
 import { trimTrailing } from '../text.js';
+import {
+  inlineAnalyser,
+  type AnalysisResult,
+  type MarkdownAnalyser,
+} from '../markdown/analysis.js';
 
 /**
  * Document registry backed by the SQLite index (P8-02, PROJECT_SPEC §62). Lookups are served from
@@ -41,6 +42,8 @@ export interface DocumentEntry {
   aliases: string[];
   mtimeMs: number;
   size: number;
+  /** Too large or complex to analyse (ADR-0025): why. Shown and indexed as plain text. */
+  analysisLimited?: string;
 }
 
 /** One document that appeared, changed on disk or disappeared during a refresh. */
@@ -63,6 +66,11 @@ export interface RegistryOptions {
   logger: RegistryLogger;
   /** Migrated index database; a private in-memory database is used when omitted (tests). */
   db?: Database.Database;
+  /**
+   * Parses document bodies (ADR-0025). The server passes a ProcessAnalyser with time and memory
+   * limits; the default parses in this thread without limits (tests).
+   */
+  analyser?: MarkdownAnalyser;
 }
 
 /** Index fields of a file that was just read; the id is resolved later against all files. */
@@ -74,6 +82,7 @@ interface FileMeta {
   frontmatterError?: string;
   title: string;
   aliases: string[];
+  analysisLimited?: string;
 }
 
 interface CacheEntry {
@@ -116,10 +125,15 @@ export class DocumentRegistry {
   private queue: Promise<void> = Promise.resolve();
   readonly store: IndexStore;
 
+  private readonly analyser: MarkdownAnalyser;
+  /** Assigning an id rewrites only the front matter: its body is not analysed twice. */
+  private lastAnalysis: { body: string; result: AnalysisResult } | undefined;
+
   constructor(
     private readonly contentDir: string,
     private readonly options: RegistryOptions,
   ) {
+    this.analyser = options.analyser ?? inlineAnalyser;
     let db = options.db;
     if (!db) {
       db = new Database(':memory:');
@@ -191,6 +205,7 @@ export class DocumentRegistry {
         aliases: row.aliases,
       };
       if (row.frontmatterError !== undefined) meta.frontmatterError = row.frontmatterError;
+      if (row.analysisLimited !== undefined) meta.analysisLimited = row.analysisLimited;
       this.indexed.set(row.path, { id: row.id, idSource: row.idSource });
       // A file still waiting for an id (e.g. ASSIGN_MISSING_IDS was off) must be read again.
       if (!this.needsId(meta))
@@ -292,6 +307,12 @@ export class DocumentRegistry {
           message: meta.frontmatterError,
         });
       }
+      if (meta.analysisLimited)
+        issues.push({
+          code: 'TOO_COMPLEX',
+          path: file.path,
+          message: `Shown and searched as plain text; links and headings are not indexed. The document is ${meta.analysisLimited}.`,
+        });
       let id: string | undefined;
       if (meta.frontmatterId !== undefined && meta.frontmatterId !== null) {
         if (!isValidDocumentId(meta.frontmatterId)) {
@@ -319,6 +340,7 @@ export class DocumentRegistry {
         mtimeMs: cached.mtimeMs,
         size: cached.size,
       };
+      if (meta.analysisLimited) entry.analysisLimited = meta.analysisLimited;
       byId.set(entry.id, entry);
     }
 
@@ -332,8 +354,16 @@ export class DocumentRegistry {
     this.byId = byId;
     this.folderPaths = folders;
     this.currentIssues = issues;
+    this.lastAnalysis = undefined;
     return changes;
   }
+
+  private readonly analyseBody = async (body: string): Promise<AnalysisResult> => {
+    if (this.lastAnalysis?.body === body) return this.lastAnalysis.result;
+    const result = await this.analyser.analyse(body);
+    this.lastAnalysis = { body, result };
+    return result;
+  };
 
   private needsId(meta: FileMeta): boolean {
     return (
@@ -383,7 +413,7 @@ export class DocumentRegistry {
   ): Promise<{ entry: CacheEntry; content: FileContent | undefined }> {
     try {
       const bytes = await readFile(file.absolutePath);
-      return analyse(bytes, file.path, file.mtimeMs, file.size);
+      return await analyse(this.analyseBody, bytes, file.path, file.mtimeMs, file.size);
     } catch (error) {
       return {
         entry: {
@@ -430,7 +460,13 @@ export class DocumentRegistry {
         { path: file.path, fields: Object.keys(fields) },
         'Assigned missing document id',
       );
-      return analyse(Buffer.from(updated, 'utf8'), file.path, after.mtimeMs, after.size);
+      return await analyse(
+        this.analyseBody,
+        Buffer.from(updated, 'utf8'),
+        file.path,
+        after.mtimeMs,
+        after.size,
+      );
     } catch (error) {
       issues.push({
         code: 'ID_ASSIGNMENT_FAILED',
@@ -489,12 +525,13 @@ function byPath(a: string, b: string): number {
 }
 
 /** Parses one file into its registry metadata and its index content. */
-function analyse(
+async function analyse(
+  analyseBody: (body: string) => Promise<AnalysisResult>,
   bytes: Buffer,
   relativePath: string,
   mtimeMs: number,
   size: number,
-): { entry: CacheEntry; content: FileContent } {
+): Promise<{ entry: CacheEntry; content: FileContent }> {
   const parsed = parseFile(bytes.toString('utf8'));
   const filename = path.posix.basename(relativePath);
   const meta: FileMeta = {
@@ -504,7 +541,10 @@ function analyse(
     aliases: stringList(parsed.data.aliases),
   };
   if (parsed.error) meta.frontmatterError = parsed.error;
-  const tree = parseMarkdown(parsed.body);
+  const result = await analyseBody(parsed.body);
+  // Too large or complex: still listed and searchable, with the raw text and no links.
+  const analysis = result.ok ? result.analysis : { links: [], headings: [], text: parsed.body };
+  if (!result.ok) meta.analysisLimited = result.reason;
   const folder = path.posix.dirname(relativePath);
   return {
     entry: { mtimeMs, size, meta, contentHash: revisionOf(bytes) },
@@ -522,11 +562,12 @@ function analyse(
       frontmatterError: parsed.error,
       tags: stringList(parsed.data.tags).map((tag) => tag.replace(/^#/, '')),
       aliases: meta.aliases,
-      links: extractLinks(tree),
-      headings: extractHeadings(tree).map((heading) => heading.text),
+      links: analysis.links,
+      headings: analysis.headings,
       folder: folder === '.' ? '' : folder,
       stem: documentStem(filename),
-      body: extractPlainText(tree),
+      body: analysis.text,
+      analysisLimited: meta.analysisLimited,
     },
   };
 }

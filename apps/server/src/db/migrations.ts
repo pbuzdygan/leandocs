@@ -185,6 +185,15 @@ export const MIGRATIONS: readonly Migration[] = [
       `);
     },
   },
+
+  {
+    version: 6,
+    name: 'documents read as plain text',
+    up: (db) => {
+      // Why a document was too large or complex to analyse (ADR-0025); NULL when it was not.
+      db.exec('ALTER TABLE documents ADD COLUMN analysis_limited TEXT');
+    },
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS.at(-1)?.version ?? 0;

@@ -1,15 +1,17 @@
+import type { ScanIssueCode } from '@leandocs/shared';
 import { errorMessage } from '../api/client';
 import { useIndexStatus } from '../api/queries';
 import { ErrorState, SkeletonLines } from '../components/ui/States';
 import { formatDate, formatRelativeTime } from '../utils/format';
 import { RebuildIndex } from './RebuildIndex';
 
-const ISSUE_LABELS: Record<string, string> = {
+const ISSUE_LABELS: Record<ScanIssueCode, string> = {
   FRONTMATTER_INVALID: 'Invalid front matter',
   INVALID_ID: 'Invalid id',
   DUPLICATE_ID: 'Duplicate id',
   ID_ASSIGNMENT_FAILED: 'Could not add an id',
   UNREADABLE: 'Unreadable file',
+  TOO_COMPLEX: 'Read as plain text',
 };
 
 /** Search index status, problems found in the files, and the rebuild action. */

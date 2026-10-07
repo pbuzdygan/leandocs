@@ -20,7 +20,15 @@ import { parseFile, toIsoTimestamp, updateFileFrontmatter } from '../documents/f
 import { deriveTitle, isValidDocumentId, type DocumentRegistry } from '../documents/registry.js';
 import { assertVisiblePath } from '../documents/scanner.js';
 import type { ContentSync } from '../watcher/content-sync.js';
-import { ImportItemError, UNUSED_FILE, type ImportEntry, type Importer } from './importer.js';
+import { inlineAnalyser, type MarkdownAnalyser } from '../markdown/analysis.js';
+import {
+  ImportItemError,
+  UNUSED_FILE,
+  type ConvertedDocument,
+  type ImportEntry,
+  type Importer,
+  type ScannedDocument,
+} from './importer.js';
 import { findByName, localReferences, wikiFileReferences } from './references.js';
 import { htmlImporter } from './html.js';
 import { markdownDirectoryImporter } from './markdown-directory.js';
@@ -64,6 +72,7 @@ export class ImportService {
     private readonly lock: MutationLock,
     private readonly sync: ContentSync,
     private readonly maxFileSize: number,
+    private readonly analyser: MarkdownAnalyser = inlineAnalyser,
   ) {}
 
   importer(kind: ImporterKind): Importer {
@@ -175,7 +184,9 @@ export class ImportService {
       const item: ImportItem = { source: scanned.source, status: 'ready', notes: [], warnings: [] };
       try {
         const target = await this.placement(destination, scanned.target, claimedPaths, item);
-        const converted = importer.convert(scanned);
+        // HTML conversion parses untrusted markup: it runs in the limited process (ADR-0025).
+        const converted =
+          importer.kind === 'html' ? await this.convertHtml(scanned) : importer.convert(scanned);
         if (converted.converted) item.converted = true;
         item.notes.push(...converted.notes);
         item.warnings.push(...converted.warnings);
@@ -236,6 +247,14 @@ export class ImportService {
     for (const document of documents) {
       const { item, target } = document;
       const parsed = parseFile(document.text);
+      // Parsing below runs in this thread: first make sure the body is safe to parse (ADR-0025).
+      const check = await this.analyser.analyse(parsed.body);
+      if (!check.ok) {
+        item.warnings.push(
+          `Imported unchanged without checking its links or attachments: the document is ${check.reason}`,
+        );
+        continue;
+      }
       const head = document.text.slice(0, document.text.length - parsed.body.length);
       const moves = [...renames];
       const names = new Set<string>();
@@ -350,6 +369,14 @@ export class ImportService {
       document.text = head + body;
     }
     return { used, problems };
+  }
+
+  private async convertHtml(scanned: ScannedDocument): Promise<ConvertedDocument> {
+    const result = await this.analyser.convertHtml(scanned.bytes);
+    if (result.ok) return result.converted;
+    throw new ImportItemError(
+      result.userError ? result.reason : `The file cannot be converted: it is ${result.reason}`,
+    );
   }
 
   /** The upload rules of normal attachments; content checks need the bytes (sent on import). */

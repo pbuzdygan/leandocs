@@ -40,6 +40,11 @@ export interface DocumentDto {
   updated: string | null;
   /** Set when the front matter block exists but cannot be parsed; it is preserved untouched. */
   frontmatterError?: string;
+  /**
+   * Set when the body is too large or complex to analyse safely (ADR-0025), with the reason
+   * ("larger than 2 MiB"). Show it as plain text and edit it in Source mode only.
+   */
+  analysisLimited?: string;
 }
 
 export interface CreateDocumentRequest {
@@ -176,7 +181,13 @@ export interface RestoreResponse {
 }
 
 export type ScanIssueCode =
-  'FRONTMATTER_INVALID' | 'INVALID_ID' | 'DUPLICATE_ID' | 'ID_ASSIGNMENT_FAILED' | 'UNREADABLE';
+  | 'FRONTMATTER_INVALID'
+  | 'INVALID_ID'
+  | 'DUPLICATE_ID'
+  | 'ID_ASSIGNMENT_FAILED'
+  | 'UNREADABLE'
+  /** Too large or complex to analyse; shown and searched as plain text (ADR-0025). */
+  | 'TOO_COMPLEX';
 
 export interface ScanIssue {
   code: ScanIssueCode;

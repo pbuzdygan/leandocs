@@ -420,6 +420,7 @@ function toDto(entry: DocumentEntry, source: string, bytes: Buffer): DocumentDto
     updated: typeof parsed.data.updated === 'string' ? parsed.data.updated : null,
   };
   if (parsed.error) dto.frontmatterError = parsed.error;
+  if (entry.analysisLimited) dto.analysisLimited = entry.analysisLimited;
   return dto;
 }
 

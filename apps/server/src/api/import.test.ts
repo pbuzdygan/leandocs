@@ -347,6 +347,25 @@ describe('POST /api/v1/import (Markdown directory)', () => {
     expect(markdownOnly.json().error.message).toBe('No HTML files were found in the selection');
   });
 
+  it('skips an HTML file too deeply nested to convert and imports the rest', async () => {
+    const { content, upload } = await setup();
+    const response = await upload(
+      {
+        'Deep.html': `<html><body>${'<div>'.repeat(5_000)}x</body></html>`,
+        'Fine.html': '<html><body><p>Fine</p></body></html>',
+      },
+      '?importer=html',
+    );
+    expect(response.statusCode, response.body).toBe(200);
+    const report = response.json<ImportReport>();
+    expect(report.items.find((item) => item.source === 'Deep.html')).toMatchObject({
+      status: 'skipped',
+      reason: 'The file cannot be converted: it is nested too deeply',
+    });
+    expect(await readFile(path.join(content, 'Fine.md'), 'utf8')).toContain('Fine');
+    expect((await readdir(content)).filter((name) => name.endsWith('.md'))).toEqual(['Fine.md']);
+  });
+
   it('copies referenced files next to each document and re-points only those links', async () => {
     const { content, upload } = await setup();
     const router = [
@@ -578,6 +597,23 @@ describe('POST /api/v1/import (Markdown directory)', () => {
       /^---\nid: [0-9a-f-]{36}\ntitle: Guide\ncreated: \S+\nupdated: \S+\n---\n\n/,
     );
     expect(written.slice(written.indexOf('# Guide'))).toBe(body);
+  });
+
+  it('imports a document too large to analyse unchanged, without following its links', async () => {
+    const { content, run } = await setup();
+    const line = 'Plain words.\n';
+    const body = `![pic](pic.png)\n\n${line.repeat(Math.ceil((3 * 1024 * 1024) / line.length))}`;
+    const report = await run({ 'Huge.md': body, 'pic.png': { data: png, type: 'image/png' } });
+    const item = report.items.find((entry) => entry.source === 'Huge.md')!;
+    expect(item.status).toBe('imported');
+    expect(item.warnings).toContain(
+      'Imported unchanged without checking its links or attachments: the document is larger than 2 MiB',
+    );
+    // Only the identity front matter is added; the picture stays where it was.
+    expect(await readFile(path.join(content, 'Huge.md'), 'utf8')).toMatch(
+      /^---\nid: .+\n---\n\n!\[pic\]\(pic\.png\)\n/s,
+    );
+    expect(report.summary.attachments).toBe(0);
   });
 
   it('keeps links between imported documents working when one has to be renamed', async () => {

@@ -124,12 +124,13 @@ function useRendered(document: DocumentDto) {
   const tree = useTree();
   return useMemo(
     () =>
-      renderMarkdown(document.content, {
+      // A document the server could not analyse safely is never parsed here either (ADR-0025).
+      renderMarkdown(document.analysisLimited ? '' : document.content, {
         documentPath: document.path,
         title: document.title,
         documents: collectTargets(tree.data),
       }),
-    [document.content, document.path, document.title, tree.data],
+    [document.content, document.analysisLimited, document.path, document.title, tree.data],
   );
 }
 
@@ -259,6 +260,13 @@ function DocumentLayout({
             {document.updated && ' · '}
             {readingMinutes(document.content)} min read
           </p>
+          {document.analysisLimited && (
+            <p className="doc__warning" role="note">
+              <WarningIcon size={14} aria-hidden="true" />
+              This document is {document.analysisLimited}, so it is shown as plain text and can only
+              be edited as Markdown source. Links and headings in it are not indexed.
+            </p>
+          )}
           {document.frontmatterError && (
             <p className="doc__warning" role="note">
               <WarningIcon size={14} aria-hidden="true" />
@@ -350,7 +358,11 @@ function ViewDocument({ document }: { document: DocumentDto }) {
           }}
         />
       )}
-      {mode === 'view' ? (
+      {document.analysisLimited ? (
+        <div role="tabpanel">
+          <SourceView source={document.content} plain />
+        </div>
+      ) : mode === 'view' ? (
         <div className="doc__body markdown" role="tabpanel">
           {document.content.trim() === '' ? (
             <p className="doc__empty">This document is empty.</p>
@@ -405,9 +417,11 @@ function EditDocument({ document, missing = false }: { document: DocumentDto; mi
         ...collectTargets(tree.data),
       ],
     });
-  const [editorMode, setEditorMode] = useState<'visual' | 'source'>(() =>
+  const [preferredMode, setEditorMode] = useState<'visual' | 'source'>(() =>
     readPreference<string>('editor.mode', 'visual') === 'source' ? 'source' : 'visual',
   );
+  // The visual editor parses the whole document: not for documents read as plain text.
+  const editorMode = document.analysisLimited ? 'source' : preferredMode;
   const rendered = useRendered(document);
   // The conflict dialog opens by itself on a new conflict; "Cancel" dismisses it for that revision.
   const [conflictRequested, setConflictRequested] = useState(false);
@@ -447,7 +461,7 @@ function EditDocument({ document, missing = false }: { document: DocumentDto; mi
             type="button"
             role="tab"
             aria-selected={editorMode === mode}
-            disabled={uploadCount > 0}
+            disabled={uploadCount > 0 || (mode === 'visual' && Boolean(document.analysisLimited))}
             className="doc__tab"
             onClick={() => {
               setEditorMode(mode);

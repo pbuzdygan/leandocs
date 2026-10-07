@@ -230,6 +230,9 @@ export class LinkUpdater {
         exact.push(linkKey(path.posix.basename(move.from).replace(/\.md$/i, '')));
       }
     }
+    // Documents too large or complex to parse safely keep their links (ADR-0025); their own
+    // links are not indexed, so only a moved one can appear here.
+    const limited = new Set(entries.filter((entry) => entry.analysisLimited).map((e) => e.path));
     const sources = new Set<string>();
     for (const { sourcePath } of this.registry.store.links({
       lookups: exact,
@@ -238,6 +241,9 @@ export class LinkUpdater {
       sources.add(sourcePath);
     for (const entry of entries)
       if (mapPath(entry.path, moves) !== undefined) sources.add(entry.path);
+    for (const source of limited)
+      if (sources.delete(source))
+        this.logger.warn({ path: source }, 'Links not updated: the document is read as plain text');
 
     const before: LinkableDocument[] = entries.map((entry) => ({
       id: entry.id,

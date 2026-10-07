@@ -36,6 +36,7 @@ import { ConfigError, type AppConfig } from './config/config.js';
 import { openDatabase } from './db/database.js';
 import { DocumentRegistry } from './documents/registry.js';
 import { LinkUpdater } from './documents/link-updater.js';
+import { DEFAULT_ANALYSIS_LIMITS, ProcessAnalyser } from './markdown/process-analyser.js';
 import { DocumentService } from './documents/service.js';
 import { AppError } from './errors.js';
 import { ensureDataDirs } from './filesystem/data-dir.js';
@@ -147,14 +148,21 @@ export async function buildApp(
     }
   });
   let watcher: ContentWatcher | undefined;
+  // Markdown is parsed in a child process with time and memory limits (ADR-0025).
+  const analyser = new ProcessAnalyser(
+    DEFAULT_ANALYSIS_LIMITS,
+    app.log.child({ module: 'markdown' }),
+  );
   app.addHook('onClose', async () => {
     await watcher?.close();
+    await analyser.close();
     db.close();
   });
   const registry = new DocumentRegistry(contentDir, {
     assignMissingIds: config.assignMissingIds,
     logger: app.log.child({ module: 'registry' }),
     db,
+    analyser,
   });
   await registry.refresh();
   app.log.info({ contentDir, documents: registry.list().length }, 'Content loaded');
@@ -211,7 +219,7 @@ export async function buildApp(
   });
   await app.register(importRoutes, {
     prefix: API_BASE_PATH,
-    imports: new ImportService(contentDir, registry, lock, sync, config.maxUploadSize),
+    imports: new ImportService(contentDir, registry, lock, sync, config.maxUploadSize, analyser),
     maxFileSize: config.maxUploadSize,
   });
   await app.register(healthRoutes, { prefix: API_BASE_PATH });

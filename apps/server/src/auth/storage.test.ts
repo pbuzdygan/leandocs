@@ -2,7 +2,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import { describe, expect, it } from 'vitest';
 import { DATABASE_FILE, openDatabase } from '../db/database.js';
-import { migrate, MIGRATIONS } from '../db/migrations.js';
+import { LATEST_SCHEMA_VERSION, migrate, MIGRATIONS } from '../db/migrations.js';
 import { IndexStore } from '../documents/index-store.js';
 import { makeTempDir, silentLogger } from '../test/temp-dir.js';
 import { hashPassword, verifyPassword } from './password.js';
@@ -25,7 +25,7 @@ describe('authentication storage', () => {
     }
     const upgraded = openDatabase(dir, silentLogger);
     try {
-      expect(upgraded.pragma('user_version', { simple: true })).toBe(5);
+      expect(upgraded.pragma('user_version', { simple: true })).toBe(LATEST_SCHEMA_VERSION);
       expect(upgraded.prepare('SELECT title FROM documents').get()).toEqual({ title: 'Guide' });
       expect(upgraded.prepare('SELECT value FROM settings').get()).toEqual({ value: 'dark' });
       expect(upgraded.prepare('SELECT document_id FROM pins').get()).toEqual({
