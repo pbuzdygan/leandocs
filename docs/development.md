@@ -254,7 +254,22 @@ The image runs as UID/GID 1000 and stores everything under the `/data` volume. I
 
 ## Versions
 
-The root `package.json` `version` is the only version source. It reaches the code as `APP_VERSION` from `@leandocs/shared`; the server reports it in `GET /api/v1/health` and its first log line, and the web app shows it with the server's version in Settings › About. To change it, set the same `version` in the root, `apps/server`, `apps/web` and `packages/shared` `package.json` files (a test enforces this). Release tags are `v<version>`.
+The root `package.json` `version` is the only version source. It reaches the code as `APP_VERSION` from `@leandocs/shared`; the server reports it in `GET /api/v1/health` and its first log line, and the web app shows it with the server's version in Settings › About. To change it, set the same `version` in the root, `apps/server`, `apps/web` and `packages/shared` `package.json` files (a test enforces this). Release builds can override the reported version with `LEANDOCS_VERSION` (Docker build argument and environment variable of `pnpm build`), which dev images use to report `devX.Y.Z`.
+
+## Releasing
+
+Images are published to GHCR only by the _Release_ workflow (`.github/workflows/release.yml`), when the owner publishes a GitHub release (D-51). Pushes and pull requests never publish.
+
+| Release tag | Commit must be on | Image tags               | Reported version |
+| ----------- | ----------------- | ------------------------ | ---------------- |
+| `X.Y.Z`     | `main`            | `X.Y.Z`, `latest`        | `X.Y.Z`          |
+| `devX.Y.Z`  | `dev`             | `devX.Y.Z`, `dev_latest` | `devX.Y.Z`       |
+
+1. Set `X.Y.Z` in every `package.json` (see _Versions_) and commit it to the branch.
+2. On GitHub, create a release with the new tag on that branch and publish it.
+3. The workflow verifies the code, checks the tag (`scripts/release-tags.mjs`), refuses to overwrite an existing `X.Y.Z`/`devX.Y.Z` image, starts the image and checks its reported version, then pushes `linux/amd64` and `linux/arm64` images.
+
+The first push creates the `leandocs` package on GHCR as private; make it public in the package settings so `docker compose pull` works without logging in.
 
 ## Layout
 

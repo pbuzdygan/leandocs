@@ -38,6 +38,17 @@ docker compose up -d
 docker compose ps        # STATUS shows "healthy" after a few seconds
 ```
 
+Published image tags:
+
+| Tag                     | What it is                                                     |
+| ----------------------- | -------------------------------------------------------------- |
+| `1.0.0` (any `X.Y.Z`)   | A stable release. Pin this in `.env`.                          |
+| `latest`                | The newest stable release.                                     |
+| `dev1.1.0` (`devX.Y.Z`) | A development preview of the next version. Not for production. |
+| `dev_latest`            | The newest development preview.                                |
+
+Stable and development tags never replace each other: `latest` is always a stable release.
+
 > Before the first published release, build the image from a checkout of the repository instead: `docker compose -f compose_local_build.yaml up --build -d`. It uses the same `.env` and data folder.
 
 To use existing Markdown files, copy them into `data/content/` before or after the first start, or use **Import** in the app.
