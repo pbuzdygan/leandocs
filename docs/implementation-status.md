@@ -5,7 +5,7 @@
 |                   |                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------- |
 | **Current phase** | **Phase 13 — Import / migration**                                               |
-| **Last updated**  | 2026-10-07 by @claude-code (P13-01)                                             |
+| **Last updated**  | 2026-10-07 by @claude-code (P13-02)                                             |
 | **Spec versions** | PROJECT_SPEC 0.4 · UI_SPEC 1.8                                                  |
 | **Branding**      | Final and applied: **Folded Stack** mark + Inter wordmark; see `BRAND_SPEC.md`. |
 
@@ -17,7 +17,7 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 
 > Rewrite this block at the end of every session.
 
-1. **Phase 13 — Import / migration. Next: P13-02** import UI + preview (UI_SPEC §134–135). The server side exists (P13-01, ADR-0022): `POST /api/v1/import?importer=markdown-directory&destination=…&dryRun=true` with one multipart `files` part per selected file (file name = `webkitRelativePath`) returns an `ImportReport` (items with `status`, `destination`, `reason`, `notes`, `warnings`, `documentId`; summary). Send the same request without `dryRun` to import, then invalidate tree/search queries (the app's own writes are not sent as SSE events). Filter hidden folders such as `.git/` in the browser before uploading, to avoid sending thousands of skipped files. Respect `MAX_IMPORT_FILES`. Attachments are skipped for now (P13-06). Phase 12 is closed. E2E-05 and critical test C are covered by `e2e/external-changes.spec.ts` and `e2e/events.spec.ts`. Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups. **Owner deployment plan remains:** external Nginx Proxy Manager for HTTPS/routing, `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true`, optional `PUBLIC_ORIGIN`. Production deployment/release validation remain Phases 14–15.
+1. **Phase 13 — Import / migration. Next: P13-03** HTML importer with conversion report (PROJECT_SPEC §68). Add an `Importer` (`reads`/`detect`/`scan`/`convert`, ADR-0022) for `.html` files and register it in `IMPORTERS` (shared) and `import/service.ts`. `convert` must produce safe Markdown and report elements that could not be converted (as item warnings). Original files are never deleted (they are uploads). A converter dependency needs the §104 checklist (ADR if significant). In the web dialog, add the "HTML files" option (UI_SPEC §134) and send `.html` content (`api.importFiles` currently sends content only for `.md`). P13-01/P13-02 are done: `POST /api/v1/import` + import dialog (Home › Import, empty state › Import Markdown), with preview → import → result; `e2e/import.spec.ts` covers the Phase 13 acceptance (a directory imported without copying by hand). Attachments: P13-06. Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups. **Owner deployment plan remains:** external Nginx Proxy Manager for HTTPS/routing, `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true`, optional `PUBLIC_ORIGIN`. Production deployment/release validation remain Phases 14–15.
 2. **Phase 10 summary:** templates (`templates/`, `GET /templates`, `template` on create), properties endpoint + `GET /tags`, pins (migration 3, `/pins`), web Info tab, TagInput, tag filter, Pinned sidebar/Home. See `docs/architecture.md` _Templates, properties and pins_.
 3. **Schema:** current version 5. Never edit migrations 1–5; add new ones. New password hashes use native Node Argon2id (64 MiB, three passes, parallelism one), and existing scrypt hashes upgrade after successful password verification (ADR-0011/0018). Session tokens are random, stored only as digests; cookies are HttpOnly/SameSite=Strict, and HTTPS proxy deployments must set `SESSION_COOKIE_SECURE=true` (ADR-0012). Keep the minimum 15-character password and 1024 UTF-8 byte maximum. One in-flight login bounds hash concurrency; legacy verification still uses ~128 MiB. Require Node >=24.7.0. Local browser tests create the account, sign in and reuse an ignored cookie-state file. A separate proxy project uses port 18766 and disposable `.e2e-proxy-data/`; The none project uses port 18767 and disposable `.e2e-none-data/`; the isolated MFA project uses port 18769 and `.e2e-mfa-data/`; `.e2e-data/` remains ordinary local-only. All test data/browser artifacts are ignored by Git/tooling and excluded from Docker build context. Await authenticated UI readiness before sending shortcuts.
 4. Open small issues: KI-7, KI-8 (attachments), KI-12 (intermittent unit test under full-suite load), KI-10 (raw HTML / cross-document attachment links on move). KI-9 is resolved by P12-02 for healthy-watcher reads; broader performance measurements remain P15-07.
@@ -227,7 +227,7 @@ Owner feedback 2026-10-02 (testing the preview), done before Phase 9 on the owne
 ### Phase 13 — Import / migration
 
 - [x] P13-01 Importer interface (§66) + generic Markdown directory importer (§67) — @claude-code 2026-10-07 · `import/{importer,markdown-directory,service}.ts`, `api/import.ts`, shared `imports.ts`; tests: `api/import.test.ts`; ADR-0022
-- [ ] P13-02 Import UI + preview (UI_SPEC §134–135)
+- [x] P13-02 Import UI + preview (UI_SPEC §134–135) — @claude-code 2026-10-07 · `actions/dialogs/ImportDialog.tsx` (+ `import.css`), Home/empty-state entry points, `api.importFiles`; tests: web `actions/import.test.tsx`, `e2e/import.spec.ts`. HTML option arrives with P13-03
 - [ ] P13-03 HTML importer with conversion report (§68)
 - [ ] P13-04 Obsidian vault import (§70)
 - [ ] P13-05 Poznote adapter, only if needed (§69)
@@ -387,6 +387,15 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 ---
 
 ## Work log
+
+### 2026-10-07 · @claude-code · P13-02
+
+- **Done:** Import dialog (UI_SPEC §134–135). "Import documentation" offers Markdown directory or Markdown files, plus an "Import into" folder. Selecting files immediately shows the "Import preview" with Source / Destination / Status and per-item reasons, notes and warnings, and a summary. Import re-sends the selection, then "Import finished" shows the result and a toast. Done opens a single imported document or reveals the first one. Entry points: Home quick action Import, and the empty state's "Import Markdown" with the spec text (§73). Hidden folders (`.git/`, `.obsidian/`) are left out in the browser and counted; non-Markdown files are sent as empty parts (listed, not uploaded). Errors appear inside the dialog.
+- **Files:** `apps/web/src/actions/dialogs/{ImportDialog.tsx,import.css}`, `actions/ContentActions.tsx`, `app/Home.tsx`, `api/client.ts`, `components/icons.tsx` (ImportIcon), `test/render.tsx` (FormData capture), `actions/import.test.tsx`, `e2e/import.spec.ts`, CHANGELOG, architecture, status.
+- **Verified:** lint ✔ typecheck ✔ test ✔ (589) build ✔; full E2E ✔ (44). The new browser test imports a real directory through the Select files chooser into a chosen folder. It checks the preview (writes nothing), the result, the file on disk (front matter kept, id added), the tree and search. Preview layout checked by screenshot.
+- **Decisions:** The HTML option is not shown until P13-03 implements it, so the UI offers no unavailable choices.
+- **Issues/notes:** none new.
+- **Next:** P13-03 HTML importer with conversion report.
 
 ### 2026-10-07 · @claude-code · P13-01
 

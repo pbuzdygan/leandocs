@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { APP_NAME } from '@leandocs/shared';
-import { FileIcon, NewFileIcon, NewFolderIcon, SearchIcon } from '../components/icons';
+import { FileIcon, ImportIcon, NewFileIcon, NewFolderIcon, SearchIcon } from '../components/icons';
 import { Link } from 'react-router';
 import { errorMessage } from '../api/client';
 import { usePins, useRecentDocuments, useTree } from '../api/queries';
@@ -29,12 +29,21 @@ export function Home() {
         icon={<FileIcon size={32} />}
         title="No documentation yet"
         actions={
-          <Button variant="primary" onClick={() => actions.newDocument('')}>
-            New document
-          </Button>
+          <>
+            <Button variant="primary" onClick={() => actions.newDocument('')}>
+              New document
+            </Button>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => actions.importDocuments('')}
+            >
+              Import Markdown
+            </button>
+          </>
         }
       >
-        Create your first document, or copy existing Markdown files into the documentation folder.
+        Create your first document or import an existing Markdown directory.
       </EmptyState>
     );
   }
@@ -56,6 +65,9 @@ export function Home() {
           </Button>
           <Button onClick={() => search.openSearch()}>
             <SearchIcon size={15} /> Search
+          </Button>
+          <Button onClick={() => actions.importDocuments('')}>
+            <ImportIcon size={15} /> Import
           </Button>
         </div>
       </section>

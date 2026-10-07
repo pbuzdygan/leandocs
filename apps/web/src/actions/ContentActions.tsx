@@ -7,6 +7,7 @@ import { useNotify } from '../components/ui/Toast';
 import { useNavigationState } from '../navigation/NavigationContext';
 import { displayFolder } from '../utils/format';
 import { DeleteDialog } from './dialogs/DeleteDialog';
+import { ImportDialog } from './dialogs/ImportDialog';
 import { MoveDialog } from './dialogs/MoveDialog';
 import { NewDocumentDialog } from './dialogs/NewDocumentDialog';
 import { NewFolderDialog } from './dialogs/NewFolderDialog';
@@ -16,6 +17,7 @@ import { targetLabel, type ItemTarget } from './targets';
 type DialogState =
   | { type: 'new-document'; folder: string }
   | { type: 'new-folder'; parent: string }
+  | { type: 'import'; folder: string }
   | { type: 'rename' | 'move' | 'delete'; target: ItemTarget }
   | null;
 
@@ -23,6 +25,8 @@ export interface ContentActions {
   editDocument: (id: string) => void;
   newDocument: (folder?: string) => void;
   newFolder: (parent?: string) => void;
+  /** UI_SPEC §134: import Markdown into `folder` (default: the content root). */
+  importDocuments: (folder?: string) => void;
   rename: (target: ItemTarget) => void;
   move: (target: ItemTarget) => void;
   remove: (target: ItemTarget) => void;
@@ -89,6 +93,7 @@ export function ContentActionsProvider({ children }: { children: ReactNode }) {
       editDocument: (id) => void navigate(`/doc/${encodeURIComponent(id)}/edit`),
       newDocument: (folder = '') => setDialog({ type: 'new-document', folder }),
       newFolder: (parent = '') => setDialog({ type: 'new-folder', parent }),
+      importDocuments: (folder = '') => setDialog({ type: 'import', folder }),
       rename: (target) => setDialog({ type: 'rename', target }),
       move: (target) => setDialog({ type: 'move', target }),
       remove: (target) => setDialog({ type: 'delete', target }),
@@ -137,6 +142,7 @@ export function ContentActionsProvider({ children }: { children: ReactNode }) {
         <NewDocumentDialog folder={dialog.folder} onClose={close} />
       )}
       {dialog?.type === 'new-folder' && <NewFolderDialog parent={dialog.parent} onClose={close} />}
+      {dialog?.type === 'import' && <ImportDialog folder={dialog.folder} onClose={close} />}
       {dialog?.type === 'rename' && <RenameDialog target={dialog.target} onClose={close} />}
       {dialog?.type === 'move' && <MoveDialog target={dialog.target} onClose={close} />}
       {dialog?.type === 'delete' && <DeleteDialog target={dialog.target} onClose={close} />}

@@ -20,6 +20,7 @@ import {
   type DocumentDto,
   type FolderDto,
   type HealthResponse,
+  type ImportReport,
   type IndexRebuildStatus,
   type IndexStatusResponse,
   type MoveDocumentRequest,
@@ -135,6 +136,21 @@ export const api = {
   },
   deleteAttachment: (id: string, name: string) =>
     request<void>(`/documents/${enc(id)}/attachments/${enc(name)}`, { method: 'DELETE' }),
+  /** ADR-0022: the same upload previews (`dryRun`) or imports. Paths are relative to the selection. */
+  importFiles: (
+    files: readonly ImportSelection[],
+    options: { destination: string; dryRun: boolean },
+  ) => {
+    const body = new FormData();
+    for (const { path, file } of files)
+      // Only Markdown content is read by the importer; other files are listed by name only.
+      body.append('files', isMarkdownPath(path) ? file : new Blob([]), path);
+    const query = `destination=${enc(options.destination)}&dryRun=${options.dryRun}`;
+    return request<ImportReport>(`/import?importer=markdown-directory&${query}`, {
+      method: 'POST',
+      body,
+    });
+  },
   health: () => request<HealthResponse>('/health'),
   templates: () => request<TemplatesResponse>('/templates'),
   pins: () => request<PinsResponse>('/pins'),
@@ -173,6 +189,16 @@ export const api = {
   deleteFolder: (path: string) =>
     request<DeleteFolderResponse>(`/folders?path=${enc(path)}`, { method: 'DELETE' }),
 };
+
+/** One selected file and its path inside the selection (`Notes/Router.md`). */
+export interface ImportSelection {
+  path: string;
+  file: Blob;
+}
+
+export function isMarkdownPath(path: string): boolean {
+  return /[^/]\.md$/i.test(path);
+}
 
 /** A user-facing message for any error thrown by the API layer. */
 export function errorMessage(error: unknown): string {

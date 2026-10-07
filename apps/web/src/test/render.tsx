@@ -26,7 +26,12 @@ export function mockApi(routes: Record<string, unknown> | Handler) {
     const url = typeof input === 'string' ? input : input.toString();
     const path = url.replace(/^\/api\/v1/, '');
     const method = init?.method ?? 'GET';
-    const body = typeof init?.body === 'string' ? JSON.parse(init.body) : undefined;
+    const body =
+      typeof init?.body === 'string'
+        ? JSON.parse(init.body)
+        : init?.body instanceof FormData
+          ? init.body
+          : undefined;
     const request = { method, path, body };
     requests.push(request);
     const configured =

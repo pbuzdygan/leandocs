@@ -6,6 +6,8 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### New features
 
+- **Import Markdown.** Bring an existing folder of Markdown notes, or individual Markdown files, into your documentation from the start page. A preview shows where each file will go and lists anything to check before you import. Folders and file contents are kept, existing documents are never overwritten, and pictures and other non-Markdown files are listed but not imported yet.
+
 - Documents refresh automatically when their files change elsewhere. While editing, your text is preserved so you can review the other version, reload it or save your work as a copy.
 
 - Protect local sign-in with an authenticator app and single-use recovery codes from Settings › Security.

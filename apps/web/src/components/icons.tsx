@@ -2,6 +2,7 @@ import {
   IconAlertCircle,
   IconAlertTriangle,
   IconFolderSymlink,
+  IconFileImport,
   IconBold,
   IconBraces,
   IconCheck,
@@ -108,6 +109,7 @@ export const TrashIcon = icon(IconTrash, 'TrashIcon');
 export const RestoreIcon = icon(IconRestore, 'RestoreIcon');
 export const CopyIcon = icon(IconCopy, 'CopyIcon');
 export const DownloadIcon = icon(IconDownload, 'DownloadIcon');
+export const ImportIcon = icon(IconFileImport, 'ImportIcon');
 export const LinkIcon = icon(IconLink, 'LinkIcon');
 export const AttachmentIcon = icon(IconPaperclip, 'AttachmentIcon');
 export const RefreshIcon = icon(IconRefresh, 'RefreshIcon');
