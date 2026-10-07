@@ -1,4 +1,5 @@
 import { AppError } from '../errors.js';
+import { trimTrailing } from '../text.js';
 
 /** Human-readable file names (PROJECT_SPEC §10): sanitised, never UUIDs. */
 
@@ -28,16 +29,20 @@ export function sanitizeName(input: string): string {
     .replace(/[/\\:*?"<>|]/g, '-')
     .trim()
     // Leading dots would hide the file; trailing dots/spaces are invalid on Windows.
-    .replace(/^\.+/, '')
-    .replace(/[. ]+$/, '');
+    .replace(/^\.+/, '');
+  name = trimTrailing(name, '. ');
 
   if (name === '') throw new InvalidNameError('name is empty');
   if (RESERVED.test(name)) throw new InvalidNameError(`"${name}" is a reserved name`);
   if (name.toLowerCase().endsWith(ASSETS_SUFFIX)) {
     throw new InvalidNameError(`names ending in "${ASSETS_SUFFIX}" are reserved for attachments`);
   }
-  while (Buffer.byteLength(name, 'utf8') > MAX_NAME_BYTES) {
-    name = Array.from(name).slice(0, -1).join('').trimEnd();
+  let bytes = Buffer.byteLength(name, 'utf8');
+  if (bytes > MAX_NAME_BYTES) {
+    // Drop whole characters from the end in one pass (re-measuring per step was quadratic).
+    const characters = Array.from(name);
+    while (bytes > MAX_NAME_BYTES) bytes -= Buffer.byteLength(characters.pop()!, 'utf8');
+    name = characters.join('').trimEnd();
   }
   return name;
 }

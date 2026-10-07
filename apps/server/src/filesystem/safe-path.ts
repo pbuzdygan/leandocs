@@ -1,6 +1,7 @@
 import { mkdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { AppError } from '../errors.js';
+import { trimTrailing } from '../text.js';
 
 /**
  * Security-critical: every user-supplied path goes through this module (PROJECT_SPEC §10, §52).
@@ -24,7 +25,7 @@ export function normalizeRelativePath(input: string): string {
   if (input.startsWith('/') || /^[a-zA-Z]:/.test(input)) {
     throw new UnsafePathError('absolute paths are not allowed');
   }
-  const trimmed = input.replace(/\/+$/, '');
+  const trimmed = trimTrailing(input, '/');
   if (trimmed === '' || trimmed === '.') return '';
   const segments = trimmed.split('/');
   for (const segment of segments) {

@@ -172,7 +172,8 @@ export function extractPlainText(tree: Root): string {
       node.type === 'code'
         ? node.value
         : node.type === 'html'
-          ? node.value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+          ? // `[^<>]` keeps this linear when a tag is never closed.
+            node.value.replace(/<[^<>]*>/g, ' ').replace(/\s+/g, ' ')
           : toString(node, { includeHtml: false });
     if (text.trim()) lines.push(text.trim());
     return SKIP;

@@ -21,6 +21,7 @@ import { parseFile, toIsoTimestamp, updateFileFrontmatter } from './frontmatter.
 import { IndexStore, type IndexRecord } from './index-store.js';
 import { revisionOf } from './revision.js';
 import { containsPath, scanContent, scanContentPaths, type ScannedFile } from './scanner.js';
+import { trimTrailing } from '../text.js';
 
 /**
  * Document registry backed by the SQLite index (P8-02, PROJECT_SPEC §62). Lookups are served from
@@ -97,8 +98,11 @@ export function provisionalId(relativePath: string): string {
 /** Title precedence: front matter `title` → first `# H1` → file name. */
 export function deriveTitle(data: Record<string, unknown>, body: string, fileName: string): string {
   if (typeof data.title === 'string' && data.title.trim() !== '') return data.title.trim();
-  const h1 = /^#[ \t]+(.+?)[ \t#]*$/m.exec(body);
-  if (h1?.[1]) return h1[1].trim();
+  // Each line is matched once; the closing `#`s are trimmed without a backtracking pattern.
+  for (const heading of body.matchAll(/^#[ \t]+(.*)$/gm)) {
+    const text = trimTrailing(heading[1]!, ' \t#').trim();
+    if (text) return text;
+  }
   return documentStem(fileName);
 }
 
