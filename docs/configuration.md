@@ -132,4 +132,4 @@ PUBLIC_ORIGIN=https://docs.example.com
 AUTH_MODE=local
 ```
 
-In Nginx Proxy Manager, add a proxy host for `docs.example.com` that forwards to `http://<docker-host>:8080`, and enable SSL with "Force SSL". The deployment guide (`docs/deployment.md`) has the full steps.
+In Nginx Proxy Manager, add a proxy host for `docs.example.com` that forwards to `http://<docker-host>:8080`, and enable SSL with "Force SSL". The [deployment guide](deployment.md) has the full steps.
