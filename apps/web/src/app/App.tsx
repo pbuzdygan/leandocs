@@ -26,6 +26,9 @@ const IndexSettings = lazy(() =>
 const SecuritySettings = lazy(() =>
   import('../settings/SecuritySettings').then((module) => ({ default: module.SecuritySettings })),
 );
+const AboutSettings = lazy(() =>
+  import('../settings/AboutSettings').then((module) => ({ default: module.AboutSettings })),
+);
 
 const DocumentPage = lazy(() =>
   import('../documents/DocumentPage').then((module) => ({ default: module.DocumentPage })),
@@ -78,6 +81,7 @@ export function AppRoutes() {
               <Route path="index" element={<IndexSettings />} />
               <Route path="links" element={<BrokenLinksSettings />} />
               <Route path="security" element={<SecuritySettings />} />
+              <Route path="about" element={<AboutSettings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Route>

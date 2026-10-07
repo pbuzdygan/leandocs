@@ -1,5 +1,6 @@
 {
   "name": "leandocs",
+  "version": "0.0.0",
   "private": true,
   "description": "LeanDocs \u2014 Documentation without the bloat.",
   "type": "module",

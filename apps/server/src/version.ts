@@ -1,3 +1,4 @@
-import packageJson from '../package.json' with { type: 'json' };
+import { APP_VERSION } from '@leandocs/shared';
 
-export const SERVER_VERSION: string = packageJson.version;
+/** Server version; baked in from the root `package.json` at build time (see `@leandocs/shared`). */
+export const SERVER_VERSION: string = APP_VERSION;

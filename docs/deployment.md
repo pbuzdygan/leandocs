@@ -164,6 +164,8 @@ docker compose up -d
 
 Database changes are applied automatically when the new version starts ([how](migrations.md)). They only go forward: an older version refuses to start on a database that a newer one has upgraded. To go back to the previous version, restore the backup taken before the update and set the old tag again.
 
+Settings › About shows which version is running (the server's health check at `/api/v1/health` and the first line of `docker compose logs leandocs` show it too). If it lists a different server and frontend version, an open browser tab still has the old version: reload the page.
+
 ## Backup and restore
 
 Everything lives in `./data` ([what is inside](configuration.md#storage)). Stop the container for a moment, so the database files are consistent, then archive the folder:

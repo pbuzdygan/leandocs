@@ -1,5 +1,6 @@
 import { stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { APP_VERSION } from '@leandocs/shared';
 import { describe, expect, it } from 'vitest';
 import { buildApp } from './app.js';
 import { loadConfig } from './config/config.js';
@@ -14,7 +15,7 @@ describe('app', () => {
     const app = await buildApp(await testConfig());
     const res = await app.inject({ method: 'GET', url: '/api/v1/health' });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ status: 'ok', name: 'LeanDocs' });
+    expect(res.json()).toEqual({ status: 'ok', name: 'LeanDocs', version: APP_VERSION });
     await app.close();
   });
 

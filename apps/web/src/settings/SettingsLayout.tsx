@@ -10,6 +10,7 @@ const SECTIONS = [
   { to: 'index', label: 'Index' },
   { to: 'links', label: 'Broken links' },
   { to: 'security', label: 'Security' },
+  { to: 'about', label: 'About' },
 ];
 
 /** UI_SPEC §81: left mini-sidebar + main panel. */

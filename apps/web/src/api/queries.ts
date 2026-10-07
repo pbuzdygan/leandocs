@@ -16,6 +16,7 @@ export const queryKeys = {
   search: (q: string) => ['search', q] as const,
   searches: ['search'] as const,
   indexStatus: ['index-status'] as const,
+  health: ['health'] as const,
   templates: ['templates'] as const,
   tags: ['tags'] as const,
   pins: ['pins'] as const,
@@ -88,6 +89,11 @@ export function useSearch(q: string, limit: number) {
 }
 
 /** Index and storage status; polls while a rebuild is running (UI_SPEC §87 progress). */
+/** Server name and version (Settings › About). */
+export function useHealth() {
+  return useQuery({ queryKey: queryKeys.health, queryFn: api.health });
+}
+
 export function useIndexStatus() {
   return useQuery({
     queryKey: queryKeys.indexStatus,

@@ -252,6 +252,10 @@ docker run --rm -p 8080:8080 -v "$PWD/data:/data" leandocs
 
 The image runs as UID/GID 1000 and stores everything under the `/data` volume. Its healthcheck calls `/api/v1/health`. The runtime is distroless (only Node.js, no shell; [ADR-0024](adr/0024-distroless-runtime-image.md)). Use `docker logs`, look at the data on the host, or run `docker exec <container> /nodejs/bin/node -e "…"`; `docker exec … sh` does not exist.
 
+## Versions
+
+The root `package.json` `version` is the only version source. It reaches the code as `APP_VERSION` from `@leandocs/shared`; the server reports it in `GET /api/v1/health` and its first log line, and the web app shows it with the server's version in Settings › About. To change it, set the same `version` in the root, `apps/server`, `apps/web` and `packages/shared` `package.json` files (a test enforces this). Release tags are `v<version>`.
+
 ## Layout
 
 See `AGENTS.md` §6 and PROJECT_SPEC §56–58.
