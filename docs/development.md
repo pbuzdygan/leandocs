@@ -250,7 +250,7 @@ docker build -f docker/Dockerfile -t leandocs .
 docker run --rm -p 8080:8080 -v "$PWD/data:/data" leandocs
 ```
 
-The image runs as user `node` and stores everything under the `/data` volume. Its healthcheck calls `/api/v1/health`.
+The image runs as UID/GID 1000 and stores everything under the `/data` volume. Its healthcheck calls `/api/v1/health`. The runtime is distroless (only Node.js, no shell; [ADR-0024](adr/0024-distroless-runtime-image.md)). Use `docker logs`, look at the data on the host, or run `docker exec <container> /nodejs/bin/node -e "…"`; `docker exec … sh` does not exist.
 
 ## Layout
 

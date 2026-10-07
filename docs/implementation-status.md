@@ -5,7 +5,7 @@
 |                   |                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------- |
 | **Current phase** | **Phase 14 — Deployment**                                                       |
-| **Last updated**  | 2026-10-07 by @claude-code (Phase 13 closed)                                    |
+| **Last updated**  | 2026-10-07 by @claude-code (P14-01)                                             |
 | **Spec versions** | PROJECT_SPEC 0.4 · UI_SPEC 1.8                                                  |
 | **Branding**      | Final and applied: **Folded Stack** mark + Inter wordmark; see `BRAND_SPEC.md`. |
 
@@ -17,7 +17,7 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 
 > Rewrite this block at the end of every session.
 
-1. **Phase 14 — Deployment. Next: P14-01** production Dockerfile hardening (image size, `NODE_ENV`, native deps; KI-4: the image is ~350 MB). Then P14-02 production `compose.yaml` (keep the local-build preview as `compose.dev.yaml` or similar), P14-03 `docs/configuration.md`, P14-04 `docs/deployment.md` including reverse proxies, P14-05 DB migration strategy, P14-06 version reporting and P14-07 release workflow to GHCR (OQ-2 is resolved: `pbuzdygan/leandocs`). **Owner deployment plan:** external Nginx Proxy Manager for HTTPS/routing, `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true`, optional `PUBLIC_ORIGIN`. Phase 13 is closed: import of Markdown directories/files, HTML and Obsidian vaults with attachments (ADR-0022 + amendments, ADR-0023, D-48; OQ-4 about `> [!note]` callouts is an open enhancement). New server dependencies from P13-03 are pure JavaScript. Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups.
+1. **Phase 14 — Deployment. Next: P14-02** production `compose.yaml`: published image (`ghcr.io/pbuzdygan/leandocs`, tag strategy with P14-07), healthcheck, `/data` volume, environment. Keep the current local-build preview as `compose.dev.yaml` (or similar) and update its header and `docs/development.md`. The image is now distroless (ADR-0024): UID 1000, no shell, healthcheck in the image, node is the entrypoint (`CMD ["--enable-source-maps", "dist/main.js"]`). Then P14-03 `docs/configuration.md`, P14-04 `docs/deployment.md` (reverse proxies incl. Nginx Proxy Manager), P14-05 DB migration strategy, P14-06 version reporting (health still reports `0.0.0`), P14-07 release workflow to GHCR (pin base images by digest). **Owner deployment plan:** external Nginx Proxy Manager for HTTPS/routing, `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true`, optional `PUBLIC_ORIGIN`. Phase 13 is closed (import: ADR-0022/0023, D-48, OQ-4). Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups.
 2. **Phase 10 summary:** templates (`templates/`, `GET /templates`, `template` on create), properties endpoint + `GET /tags`, pins (migration 3, `/pins`), web Info tab, TagInput, tag filter, Pinned sidebar/Home. See `docs/architecture.md` _Templates, properties and pins_.
 3. **Schema:** current version 5. Never edit migrations 1–5; add new ones. New password hashes use native Node Argon2id (64 MiB, three passes, parallelism one), and existing scrypt hashes upgrade after successful password verification (ADR-0011/0018). Session tokens are random, stored only as digests; cookies are HttpOnly/SameSite=Strict, and HTTPS proxy deployments must set `SESSION_COOKIE_SECURE=true` (ADR-0012). Keep the minimum 15-character password and 1024 UTF-8 byte maximum. One in-flight login bounds hash concurrency; legacy verification still uses ~128 MiB. Require Node >=24.7.0. Local browser tests create the account, sign in and reuse an ignored cookie-state file. A separate proxy project uses port 18766 and disposable `.e2e-proxy-data/`; The none project uses port 18767 and disposable `.e2e-none-data/`; the isolated MFA project uses port 18769 and `.e2e-mfa-data/`; `.e2e-data/` remains ordinary local-only. All test data/browser artifacts are ignored by Git/tooling and excluded from Docker build context. Await authenticated UI readiness before sending shortcuts.
 4. Open small issues: KI-7, KI-8 (attachments), KI-12 (intermittent unit test under full-suite load), KI-10 (raw HTML / cross-document attachment links on move). KI-9 is resolved by P12-02 for healthy-watcher reads; broader performance measurements remain P15-07.
@@ -235,7 +235,7 @@ Owner feedback 2026-10-02 (testing the preview), done before Phase 9 on the owne
 
 ### Phase 14 — Deployment
 
-- [ ] P14-01 Production Dockerfile hardening (image size, `NODE_ENV`, native deps)
+- [x] P14-01 Production Dockerfile hardening (image size, `NODE_ENV`, native deps) — @claude-code 2026-10-07 · `docker/Dockerfile` (distroless runtime, trimmed native module, build-time SQLite check), CI container health step; 425 → 252 MB; ADR-0024
 - [ ] P14-02 Production `compose.yaml` (published image, healthcheck, volume). A local-build preview `compose.yaml` already exists (P4-11) and should be kept as `compose.dev.yaml` or similar
 - [ ] P14-03 `docs/configuration.md`
 - [ ] P14-04 `docs/deployment.md` incl. reverse proxy (Nginx, NPM, Traefik, Caddy)
@@ -368,6 +368,7 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 | ADR-0021 | 2026-10-07 | [External-change events](adr/0021-external-change-events.md): authenticated SSE, bounded streams and reconnect resync; one frontend consumer, immediate editing conflicts and revision-safe recovery. In-app metadata responses are distinguished from outside changes.                                                                                                                                                                                                  | @codex                               |
 | ADR-0022 | 2026-10-07 | [Import pipeline](adr/0022-import-pipeline.md): stateless multipart `POST /import` with `dryRun` preview; importers implement `reads`/`detect`/`scan`/`convert`, `ImportService` shares `preview`/`import`; never overwrite (` (n)` suffix), add missing ids (D-10 fields, also with `ASSIGN_MISSING_IDS=false`), replace duplicate ids, keep invalid front matter unchanged; 10,000 files / 256 MiB Markdown per request                                                |
 | ADR-0023 | 2026-10-07 | [HTML import conversion](adr/0023-html-import-conversion.md): `hast-util-from-html` → `hast-util-to-mdast` → `mdast-util-to-markdown` (2.1.3) + `mdast-util-gfm`, pinned; unsafe/unrepresentable HTML is removed before conversion and reported per kind; `<title>` → front matter; relative `.html` links → `.md`; BOM → meta charset → UTF-8 → Windows-1252                                                                                                            |
+| ADR-0024 | 2026-10-07 | [Distroless runtime image](adr/0024-distroless-runtime-image.md): build on `node:24-bookworm-slim`, run on `gcr.io/distroless/nodejs24-debian12:nonroot` as UID 1000 (no shell/package manager); better-sqlite3 trimmed to the platform binary and checked at build time; supersedes the runtime part of D-08                                                                                                                                                            |
 
 ---
 
@@ -378,7 +379,7 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 | KI-1  | Root scripts call `pnpm`, so `pnpm` must be on `PATH`. On the owner's machine `corepack enable` failed: `~/.local` did not exist, and `/usr/bin` needs sudo.                                                | `sudo corepack enable`, or `mkdir -p ~/.local/bin && corepack enable --install-directory ~/.local/bin` and add it to `PATH` (see `docs/development.md`)                                       |
 | KI-2  | Port 8080 is already in use on the owner's dev machine (another service)                                                                                                                                    | `PORT=9000 pnpm dev` (the Vite proxy follows `PORT`)                                                                                                                                          |
 | KI-3  | Resolved: GitHub verify, E2E and Docker jobs passed for `d3da0ea` on `dev`.                                                                                                                                 | [Verified CI run](https://github.com/pbuzdygan/leandocs/actions/runs/37542982082); P12-02/P12-03 are present on origin/dev; P12-04 is locally verified and awaits publication/CI.             |
-| KI-4  | Docker image is ~350 MB                                                                                                                                                                                     | Optimise in P14-01                                                                                                                                                                            |
+| KI-4  | Resolved by P14-01: the image is 252 MB (was 425 MB) with a distroless runtime.                                                                                                                             | ADR-0024                                                                                                                                                                                      |
 | KI-5  | Playwright's Chromium cannot start on the owner's host (missing system libraries such as `libatk`, and installing them needs sudo)                                                                          | Run E2E in `mcr.microsoft.com/playwright:v1.63.0-noble` (command in `docs/development.md`); CI uses `playwright install --with-deps`                                                          |
 | KI-7  | Attachments added outside the app with an upper-case extension (`Photo.PNG`) are listed but cannot be opened or deleted (names must round-trip through the lower-casing sanitiser)                          | Fix with P9/P12 or when touching attachments: accept the stored name case-insensitively in `attachments/service.ts` `target()`                                                                |
 | KI-8  | Attachment reads (`GET …/attachments/:file`) run under the global `MutationLock` and buffer the whole file, so large downloads delay saves; `docs/architecture.md` says reads are not locked                | Revisit in P15-07 (performance): stream with no-follow open outside the lock                                                                                                                  |
@@ -390,6 +391,20 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 ---
 
 ## Work log
+
+### 2026-10-07 · @claude-code · P14-01
+
+- **Done:** Production image hardening. The runtime is now distroless Node 24 (Debian 12 glibc; no shell, no package manager) and runs as UID/GID 1000 as before. In the build stage, `pnpm fetch` layer caching was added. better-sqlite3 is trimmed to the build platform's binary (sources, other platforms, types, maps and docs removed), and an in-memory SQLite query runs at build time. The healthcheck and command use exec form, with source maps enabled. CI now starts the image and waits for `/api/v1/health`. Size: 425 MB → 252 MB.
+- **Files:** `docker/Dockerfile`, `.github/workflows/ci.yml`, ADR-0024, `docs/development.md`, CHANGELOG, status (KI-4 resolved).
+- **Verified:** lint ✔ typecheck ✔ test ✔ build ✔ (no code changes). Container smoke tests:
+  - healthy with a bind mount as the host user and with a named volume as the default UID 1000;
+  - API and web app served; files on the volume owned by UID 1000;
+  - SIGTERM shutdown in 0.2 s with exit code 0; no shell inside;
+  - first-run setup, login, attachment upload (content sniffing), Markdown + HTML import with attachments, search;
+  - `docker compose config` valid.
+- **Decisions:** ADR-0024 (supersedes the runtime part of D-08).
+- **Issues/notes:** The distroless Node patch version (24.14.0 today) follows Google's image; pin digests in P14-07. The health version still reads `0.0.0` (P14-06).
+- **Next:** P14-02 production compose file.
 
 ### 2026-10-07 · @claude-code · Phase 13 closed
 

@@ -70,6 +70,8 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### Improvements
 
+- The Docker image is much smaller (about 250 MB instead of 425 MB), so it downloads and updates faster. It also contains only what LeanDocs needs to run, with no shell or package manager, which leaves less to attack. Existing data folders keep working without changes.
+
 - Changes made outside the app are indexed without rescanning every documentation folder, keeping browsing responsive in large collections.
 
 - Repeated sign-in attempts are now limited even when they come from different addresses, with a clear wait time before retrying. The form clears your password after each submission.
