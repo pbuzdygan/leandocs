@@ -31,8 +31,10 @@ LeanDocs is a lightweight, self-hosted documentation manager for technical peopl
 
 ```bash
 mkdir -p data/content && cp -r examples/demo-content/. data/content/   # optional demo docs
-docker compose up --build -d                                           # http://localhost:8080
+docker compose -f compose_local_build.yaml up --build -d               # http://localhost:8080
 ```
+
+`compose_local_build.yaml` builds the image from this repository. `compose.yaml` runs the published image (`ghcr.io/pbuzdygan/leandocs`) once releases exist.
 
 For development with hot reload: `corepack enable && pnpm install && pnpm dev` (http://localhost:5173). Details are in [`docs/development.md`](docs/development.md).
 

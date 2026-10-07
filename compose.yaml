@@ -1,31 +1,48 @@
-# Local preview: builds LeanDocs from this repository and runs it in one container.
+# LeanDocs — production deployment with the published image (PROJECT_SPEC §76–77).
 #
-#   mkdir -p data && docker compose up --build -d     → http://localhost:8080
+#   mkdir -p data && docker compose up -d                         → http://localhost:8080
 #
-# Optional `.env` next to this file (see .env.example):
-#   LEANDOCS_PORT=8090        host port, if 8080 is taken
-#   LEANDOCS_UID=1001         run as your user so files in ./data stay yours (`id -u`)
-#   LEANDOCS_GID=1001         (`id -g`)
+# Your documentation is plain Markdown in ./data/content; ./data/system holds the account and
+# the search index. Back up the whole ./data folder. Building the image from this repository
+# instead: compose_local_build.yaml. Every setting: docs/configuration.md.
 #
-# The production compose file with a published image comes in Phase 14 (P14-02).
+# Put HTTPS in front of it (e.g. Nginx Proxy Manager) and then set, in `.env`:
+#   SESSION_COOKIE_SECURE=true
+#   PUBLIC_ORIGIN=https://docs.example.com
+#
+# Optional `.env` values for this file (see .env.example):
+#   LEANDOCS_TAG=1.0.0          image version to run (default: latest)
+#   LEANDOCS_PORT=8090          host port, if 8080 is taken
+#   LEANDOCS_BIND=127.0.0.1     host address to listen on (default: all addresses)
+#   LEANDOCS_UID=1001           run as your user so files in ./data stay yours (`id -u`)
+#   LEANDOCS_GID=1001           (`id -g`)
 services:
   leandocs:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    image: leandocs:local
+    image: '${LEANDOCS_IMAGE:-ghcr.io/pbuzdygan/leandocs}:${LEANDOCS_TAG:-latest}'
     user: '${LEANDOCS_UID:-1000}:${LEANDOCS_GID:-1000}'
     environment:
       AUTH_MODE: '${AUTH_MODE:-local}'
       PUBLIC_ORIGIN: '${PUBLIC_ORIGIN:-}'
+      SESSION_COOKIE_SECURE: '${SESSION_COOKIE_SECURE:-false}'
       PROXY_TRUSTED_IPS: '${PROXY_TRUSTED_IPS:-}'
       PROXY_AUTH_HEADER: '${PROXY_AUTH_HEADER:-}'
       PROXY_AUTH_USER: '${PROXY_AUTH_USER:-}'
-      SESSION_COOKIE_SECURE: '${SESSION_COOKIE_SECURE:-false}'
       MAX_UPLOAD_SIZE: '${MAX_UPLOAD_SIZE:-52428800}'
       WATCH_MODE: '${WATCH_MODE:-native}'
+      ASSIGN_MISSING_IDS: '${ASSIGN_MISSING_IDS:-true}'
+      LOG_LEVEL: '${LOG_LEVEL:-info}'
     ports:
-      - '${LEANDOCS_PORT:-8080}:8080'
+      - '${LEANDOCS_BIND:-0.0.0.0}:${LEANDOCS_PORT:-8080}:8080'
     volumes:
       - ./data:/data
+    # Everything LeanDocs writes goes to /data; the rest of the container stays read-only.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
+    # The image has a healthcheck (`docker compose ps` shows healthy); stop it cleanly.
+    stop_grace_period: 20s

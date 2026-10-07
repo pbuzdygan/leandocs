@@ -22,10 +22,10 @@ There are two ways to look at the current interface. Both show the same app.
 ```bash
 mkdir -p data/content
 cp -r examples/demo-content/. data/content/     # optional sample documentation
-docker compose up --build -d                    # http://localhost:8080
+docker compose -f compose_local_build.yaml up --build -d   # http://localhost:8080
 ```
 
-Optional `.env` next to `compose.yaml`: `LEANDOCS_PORT=8090` if 8080 is taken, and `LEANDOCS_UID`/`LEANDOCS_GID` (output of `id -u` / `id -g`) so the files in `./data` stay owned by you. After pulling new code, run `docker compose up --build -d` again. Stop with `docker compose down`. Your documents in `./data/content` are plain files and stay where they are.
+Optional `.env` next to the compose file: `LEANDOCS_PORT=8090` if 8080 is taken, and `LEANDOCS_UID`/`LEANDOCS_GID` (output of `id -u` / `id -g`) so the files in `./data` stay owned by you. After pulling new code, run the same command again. Stop with `docker compose -f compose_local_build.yaml down`. `compose.yaml` is the production file: it runs the published image instead of building one. A plain `docker compose up` therefore pulls from GHCR. Both files use the same project and service names, so switching between them replaces the container but keeps `./data`. Your documents in `./data/content` are plain files and stay where they are.
 
 **2. Development server** (hot reload while coding; needs Node 24 + pnpm):
 
