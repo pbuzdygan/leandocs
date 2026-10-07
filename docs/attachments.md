@@ -6,7 +6,7 @@ Supported files: PNG, JPEG, WebP, SVG, PDF, TXT, YAML, JSON and ZIP. The default
 
 Uploads keep their insertion point while you continue typing. Visual mode shows an upload placeholder. Wait for uploads before choosing Done or switching editor modes. If you leave through another navigation link during upload, a saved file may have no document link; it remains visible in **Attachments**. Failed files are skipped, and successful files in the same selection are still inserted.
 
-Expand **Attachments** below a document to open, download or delete files. Delete requires confirmation and is permanent; links are not removed from Markdown. Moving, renaming, trashing and restoring a document carries its assets with it. Rename updates the document's own ordinary Markdown asset links. Rewriting links from other documents and raw HTML is scheduled for Phase 9.
+Expand **Attachments** below a document to open, download or delete files. Delete requires confirmation and is permanent; links are not removed from Markdown. Moving, renaming, trashing and restoring a document carries its assets with it. Renaming or moving updates the document's own Markdown links to its attachments. Links written as raw HTML (`<img src>`, `<a href>`) and links from other documents to these attachments are not updated.
 
 SVG is delivered with sandbox restrictions. Scripts and external resources do not execute, including when opening an SVG directly. Generic files download instead of running in the application.
 

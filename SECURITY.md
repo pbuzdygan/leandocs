@@ -1,6 +1,6 @@
 # Security Policy
 
-LeanDocs is pre-release software. Phase 11 authentication and its initial security review are implemented; production deployment and release validation remain in Phases 14–15. See [review findings and constraints](docs/security-review.md) and [implementation status](docs/implementation-status.md).
+LeanDocs is pre-release software: development previews are published, and the first stable release (1.0) is being prepared. Two security reviews have been completed (authentication and rendering, then content handling, import and deployment). See [review findings and constraints](docs/security-review.md) and [implementation status](docs/implementation-status.md).
 
 Complete administrator setup privately before public exposure. Ordinary Nginx Proxy Manager HTTPS routing uses `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true` and, optionally, a matching public HTTPS `PUBLIC_ORIGIN`. Preserve the application authentication and CSRF headers. Back up durable authentication alongside content; corrupt app data stops startup rather than reopening setup.
 

@@ -50,23 +50,12 @@ If port 8080 is busy: `PORT=9000 pnpm dev` (the Vite proxy follows `PORT`, or se
 
 ## Environment variables
 
-| Variable                | Default   | Notes                                                                                                                                                                          |
-| ----------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `AUTH_MODE`             | `local`   | `local`, `proxy` or deliberate `none`; unsupported modes fail startup.                                                                                                         |
-| `PROXY_TRUSTED_IPS`     | unset     | Required in proxy mode: comma-separated exact peer IP addresses.                                                                                                               |
-| `PROXY_AUTH_HEADER`     | unset     | Required in proxy mode: dedicated identity header.                                                                                                                             |
-| `PROXY_AUTH_USER`       | unset     | Required in proxy mode: the single allowed gateway identity.                                                                                                                   |
-| `PORT`                  | `8080`    | HTTP port                                                                                                                                                                      |
-| `HOST`                  | `0.0.0.0` | Bind address                                                                                                                                                                   |
-| `DATA_DIR`              | `./data`  | `content/` (documents) and `system/` (SQLite) are created inside                                                                                                               |
-| `LOG_LEVEL`             | `info`    | `fatal` `error` `warn` `info` `debug` `trace` `silent`; per-request logs only at `debug`/`trace`                                                                               |
-| `WEB_DIST_DIR`          | unset     | When set, the server serves the built web app with SPA fallback (always set in Docker)                                                                                         |
-| `SESSION_COOKIE_SECURE` | `false`   | Set `true` when browsers connect through an HTTPS reverse proxy; adds Secure to session cookies without trusting forwarded headers. Keep false for HTTP development.           |
-| `PUBLIC_ORIGIN`         | unset     | Optional canonical HTTP(S) origin, e.g. `https://docs.example.com`. Pins the API Host and mutation origin; no path/query/credentials. Preserve this Host at the reverse proxy. |
-| `ASSIGN_MISSING_IDS`    | `true`    | Add a UUID (and missing `title`/`created`/`updated`) to documents without an `id`. Only these lines are added; nothing else in the file changes (D-10).                        |
-| `WATCH_MODE`            | `native`  | How changes made outside the app are detected: `native` (file events), `poll` (network shares or mounts without file events) or `off` (only on the next request). ADR-0020.    |
+Every setting, with defaults and allowed values, is in [configuration.md](configuration.md); `.env.example` lists them for local use. Notes for development:
 
-`AUTH_MODE` supports `local` (default), `proxy` and explicit `none`. `MAX_UPLOAD_SIZE` sets the attachment limit in bytes (default 52428800). Set it in the shell for local development or in `.env` for Docker Compose. See `.env.example`.
+- `pnpm dev` keeps data in `DATA_DIR` (default `./data`). Use a separate folder (`DATA_DIR=./data-dev`) to keep test documents away from the Docker preview.
+- `WEB_DIST_DIR` stays unset: Vite serves the web app on port 5173 and proxies `/api` to `PORT` (or `LEANDOCS_API_URL`).
+- Keep `SESSION_COOKIE_SECURE=false` over plain `http://localhost`.
+- `LOG_LEVEL=debug` logs every request.
 
 ## External reverse proxy and authentication gateway
 

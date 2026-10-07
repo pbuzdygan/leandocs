@@ -54,7 +54,7 @@ Diagrams render in strict security mode. An invalid diagram shows "Diagram rende
 | `[[Home Assistant\|HA]]`                      | Custom link text                                                      |
 | `[Backup](../Procedures/Backup%20Restore.md)` | Standard relative Markdown link: the most portable option             |
 
-Links to documents that do not exist are shown muted with a dashed underline ("Document not found"). Links keep working after a document is renamed or moved, because LeanDocs resolves them to the document's permanent id. Rewriting links _inside other files_ after a rename comes in a later phase.
+Links to documents that do not exist are shown muted with a dashed underline ("Document not found"). When you rename or move a document or folder in LeanDocs, links to it in other documents are updated in their files, so they keep working in other editors too. Wiki links are changed only when they would stop finding the document. Links in raw HTML are not updated.
 
 ## Raw HTML
 
@@ -64,7 +64,11 @@ Simple HTML such as `<details>`, `<summary>`, `<kbd>`, `<sup>` and `<sub>` is al
 
 The **Contents** panel on the right lists `##`–`####` headings and highlights the section you are reading. Every heading has an anchor, e.g. `/doc/<id>#hardware`.
 
-## Not yet supported
+## Images and attachments
 
-- Images and attachments stored next to a document (`Name.assets/…`) are displayed starting with Phase 7.
+Images and files stored next to a document (`Name.assets/…`) are shown and linked with normal relative Markdown. See [attachments.md](attachments.md).
+
+## Not supported
+
 - Math (KaTeX) and other extensions are out of scope for 1.0.
+- Obsidian/GitHub alerts (`> [!note]`) are shown as ordinary quotes. Use `:::note` callouts instead.

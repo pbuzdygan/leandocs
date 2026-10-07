@@ -50,9 +50,9 @@ Published image tags:
 
 Stable and development tags never replace each other: `latest` is always a stable release.
 
-> Before the first published release, build the image from a checkout of the repository instead: `docker compose -f compose_local_build.yaml up --build -d`. It uses the same `.env` and data folder.
+> **Before the first stable release** there is no `latest` image and no `compose.yaml` on the `main` branch yet. Download the file from the `dev` branch instead (`…/leandocs/dev/compose.yaml` in the `curl` command) and set `LEANDOCS_TAG=dev_latest` or a `devX.Y.Z` tag. Development previews are for trying LeanDocs out; back up `./data` before every update. You can also build the image from a checkout of the repository: `docker compose -f compose_local_build.yaml up --build -d`. It uses the same `.env` and data folder.
 
-To use existing Markdown files, copy them into `data/content/` before or after the first start, or use **Import** in the app.
+To use existing Markdown files, copy them into `data/content/` before or after the first start, or use **Import** in the app ([importing](import.md)).
 
 ## 2. Create the administrator account
 

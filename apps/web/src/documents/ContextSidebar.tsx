@@ -15,8 +15,8 @@ const TABS: { value: ContextTab; label: string }[] = [
 ];
 
 /**
- * Right context panel (UI_SPEC §43–48): "Contents" and "Links" tabs, one at a time; "Info" arrives
- * with P10-04. Collapsed state and the chosen tab are remembered.
+ * Right context panel (UI_SPEC §43–48): "Contents", "Links" and "Info" tabs, one at a time.
+ * Collapsed state and the chosen tab are remembered.
  */
 export function ContextSidebar({
   headings,

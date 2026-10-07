@@ -1221,7 +1221,7 @@ AGENTS.md                      (instructions for all AI coding agents)
 CLAUDE.md                      (pointer to AGENTS.md)
 PROJECT_SPEC.md
 UI_SPEC.md
-BRAND_SPEC.md                  (later — branding phase)
+BRAND_SPEC.md
 CONTRIBUTING.md
 CHANGELOG.md
 SECURITY.md
@@ -1230,11 +1230,16 @@ LICENSE                        (pending owner decision)
 docs/
 ├── implementation-status.md   (single source of truth for progress)
 ├── adr/
-├── architecture.md            (created/extended as phases land)
-├── development.md             (Phase 0)
-├── markdown.md                (Phase 4)
-├── configuration.md           (Phase 14)
-└── deployment.md              (Phase 14)
+├── architecture.md            (how the code is organised)
+├── development.md             (local setup, tests, releases)
+├── markdown.md                (user guide: supported Markdown)
+├── attachments.md             (user guide: attachments)
+├── import.md                  (user guide: importing existing notes)
+├── configuration.md           (every setting, storage layout)
+├── deployment.md              (install, HTTPS, update, backup, restore)
+├── migrations.md              (database migration policy)
+├── security-review.md, accessibility.md, performance.md   (release-hardening results)
+└── archive/                   (superseded drafts; not requirements)
 ```
 
 ## 96. `docs/implementation-status.md`
