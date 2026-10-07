@@ -4,8 +4,8 @@
 
 |                   |                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------- |
-| **Current phase** | **Phase 13 — Import / migration**                                               |
-| **Last updated**  | 2026-10-07 by @claude-code (P13-04)                                             |
+| **Current phase** | **Phase 14 — Deployment**                                                       |
+| **Last updated**  | 2026-10-07 by @claude-code (Phase 13 closed)                                    |
 | **Spec versions** | PROJECT_SPEC 0.4 · UI_SPEC 1.8                                                  |
 | **Branding**      | Final and applied: **Folded Stack** mark + Inter wordmark; see `BRAND_SPEC.md`. |
 
@@ -17,7 +17,7 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 
 > Rewrite this block at the end of every session.
 
-1. **Phase 13 — Import / migration. Remaining: P13-05** Poznote adapter, _only if needed_ (PROJECT_SPEC §69). **Ask the owner first** whether a Poznote migration is needed. Poznote exports `.md`/`.html` files with folders and attachments, which the Markdown and HTML importers may already cover; test with a real export before writing an adapter. If it is not needed, mark P13-05 `[-]` with the owner's decision and close Phase 13 (acceptance: an existing Markdown library is imported without copying by hand, covered by `e2e/import.spec.ts`). Then Phase 14 (deployment) starts with P14-01. Import docs: ADR-0022 (+ P13-06/P13-04 amendments), ADR-0023, D-48, OQ-4. Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups. **Owner deployment plan remains:** external Nginx Proxy Manager for HTTPS/routing, `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true`, optional `PUBLIC_ORIGIN`. Production deployment/release validation remain Phases 14–15.
+1. **Phase 14 — Deployment. Next: P14-01** production Dockerfile hardening (image size, `NODE_ENV`, native deps; KI-4: the image is ~350 MB). Then P14-02 production `compose.yaml` (keep the local-build preview as `compose.dev.yaml` or similar), P14-03 `docs/configuration.md`, P14-04 `docs/deployment.md` including reverse proxies, P14-05 DB migration strategy, P14-06 version reporting and P14-07 release workflow to GHCR (OQ-2 is resolved: `pbuzdygan/leandocs`). **Owner deployment plan:** external Nginx Proxy Manager for HTTPS/routing, `AUTH_MODE=local`, `SESSION_COOKIE_SECURE=true`, optional `PUBLIC_ORIGIN`. Phase 13 is closed: import of Markdown directories/files, HTML and Obsidian vaults with attachments (ADR-0022 + amendments, ADR-0023, D-48; OQ-4 about `> [!note]` callouts is an open enhancement). New server dependencies from P13-03 are pure JavaScript. Phase 11 (auth) is complete; keep the 15-character password minimum and matching `system/app.db`, `system/auth.initialized` and `system/mfa.key` backups.
 2. **Phase 10 summary:** templates (`templates/`, `GET /templates`, `template` on create), properties endpoint + `GET /tags`, pins (migration 3, `/pins`), web Info tab, TagInput, tag filter, Pinned sidebar/Home. See `docs/architecture.md` _Templates, properties and pins_.
 3. **Schema:** current version 5. Never edit migrations 1–5; add new ones. New password hashes use native Node Argon2id (64 MiB, three passes, parallelism one), and existing scrypt hashes upgrade after successful password verification (ADR-0011/0018). Session tokens are random, stored only as digests; cookies are HttpOnly/SameSite=Strict, and HTTPS proxy deployments must set `SESSION_COOKIE_SECURE=true` (ADR-0012). Keep the minimum 15-character password and 1024 UTF-8 byte maximum. One in-flight login bounds hash concurrency; legacy verification still uses ~128 MiB. Require Node >=24.7.0. Local browser tests create the account, sign in and reuse an ignored cookie-state file. A separate proxy project uses port 18766 and disposable `.e2e-proxy-data/`; The none project uses port 18767 and disposable `.e2e-none-data/`; the isolated MFA project uses port 18769 and `.e2e-mfa-data/`; `.e2e-data/` remains ordinary local-only. All test data/browser artifacts are ignored by Git/tooling and excluded from Docker build context. Await authenticated UI readiness before sending shortcuts.
 4. Open small issues: KI-7, KI-8 (attachments), KI-12 (intermittent unit test under full-suite load), KI-10 (raw HTML / cross-document attachment links on move). KI-9 is resolved by P12-02 for healthy-watcher reads; broader performance measurements remain P15-07.
@@ -45,8 +45,8 @@ Legend: `[ ]` to do · `[~]` in progress (claimed) · `[x]` done · `[!]` blocke
 | 10    | Templates, tags, properties                | ✅ Done (2026-10-02) |
 | 11    | Authentication & hardening                 | ✅ Done (2026-10-04) |
 | 12    | File watcher & external changes            | ✅ Done (2026-10-07) |
-| 13    | Import / migration                         | ▶ Current            |
-| 14    | Deployment                                 | ⏳                   |
+| 13    | Import / migration                         | ✅ Done (2026-10-07) |
+| 14    | Deployment                                 | ▶ Current            |
 | 15    | Release hardening                          | ⏳                   |
 | 16    | UI conformance & polish (+ branding)       | ⏳                   |
 | 17    | Release 1.0                                | ⏳                   |
@@ -224,13 +224,13 @@ Owner feedback 2026-10-02 (testing the preview), done before Phase 9 on the owne
 - [x] P12-04 Frontend: refresh when viewing, conflict state when editing (UI_SPEC §70) — @codex 2026-10-07 · `api/external-changes.ts`, editor sessions/conflict recovery; frontend unit and browser regressions; ADR-0021 amendment
 - [x] P12-05 Tests incl. critical test C and E2E-05 — @claude-code 2026-10-07 · E2E-05 + critical test C: `e2e/external-changes.spec.ts` (in-place edit, atomic save + search, external folder/move/delete while viewing, editor conflicts/deletion recovery), `e2e/events.spec.ts`; server/unit coverage in `watcher/*.test.ts`, `documents/incremental.test.ts`, `api/{watcher,events}.test.ts`, web `api/external-changes.test.tsx`
 
-### Phase 13 — Import / migration
+### Phase 13 — Import / migration ✅
 
 - [x] P13-01 Importer interface (§66) + generic Markdown directory importer (§67) — @claude-code 2026-10-07 · `import/{importer,markdown-directory,service}.ts`, `api/import.ts`, shared `imports.ts`; tests: `api/import.test.ts`; ADR-0022
 - [x] P13-02 Import UI + preview (UI_SPEC §134–135) — @claude-code 2026-10-07 · `actions/dialogs/ImportDialog.tsx` (+ `import.css`), Home/empty-state entry points, `api.importFiles`; tests: web `actions/import.test.tsx`, `e2e/import.spec.ts`. HTML option arrives with P13-03
 - [x] P13-03 HTML importer with conversion report (§68) — @claude-code 2026-10-07 · `import/html.ts`, HTML option in `ImportDialog.tsx`; tests: `import/html.test.ts`, `api/import.test.ts`, web `actions/import.test.tsx`, `e2e/import.spec.ts`; ADR-0023
 - [x] P13-04 Obsidian vault import (§70) — @claude-code 2026-10-07 · inside the Markdown directory importer (owner: no separate option): `import/references.ts` (`wikiFileReferences`, `findByName`), `ImportService.attach`; tests: `api/import.test.ts` (vault + ordinary-library regression); ADR-0022 amendment
-- [ ] P13-05 Poznote adapter, only if needed (§69)
+- [-] P13-05 Poznote adapter, only if needed (§69) — dropped 2026-10-07: owner does not need a Poznote migration
 - [x] P13-06 Attachments referenced by imported documents: copy local files into `<doc>.assets/` and rewrite the links (shared by the Markdown and Obsidian importers; ADR-0022) — @claude-code 2026-10-07 · `import/{service,references}.ts`, two-phase upload (`IMPORT_NAME_ONLY_TYPE`), dialog attachment rows; tests: `api/import.test.ts`, web `actions/import.test.tsx`, `e2e/import.spec.ts`; ADR-0022 amendment
 
 ### Phase 14 — Deployment
@@ -390,6 +390,11 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 ---
 
 ## Work log
+
+### 2026-10-07 · @claude-code · Phase 13 closed
+
+- **Done:** Owner decided no Poznote migration is needed → P13-05 dropped. Phase 13 is closed. Acceptance (an existing Markdown library is imported without copying by hand) is covered by `e2e/import.spec.ts`.
+- **Next:** P14-01 production Dockerfile hardening.
 
 ### 2026-10-07 · @claude-code · P13-04
 
