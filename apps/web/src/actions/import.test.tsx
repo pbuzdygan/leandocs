@@ -179,6 +179,56 @@ describe('import dialog (UI_SPEC §134–135)', () => {
     await waitFor(() => expect(location()).toBe('/doc/id-single'));
   });
 
+  it('converts HTML files and labels converted items in the preview', async () => {
+    const uploads: Upload[] = [];
+    mockApi((request) => {
+      if (request.path === '/tree') return { body: { root: sampleTree() } };
+      if (request.path === '/documents/recent?limit=10') return { body: { items: [] } };
+      if (request.path === '/pins') return { body: { items: [] } };
+      if (request.method === 'POST' && request.path.startsWith('/import?')) {
+        const form = request.body as FormData;
+        uploads.push({
+          query: request.path,
+          parts: form
+            .getAll('files')
+            .map((part) => ({ path: (part as File).name, size: (part as File).size })),
+        });
+        return {
+          body: {
+            importer: 'html',
+            destination: '',
+            dryRun: true,
+            items: [
+              {
+                source: 'old-note.html',
+                destination: 'old-note.md',
+                status: 'ready',
+                converted: true,
+                notes: [],
+                warnings: ['Removed a script that Markdown cannot contain'],
+              },
+            ],
+            summary: { documents: 1, folders: 0, skipped: 0, failed: 0, warnings: 1 },
+          } satisfies ImportReport,
+        };
+      }
+      return undefined;
+    });
+    const { user } = renderApp('/');
+    await user.click(await screen.findByRole('button', { name: 'Import' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Import documentation' });
+    await user.click(within(dialog).getByRole('radio', { name: /HTML files/ }));
+    const input = within(dialog).getByLabelText('Choose HTML files');
+    expect(input).toHaveAttribute('accept', '.html,.htm,text/html');
+    await user.upload(input, [file('old-note.html', '<p>Old</p>')]);
+    const preview = await screen.findByRole('dialog', { name: 'Import preview' });
+    expect(uploads[0]!.query).toBe('/import?importer=html&destination=&dryRun=true');
+    expect(uploads[0]!.parts).toEqual([{ path: 'old-note.html', size: 10 }]);
+    expect(within(preview).getAllByRole('row')[1]).toHaveTextContent(
+      'old-note.html Removed a script that Markdown cannot containold-note.mdConverted',
+    );
+  });
+
   it('shows server errors and lets the user go back to choose other files', async () => {
     mockApi((request) => {
       if (request.path === '/tree') return { body: { root: folder('', []) } };

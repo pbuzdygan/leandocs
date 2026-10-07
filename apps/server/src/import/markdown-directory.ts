@@ -85,7 +85,7 @@ export const markdownDirectoryImporter: Importer = {
     } catch {
       throw new ImportItemError('The file is not UTF-8 text');
     }
-    return { text, notes: [], warnings: [] };
+    return { text, notes: [], warnings: [], converted: false };
   },
 };
 

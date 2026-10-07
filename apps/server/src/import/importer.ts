@@ -47,6 +47,8 @@ export type ScannedItem = ScannedDocument | SkippedEntry;
 
 export interface ConvertedDocument {
   text: string;
+  /** The source was converted from another format (shown as "Converted" in the preview). */
+  converted: boolean;
   notes: string[];
   warnings: string[];
 }

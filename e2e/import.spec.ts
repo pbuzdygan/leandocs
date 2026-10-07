@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './document-fixture';
 import { csrfRequest } from './csrf-request';
 
 const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
@@ -63,5 +63,51 @@ test('imports a Markdown directory through the preview and keeps its structure',
   } finally {
     await rm(source, { recursive: true, force: true });
     await rm(destination, { recursive: true, force: true });
+  }
+});
+
+test('converts an HTML file, reports what was removed and opens the new document', async ({
+  page,
+  createDocument,
+}) => {
+  // A non-empty library shows the Home quick actions (an empty one offers "Import Markdown").
+  await createDocument('Import neighbour', '# Neighbour\n');
+  const source = await mkdtemp(path.join(tmpdir(), 'leandocs-html-'));
+  const html = path.join(source, 'Legacy wiki page.html');
+  const target = path.join(content, 'Legacy wiki page.md');
+  try {
+    await writeFile(
+      html,
+      '<html><head><title>Legacy wiki</title></head><body><h1>Legacy wiki</h1>' +
+        '<p>Restart the <b>router</b> first.</p><script>alert("x")</script></body></html>',
+    );
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Import', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Import documentation' });
+    await dialog.getByRole('radio', { name: /HTML files/ }).check();
+    const chooser = page.waitForEvent('filechooser');
+    await dialog.getByRole('button', { name: 'Select files' }).click();
+    await (await chooser).setFiles(html);
+
+    const preview = page.getByRole('dialog', { name: 'Import preview' });
+    const row = preview.getByRole('row', { name: /Legacy wiki page\.html/ });
+    await expect(row).toContainText('Converted');
+    await expect(row).toContainText('Removed a script that Markdown cannot contain');
+    await preview.getByRole('button', { name: 'Import 1 document' }).click();
+    await page
+      .getByRole('dialog', { name: 'Import finished' })
+      .getByRole('button', { name: 'Done' })
+      .click();
+
+    await expect(page.getByRole('heading', { level: 1, name: 'Legacy wiki' })).toBeVisible();
+    await expect(page.locator('.doc__content strong, article strong').first()).toHaveText('router');
+    const markdown = await readFile(target, 'utf8');
+    expect(markdown).toContain('Restart the **router** first.');
+    expect(markdown).not.toContain('alert');
+    // The HTML original stays where it was; nothing HTML is stored in the documentation.
+    expect(await readFile(html, 'utf8')).toContain('<script>');
+  } finally {
+    await rm(source, { recursive: true, force: true });
+    await rm(target, { force: true });
   }
 });

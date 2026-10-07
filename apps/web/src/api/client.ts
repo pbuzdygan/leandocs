@@ -21,6 +21,7 @@ import {
   type FolderDto,
   type HealthResponse,
   type ImportReport,
+  type ImporterKind,
   type IndexRebuildStatus,
   type IndexStatusResponse,
   type MoveDocumentRequest,
@@ -139,14 +140,14 @@ export const api = {
   /** ADR-0022: the same upload previews (`dryRun`) or imports. Paths are relative to the selection. */
   importFiles: (
     files: readonly ImportSelection[],
-    options: { destination: string; dryRun: boolean },
+    options: { importer: ImporterKind; destination: string; dryRun: boolean },
   ) => {
     const body = new FormData();
     for (const { path, file } of files)
-      // Only Markdown content is read by the importer; other files are listed by name only.
-      body.append('files', isMarkdownPath(path) ? file : new Blob([]), path);
+      // The importer reads only its own file type; other files are listed by name only.
+      body.append('files', importerReads(options.importer, path) ? file : new Blob([]), path);
     const query = `destination=${enc(options.destination)}&dryRun=${options.dryRun}`;
-    return request<ImportReport>(`/import?importer=markdown-directory&${query}`, {
+    return request<ImportReport>(`/import?importer=${options.importer}&${query}`, {
       method: 'POST',
       body,
     });
@@ -196,8 +197,9 @@ export interface ImportSelection {
   file: Blob;
 }
 
-export function isMarkdownPath(path: string): boolean {
-  return /[^/]\.md$/i.test(path);
+/** Mirrors each server importer's `reads` (ADR-0022). */
+export function importerReads(importer: ImporterKind, path: string): boolean {
+  return (importer === 'html' ? /[^/]\.html?$/i : /[^/]\.md$/i).test(path);
 }
 
 /** A user-facing message for any error thrown by the API layer. */

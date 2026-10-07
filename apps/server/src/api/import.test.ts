@@ -255,7 +255,7 @@ describe('POST /api/v1/import (Markdown directory)', () => {
       [{ 'a.md': '# a' }, '?destination=Bad:name', 400, 'INVALID_NAME'],
       [{ 'a.png': 'x' }, '', 400, 'IMPORT_UNSUPPORTED'],
       [{}, '', 400, 'IMPORT_EMPTY'],
-      [{ 'a.md': '# a' }, '?importer=html', 400, 'VALIDATION_ERROR'],
+      [{ 'a.md': '# a' }, '?importer=poznote', 400, 'VALIDATION_ERROR'],
     ];
     for (const [files, query, status, code] of cases) {
       const response = await upload(files, query);
@@ -282,6 +282,54 @@ describe('POST /api/v1/import (Markdown directory)', () => {
       403,
     );
     expect(await listFiles(content)).toEqual(before);
+  });
+
+  it('converts HTML files to Markdown documents with a report and never stores the HTML', async () => {
+    const { content, upload } = await setup();
+    const files = {
+      'Export/Old note.html':
+        '<html><head><title>Old note</title></head><body><h1>Old</h1><p>See <a href="Other.html">other</a>.</p><script>x()</script></body></html>',
+      'Export/Other.htm': '<p>Second page</p>',
+      'Export/readme.md': '# Not HTML\n',
+    };
+    const preview = await upload(files, '?importer=html&dryRun=true');
+    expect(preview.statusCode, preview.body).toBe(200);
+    expect(preview.json<ImportReport>().items).toEqual([
+      {
+        source: 'Export/Old note.html',
+        destination: 'Export/Old note.md',
+        status: 'ready',
+        converted: true,
+        notes: [
+          'Links to an HTML page now point to the converted Markdown file',
+          'Adds missing front matter: id, created, updated',
+        ],
+        warnings: ['Removed a script that Markdown cannot contain'],
+      },
+      {
+        source: 'Export/Other.htm',
+        destination: 'Export/Other.md',
+        status: 'ready',
+        converted: true,
+        notes: ['Adds missing front matter: id, title, created, updated'],
+        warnings: [],
+      },
+      {
+        source: 'Export/readme.md',
+        status: 'skipped',
+        reason: 'Only HTML files are converted',
+        notes: [],
+        warnings: [],
+      },
+    ]);
+    const response = await upload(files, '?importer=html');
+    expect(response.statusCode, response.body).toBe(200);
+    expect(await listFiles(path.join(content, 'Export'))).toEqual(['Old note.md', 'Other.md']);
+    expect(await readFile(path.join(content, 'Export/Old note.md'), 'utf8')).toMatch(
+      /^---\ntitle: Old note\nid: [0-9a-f-]{36}\ncreated: \S+\nupdated: \S+\n---\n\n# Old\n\nSee \[other\]\(Other\.md\)\.\n$/,
+    );
+    const markdownOnly = await upload({ 'a.md': '# a' }, '?importer=html');
+    expect(markdownOnly.json().error.message).toBe('No HTML files were found in the selection');
   });
 
   it('places a selection into an existing folder and merges folders', async () => {

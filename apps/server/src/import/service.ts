@@ -18,10 +18,12 @@ import { deriveTitle, isValidDocumentId, type DocumentRegistry } from '../docume
 import { assertVisiblePath } from '../documents/scanner.js';
 import type { ContentSync } from '../watcher/content-sync.js';
 import { ImportItemError, type ImportEntry, type Importer } from './importer.js';
+import { htmlImporter } from './html.js';
 import { markdownDirectoryImporter } from './markdown-directory.js';
 
 const IMPORTERS: Record<ImporterKind, Importer> = {
   'markdown-directory': markdownDirectoryImporter,
+  html: htmlImporter,
 };
 
 interface Plan {
@@ -108,7 +110,9 @@ export class ImportService {
       throw new AppError(
         400,
         'IMPORT_UNSUPPORTED',
-        'No Markdown files were found in the selection',
+        importer.kind === 'html'
+          ? 'No HTML files were found in the selection'
+          : 'No Markdown files were found in the selection',
       );
     const claimedPaths = new Set<string>();
     const claimedIds = new Set<string>();
@@ -124,6 +128,7 @@ export class ImportService {
       try {
         const target = await this.placement(destination, scanned.target, claimedPaths, item);
         const converted = importer.convert(scanned);
+        if (converted.converted) item.converted = true;
         item.notes.push(...converted.notes);
         item.warnings.push(...converted.warnings);
         texts.set(item, this.identify(converted.text, target, claimedIds, item, now));

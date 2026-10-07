@@ -1,6 +1,6 @@
 /** Import / migration (PROJECT_SPEC §66–71). */
 
-export const IMPORTERS = ['markdown-directory'] as const;
+export const IMPORTERS = ['markdown-directory', 'html'] as const;
 export type ImporterKind = (typeof IMPORTERS)[number];
 
 /** Limits for one import request (one browser selection). */
@@ -19,6 +19,8 @@ export interface ImportItem {
   /** Content-relative target path; absent when the item is not imported. */
   destination?: string;
   status: ImportItemStatus;
+  /** The source was converted to Markdown (e.g. from HTML). */
+  converted?: boolean;
   /** Why the item is skipped or failed. */
   reason?: string;
   /** Set once the document exists in the library. */

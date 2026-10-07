@@ -1,7 +1,12 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
-import { MAX_IMPORT_FILES, type ImportItem, type ImportReport } from '@leandocs/shared';
+import {
+  MAX_IMPORT_FILES,
+  type ImportItem,
+  type ImportReport,
+  type ImporterKind,
+} from '@leandocs/shared';
 import { api, errorMessage, type ImportSelection } from '../../api/client';
 import { useContentMutation, useTree } from '../../api/queries';
 import { Button } from '../../components/ui/Button';
@@ -14,12 +19,43 @@ import { collectFolders } from '../../navigation/tree-utils';
 import { displayFolder } from '../../utils/format';
 import './import.css';
 
-type Source = 'directory' | 'files';
+type Source = 'directory' | 'files' | 'html';
+
+/** UI_SPEC §134. A directory keeps its folders; individual files are imported side by side. */
+const SOURCES: Record<
+  Source,
+  { label: string; hint: string; importer: ImporterKind; directory: boolean; accept?: string }
+> = {
+  directory: {
+    label: 'Markdown directory',
+    hint: 'A folder with its subfolders',
+    importer: 'markdown-directory',
+    directory: true,
+  },
+  files: {
+    label: 'Markdown files',
+    hint: 'One or more .md files',
+    importer: 'markdown-directory',
+    directory: false,
+    accept: '.md,text/markdown',
+  },
+  html: {
+    label: 'HTML files',
+    hint: 'Converted to Markdown, with a report of anything that could not be converted',
+    importer: 'html',
+    directory: false,
+    accept: '.html,.htm,text/html',
+  },
+};
 
 interface Selection {
   files: ImportSelection[];
   /** Files left out in the browser because they are inside hidden folders (`.git/`). */
   hidden: { count: number; folders: string[] };
+}
+
+function statusLabel(item: ImportItem): string {
+  return item.status === 'ready' && item.converted ? 'Converted' : STATUS_LABEL[item.status];
 }
 
 const STATUS_LABEL: Record<ImportItem['status'], string> = {
@@ -30,7 +66,7 @@ const STATUS_LABEL: Record<ImportItem['status'], string> = {
 };
 
 /**
- * UI_SPEC §134–135 (ADR-0022): choose a Markdown directory or Markdown files and a destination,
+ * UI_SPEC §134–135 (ADR-0022): choose a Markdown directory, Markdown or HTML files and a destination,
  * review the preview with its warnings, then import. Nothing is written before Import.
  */
 export function ImportDialog({ folder, onClose }: { folder: string; onClose: () => void }) {
@@ -39,6 +75,8 @@ export function ImportDialog({ folder, onClose }: { folder: string; onClose: () 
   const navigate = useNavigate();
   const { reveal } = useNavigationState();
   const [source, setSource] = useState<Source>('directory');
+  /** The individual-files input serves Markdown and HTML files. */
+  const fileSource: Source = SOURCES[source].directory ? 'files' : source;
   const [destination, setDestination] = useState(folder);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [selectionError, setSelectionError] = useState<string | null>(null);
@@ -47,10 +85,11 @@ export function ImportDialog({ folder, onClose }: { folder: string; onClose: () 
   const folders = tree.data ? collectFolders(tree.data) : [folder];
 
   const preview = useMutation({
-    mutationFn: (files: ImportSelection[]) => api.importFiles(files, { destination, dryRun: true }),
+    mutationFn: (files: ImportSelection[]) =>
+      api.importFiles(files, { importer: SOURCES[source].importer, destination, dryRun: true }),
   });
   const run = useContentMutation((files: ImportSelection[]) =>
-    api.importFiles(files, { destination, dryRun: false }),
+    api.importFiles(files, { importer: SOURCES[source].importer, destination, dryRun: false }),
   );
   const report: ImportReport | undefined = run.data ?? preview.data;
   const done = run.data !== undefined;
@@ -120,7 +159,7 @@ export function ImportDialog({ folder, onClose }: { folder: string; onClose: () 
       <Button
         variant="primary"
         disabled={busy}
-        onClick={() => (source === 'directory' ? directoryInput : filesInput).current?.click()}
+        onClick={() => (SOURCES[source].directory ? directoryInput : filesInput).current?.click()}
       >
         {preview.isPending ? 'Preparing preview…' : 'Select files'}
       </Button>
@@ -149,31 +188,21 @@ export function ImportDialog({ folder, onClose }: { folder: string; onClose: () 
         <>
           <fieldset className="import-source">
             <legend className="field__label">Import</legend>
-            <label className="import-source__option">
-              <input
-                type="radio"
-                name="import-source"
-                checked={source === 'directory'}
-                onChange={() => setSource('directory')}
-                data-autofocus
-              />
-              <span>
-                Markdown directory
-                <span className="field__hint">A folder with its subfolders</span>
-              </span>
-            </label>
-            <label className="import-source__option">
-              <input
-                type="radio"
-                name="import-source"
-                checked={source === 'files'}
-                onChange={() => setSource('files')}
-              />
-              <span>
-                Markdown files
-                <span className="field__hint">One or more .md files</span>
-              </span>
-            </label>
+            {(Object.keys(SOURCES) as Source[]).map((key) => (
+              <label key={key} className="import-source__option">
+                <input
+                  type="radio"
+                  name="import-source"
+                  checked={source === key}
+                  onChange={() => setSource(key)}
+                  data-autofocus={source === key ? true : undefined}
+                />
+                <span>
+                  {SOURCES[key].label}
+                  <span className="field__hint">{SOURCES[key].hint}</span>
+                </span>
+              </label>
+            ))}
           </fieldset>
           <SelectField
             label="Import into"
@@ -203,8 +232,8 @@ export function ImportDialog({ folder, onClose }: { folder: string; onClose: () 
             type="file"
             multiple
             hidden
-            accept=".md,text/markdown"
-            aria-label="Choose Markdown files"
+            accept={SOURCES[fileSource].accept}
+            aria-label={`Choose ${SOURCES[fileSource].label}`}
             onChange={choose}
           />
         </>
@@ -271,7 +300,7 @@ function ImportReportView({
                 <td className="import-table__path">{item.destination ?? '—'}</td>
                 <td>
                   <span className={`import-status import-status--${item.status}`}>
-                    {STATUS_LABEL[item.status]}
+                    {statusLabel(item)}
                   </span>
                 </td>
               </tr>
@@ -290,7 +319,7 @@ function selected(list: FileList | null, source: Source): Selection | null {
   const hiddenFolders = new Set<string>();
   let hiddenCount = 0;
   for (const file of Array.from(list)) {
-    const path = (source === 'directory' && file.webkitRelativePath) || file.name;
+    const path = (SOURCES[source].directory && file.webkitRelativePath) || file.name;
     const segments = path.split('/');
     const hiddenIndex = segments.slice(0, -1).findIndex((segment) => segment.startsWith('.'));
     if (hiddenIndex !== -1) {
