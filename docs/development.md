@@ -254,7 +254,7 @@ The image runs as UID/GID 1000 and stores everything under the `/data` volume. I
 
 ## Versions
 
-The root `package.json` `version` is the only version source. It reaches the code as `APP_VERSION` from `@leandocs/shared`; the server reports it in `GET /api/v1/health` and its first log line, and the web app shows it with the server's version in Settings › About. To change it, set the same `version` in the root, `apps/server`, `apps/web` and `packages/shared` `package.json` files (a test enforces this). Release builds can override the reported version with `LEANDOCS_VERSION` (Docker build argument and environment variable of `pnpm build`), which dev images use to report `devX.Y.Z`.
+Published images report the **release tag** as their version (D-53): the release workflow passes it as `LEANDOCS_VERSION` (Docker build argument and environment variable of `pnpm build`), so nothing has to be edited before a release. Other builds (development, tests, local images) report the root `package.json` `version`. Either way it reaches the code as `APP_VERSION` from `@leandocs/shared`; the server reports it in `GET /api/v1/health` and its first log line, and the web app shows it with the server's version in Settings › About. The `package.json` versions may lag behind releases; when you do change them, set the same `version` in the root, `apps/server`, `apps/web` and `packages/shared` files (a test enforces this).
 
 ## Dependencies
 
@@ -273,11 +273,11 @@ Images are published to GHCR only by the _Release_ workflow (`.github/workflows/
 | `X.Y.Z`     | `main`            | `X.Y.Z`, `latest`        | `X.Y.Z`          |
 | `devX.Y.Z`  | `dev`             | `devX.Y.Z`, `dev_latest` | `devX.Y.Z`       |
 
-1. Set `X.Y.Z` in every `package.json` (see _Versions_) and commit it to the branch.
-2. On GitHub, create a release with the new tag on that branch and publish it.
+1. Push the commit you want to release to `main` or `dev`.
+2. On GitHub, create a release with the new tag (`X.Y.Z` or `devX.Y.Z`) on that branch and publish it. No version file has to be changed first.
 3. The workflow verifies the code, checks the tag (`scripts/release-tags.mjs`), refuses to overwrite an existing `X.Y.Z`/`devX.Y.Z` image, starts the image and checks its reported version, then pushes `linux/amd64` and `linux/arm64` images.
 
-If the workflow refuses a release (wrong version, wrong branch), nothing is published. Fix the cause and push it, delete the release **and** its tag on GitHub (re-running the workflow reuses the old commit), then create the release again.
+If the workflow refuses a release (malformed tag, wrong branch, version already published), nothing is published. Fix the cause and push it, delete the release **and** its tag on GitHub (re-running the workflow reuses the old commit), then create the release again.
 
 The first push creates the `leandocs` package on GHCR as private; make it public in the package settings so `docker compose pull` works without logging in.
 

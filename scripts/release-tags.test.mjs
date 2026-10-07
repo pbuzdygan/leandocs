@@ -3,7 +3,7 @@ import { resolveRelease } from './release-tags.mjs';
 
 describe('release tags', () => {
   it('publishes main releases as X.Y.Z and latest', () => {
-    expect(resolveRelease('1.2.3', '1.2.3')).toEqual({
+    expect(resolveRelease('1.2.3')).toEqual({
       channel: 'main',
       branch: 'main',
       version: '1.2.3',
@@ -12,7 +12,7 @@ describe('release tags', () => {
   });
 
   it('publishes dev releases as devX.Y.Z and dev_latest only', () => {
-    expect(resolveRelease('dev1.2.3', '1.2.3')).toEqual({
+    expect(resolveRelease('dev1.2.3')).toEqual({
       channel: 'dev',
       branch: 'dev',
       version: 'dev1.2.3',
@@ -20,15 +20,15 @@ describe('release tags', () => {
     });
   });
 
-  it('rejects tags that do not match the package version', () => {
-    expect(() => resolveRelease('1.2.4', '1.2.3')).toThrow(/does not match/);
-    expect(() => resolveRelease('dev1.2.4', '1.2.3')).toThrow(/does not match/);
+  it('takes the version from the tag, whatever package.json says (D-53)', () => {
+    expect(resolveRelease('0.1.1').version).toBe('0.1.1');
+    expect(resolveRelease('dev0.1.1').version).toBe('dev0.1.1');
   });
 
   it.each(['v1.2.3', 'latest', 'dev_latest', 'dev-1.2.3', '1.2', '1.2.3-rc.1', 'Dev1.2.3'])(
     'rejects the tag %s',
     (tag) => {
-      expect(() => resolveRelease(tag, '1.2.3')).toThrow(/must be X\.Y\.Z/);
+      expect(() => resolveRelease(tag)).toThrow(/must be X\.Y\.Z/);
     },
   );
 });

@@ -3,7 +3,8 @@
 #   release tag X.Y.Z     (commit on main) → ghcr.io/pbuzdygan/leandocs:X.Y.Z    + :latest
 #   release tag devX.Y.Z  (commit on dev)  → ghcr.io/pbuzdygan/leandocs:devX.Y.Z + :dev_latest
 #
-# X.Y.Z must equal the root package.json version. Pushes and pull requests never publish images.
+# The tag is the version the image reports (LEANDOCS_VERSION, D-53); package.json is not checked.
+# Pushes and pull requests never publish images.
 name: Release
 
 on:

@@ -6,8 +6,9 @@ import { version } from '../../../package.json';
 declare const __LEANDOCS_VERSION__: string | undefined;
 
 /**
- * The LeanDocs version. The root `package.json` is the single source of truth; the server and the
- * web app each bake it in at build time, so a stale browser bundle shows a different frontend
+ * The LeanDocs version. Release images use their release tag (`LEANDOCS_VERSION`, D-53); other
+ * builds fall back to the root `package.json`. The server and the web app each bake it in at build
+ * time, so a stale browser bundle shows a different frontend
  * version than the server reports (UI_SPEC §88). Release tags: `X.Y.Z` (main), `devX.Y.Z` (dev).
  */
 export const APP_VERSION: string =

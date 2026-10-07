@@ -15,7 +15,7 @@ RUN pnpm fetch
 COPY . .
 RUN pnpm install --frozen-lockfile --offline
 # Version the image reports (health, logs, Settings › About); the release workflow sets it, e.g.
-# `1.2.0` or `dev1.2.0`. Empty: the root package.json version.
+# `1.2.0` or `dev1.2.0` (the release workflow passes the release tag). Empty: the root package.json version.
 ARG LEANDOCS_VERSION=
 RUN pnpm build
 # Self-contained production install of the server (workspace deps resolved).
