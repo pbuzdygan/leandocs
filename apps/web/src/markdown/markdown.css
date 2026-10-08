@@ -117,6 +117,14 @@
   text-decoration: underline;
 }
 
+/* Dark mode: the accent is too close to the light body text to mark a link by colour alone
+   (2.3:1, WCAG 1.4.1 needs 3:1), so links keep a quiet underline (§51 allows one). */
+[data-theme='dark'] .markdown a:not(:hover) {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  text-underline-offset: 3px;
+}
+
 /* Broken links (UI_SPEC §76) */
 .markdown .broken-link {
   color: var(--text-muted);

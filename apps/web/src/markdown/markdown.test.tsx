@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -245,6 +245,30 @@ describe('Mermaid', () => {
     const mermaid = (await import('mermaid')).default;
     expect(mermaid.initialize).toHaveBeenCalledWith(
       expect.objectContaining({ securityLevel: 'strict' }),
+    );
+  });
+
+  it('draws diagrams in the theme shown and again when it changes (P16-03)', async () => {
+    document.documentElement.dataset.theme = 'dark';
+    const mermaid = (await import('mermaid')).default;
+    vi.mocked(mermaid.initialize).mockClear();
+    const { tree } = renderMarkdown('```mermaid\nflowchart LR\n  A --> B\n```\n', context);
+    render(
+      <MemoryRouter>
+        <HastContent tree={tree} />
+      </MemoryRouter>,
+    );
+    await screen.findByTestId('diagram');
+    expect(mermaid.initialize).toHaveBeenLastCalledWith(
+      expect.objectContaining({ securityLevel: 'strict', theme: 'base' }),
+    );
+    act(() => {
+      document.documentElement.dataset.theme = 'light';
+    });
+    await waitFor(() =>
+      expect(mermaid.initialize).toHaveBeenLastCalledWith(
+        expect.objectContaining({ securityLevel: 'strict', theme: 'neutral' }),
+      ),
     );
   });
 

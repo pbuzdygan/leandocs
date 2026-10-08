@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS = {
     wordWrap: true,
     tabSize: 2,
   },
+  appearance: { theme: 'system' },
 };
 
 /**
@@ -20,7 +21,7 @@ const DEFAULT_SETTINGS = {
  */
 export async function expectStoredSettings(
   page: Page,
-  expected: { general?: Record<string, unknown>; editor?: Record<string, unknown> },
+  expected: Record<string, Record<string, unknown>>,
 ): Promise<void> {
   await expect
     .poll(async () => {

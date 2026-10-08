@@ -4,6 +4,7 @@ import {
   DEFAULT_SETTINGS,
   EDITOR_MODES,
   TAB_SIZES,
+  THEMES,
   type AppSettings,
   type UpdateSettingsRequest,
 } from '@leandocs/shared';
@@ -26,10 +27,13 @@ const VALID: { [G in Group]: { [K in keyof AppSettings[G]]: (value: unknown) => 
     wordWrap: (value) => typeof value === 'boolean',
     tabSize: (value) => (TAB_SIZES as readonly unknown[]).includes(value),
   },
+  appearance: {
+    theme: (value) => THEMES.includes(value as AppSettings['appearance']['theme']),
+  },
 };
 
 /**
- * App settings (UI_SPEC §81–83) as one `settings` row per field, keyed `group.field` with a JSON
+ * App settings (UI_SPEC §81–84) as one `settings` row per field, keyed `group.field` with a JSON
  * value. Durable app data: index rebuilds and resets of derived tables keep them (ADR-0019).
  */
 export class SettingsService {

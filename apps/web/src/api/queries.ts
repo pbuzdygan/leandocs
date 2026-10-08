@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useCallback } from 'react';
-import type { AppSettings, UpdateSettingsRequest } from '@leandocs/shared';
+import { mergeSettings, type AppSettings, type UpdateSettingsRequest } from '@leandocs/shared';
 import { ApiError, api } from './client';
 
 /** Server state lives in TanStack Query (UI_SPEC §141); no global store for documents. */
@@ -170,10 +170,7 @@ export function useUpdateSettings() {
     (update: UpdateSettingsRequest) => {
       const current = queryClient.getQueryData<AppSettings>(queryKeys.settings);
       if (current)
-        queryClient.setQueryData<AppSettings>(queryKeys.settings, {
-          general: { ...current.general, ...update.general },
-          editor: { ...current.editor, ...update.editor },
-        });
+        queryClient.setQueryData<AppSettings>(queryKeys.settings, mergeSettings(current, update));
       mutate(update);
     },
     [queryClient, mutate],

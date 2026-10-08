@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from 'react';
 import {
   AUTOSAVE_DELAYS,
+  mergeSettings,
   TAB_SIZES,
   type AppSettings,
   type EditorMode,
+  type Theme,
   type UpdateSettingsRequest,
 } from '@leandocs/shared';
 import { errorMessage } from '../api/client';
@@ -31,13 +33,7 @@ function SettingsForm({
   const shown = local && local.base === settings.data ? local.value : settings.data;
   const save = (body: UpdateSettingsRequest) => {
     if (settings.data && shown)
-      setLocal({
-        base: settings.data,
-        value: {
-          general: { ...shown.general, ...body.general },
-          editor: { ...shown.editor, ...body.editor },
-        },
-      });
+      setLocal({ base: settings.data, value: mergeSettings(shown, body) });
     update.save(body);
   };
   if (settings.isError)
@@ -172,6 +168,26 @@ export function EditorSettings() {
             ))}
           </SelectField>
         </>
+      )}
+    </SettingsForm>
+  );
+}
+
+/** UI_SPEC §84. */
+export function AppearanceSettings() {
+  return (
+    <SettingsForm id="appearance-title" title="Appearance">
+      {({ appearance }, save) => (
+        <SelectField
+          label="Theme"
+          hint="System follows the light or dark setting of your device."
+          value={appearance.theme}
+          onChange={(event) => save({ appearance: { theme: event.target.value as Theme } })}
+        >
+          <option value="system">System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </SelectField>
       )}
     </SettingsForm>
   );

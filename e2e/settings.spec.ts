@@ -63,3 +63,26 @@ test('opens the last viewed document on startup when enabled', async ({ page, cr
   await page.goto('/');
   await expect(page).toHaveURL(new RegExp(`/doc/${id}$`));
 });
+
+test('appearance: the theme applies at once, is saved and wins over the system', async ({
+  page,
+}) => {
+  // The system prefers dark; "Light" overrides it (P16-03, UI_SPEC §84).
+  await page.emulateMedia({ colorScheme: 'dark' });
+  const html = page.locator('html');
+  await page.goto('/settings/appearance');
+  const select = page.getByRole('combobox', { name: 'Theme' });
+  await expect(select).toHaveValue('system');
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+
+  await select.selectOption('light');
+  await expect(html).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 250, 252)');
+  await expectStoredSettings(page, { appearance: { theme: 'light' } });
+  await page.reload();
+  await expect(html).toHaveAttribute('data-theme', 'light');
+
+  await select.selectOption('dark');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(15, 23, 42)');
+  await expectStoredSettings(page, { appearance: { theme: 'dark' } });
+});

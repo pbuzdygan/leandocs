@@ -1,9 +1,9 @@
 /*
  * Design tokens — UI_SPEC §5–12, §85.
  * Components must use these variables; never hard-code colours (UI_SPEC §142).
- * The accent is a UI colour, not final branding (BRAND_SPEC.md pending).
  */
 :root {
+  color-scheme: light;
   --bg-app: #f8fafc;
   --bg-surface: #ffffff;
   --bg-subtle: #f1f5f9;
@@ -102,7 +102,10 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* UI_SPEC §84–85: as neutral as light mode (Technical Minimal); `data-theme` is set on <html> by
+   app/theme.ts and public/theme-init.js. */
 [data-theme='dark'] {
+  color-scheme: dark;
   --bg-app: #0f172a;
   --bg-surface: #111827;
   --bg-subtle: #1e293b;

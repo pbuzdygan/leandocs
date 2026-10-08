@@ -1,4 +1,9 @@
-import { DEFAULT_SETTINGS, type AppSettings, type UpdateSettingsRequest } from '@leandocs/shared';
+import {
+  DEFAULT_SETTINGS,
+  mergeSettings,
+  type AppSettings,
+  type UpdateSettingsRequest,
+} from '@leandocs/shared';
 
 /** Settings served by `mockApi` unless a test routes `/settings` itself; reset after each test. */
 let testSettings: AppSettings = structuredClone(DEFAULT_SETTINGS);
@@ -6,10 +11,7 @@ let testSettings: AppSettings = structuredClone(DEFAULT_SETTINGS);
 export const getTestSettings = (): AppSettings => testSettings;
 
 export function setTestSettings(update: UpdateSettingsRequest): void {
-  testSettings = {
-    general: { ...testSettings.general, ...update.general },
-    editor: { ...testSettings.editor, ...update.editor },
-  };
+  testSettings = mergeSettings(testSettings, update);
 }
 
 export function resetTestSettings(): void {

@@ -3,10 +3,11 @@ import { usePageTitle } from '../utils/page-title';
 import './settings.css';
 import { useSession } from '../auth/Login';
 
-/** UI_SPEC §81 order. Appearance arrives with dark mode (P16-03, D-22). */
+/** UI_SPEC §81 order. */
 const SECTIONS = [
   { to: 'general', label: 'General' },
   { to: 'editor', label: 'Editor' },
+  { to: 'appearance', label: 'Appearance' },
   { to: 'security', label: 'Security' },
   { to: 'storage', label: 'Storage' },
   { to: 'index', label: 'Index' },

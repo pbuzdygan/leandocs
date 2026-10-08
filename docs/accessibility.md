@@ -11,8 +11,9 @@ what the review in P15-08 (2026-10-07) found.
   source, Info and Links panels), the visual and source editors with the slash menu, every menu
   and dialog, the search palette, every Settings section, Not found, sign-in (with an error), the
   mobile layout with the navigation drawer, and — in `e2e/setup.spec.ts` — the first-run setup
-  screens and the empty library. `expectAccessible(page, screen, include?)` in `e2e/axe.ts`
-  lists every violation per screen.
+  screens and the empty library. These scans run twice, in the light and the dark theme (P16-03;
+  the browser's colour scheme is emulated and the theme setting stays on System).
+  `expectAccessible(page, screen, include?)` in `e2e/axe.ts` lists every violation per screen.
 - **Keyboard checks** (same file): every Tab stop on a document page must show a focus
   indicator (an outline or a box shadow); dialogs move focus inside, keep it there, and return
   it to the button that opened them (or to the menu's button when opened from a menu); search
@@ -36,7 +37,10 @@ Run them with the rest of the browser tests (`pnpm build && pnpm test:e2e`, see
   (all at least 4.5:1 on every surface, including `--bg-subtle`). `--text-disabled` is only for
   disabled controls and decoration. Status colours as **text** use `--success-text`,
   `--warning-text`, `--danger-text` and `--info-text`; the base `--success`/`--warning`/
-  `--danger`/`--info` are for borders and icons (3:1).
+  `--danger`/`--info` are for borders and icons (3:1). Both themes must pass: a new token needs a
+  value in the dark block of `tokens.css` when the light value does not work on dark surfaces.
+- Links in running text are underlined in the dark theme, where the accent alone is too close to
+  the body text (WCAG 1.4.1); keep that when styling new text links.
 - Focus: keep the global `:focus-visible` ring (`--focus-ring`, solid accent). A component that
   replaces it needs another indicator with at least 3:1 contrast — an accent border, inset
   shadow or outline, not a faint background.

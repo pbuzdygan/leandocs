@@ -50,4 +50,5 @@ afterEach(() => {
   window.localStorage.clear();
   resetTestSettings();
   window.innerWidth = 1440;
+  delete document.documentElement.dataset.theme;
 });

@@ -43,105 +43,145 @@ const RICH = [
   '',
 ].join('\n');
 
-test('document screens, menus and dialogs have no WCAG AA violations', async ({
-  page,
-  createDocument,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await createDocument('Accessible Target', '# Accessible Target\n\nLinked from elsewhere.\n');
-  const id = await createDocument('Accessible Page', RICH);
+/**
+ * The scans run in both themes (P16-03). The theme setting stays "System", so the emulated system
+ * colour scheme decides which one the app shows.
+ */
+for (const colorScheme of ['light', 'dark'] as const) {
+  test.describe(`${colorScheme} theme`, () => {
+    test.use({ colorScheme });
 
-  await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expectAccessible(page, 'home');
+    test('document screens, menus and dialogs have no WCAG AA violations', async ({
+      page,
+      createDocument,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await createDocument('Accessible Target', '# Accessible Target\n\nLinked from elsewhere.\n');
+      const id = await createDocument('Accessible Page', RICH);
 
-  await page.goto(`/doc/${id}`);
-  await expect(page.getByRole('heading', { level: 1, name: 'Accessible Page' })).toBeVisible();
-  await expect(page.locator('.mermaid-diagram svg, .mermaid svg').first()).toBeVisible();
-  await expectAccessible(page, 'document view');
+      await page.goto('/');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await expectAccessible(page, 'home');
 
-  await page.getByRole('tab', { name: 'Source', exact: true }).click();
-  await expectAccessible(page, 'document source view');
-  await page.getByRole('tab', { name: 'View', exact: true }).click();
+      await page.goto(`/doc/${id}`);
+      await expect(page.getByRole('heading', { level: 1, name: 'Accessible Page' })).toBeVisible();
+      await expect(page.locator('.mermaid-diagram svg, .mermaid svg').first()).toBeVisible();
+      await expectAccessible(page, 'document view');
 
-  for (const tab of ['Info', 'Links']) {
-    await page.getByRole('tab', { name: tab, exact: true }).click();
-    await expectAccessible(page, `context panel: ${tab}`);
-  }
+      await page.getByRole('tab', { name: 'Source', exact: true }).click();
+      await expectAccessible(page, 'document source view');
+      await page.getByRole('tab', { name: 'View', exact: true }).click();
 
-  await page.getByRole('button', { name: 'More actions' }).click();
-  await expect(page.getByRole('menu')).toBeVisible();
-  await expectAccessible(page, 'document menu', '[role="menu"]');
-  await page.getByRole('menuitem', { name: 'Move', exact: true }).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await expectAccessible(page, 'move dialog', '[role="dialog"]');
-  await page.keyboard.press('Escape');
+      for (const tab of ['Info', 'Links']) {
+        await page.getByRole('tab', { name: tab, exact: true }).click();
+        await expectAccessible(page, `context panel: ${tab}`);
+      }
 
-  await page.getByRole('treeitem', { name: 'Accessible Page', exact: true }).click({
-    button: 'right',
+      await page.getByRole('button', { name: 'More actions' }).click();
+      await expect(page.getByRole('menu')).toBeVisible();
+      await expectAccessible(page, 'document menu', '[role="menu"]');
+      await page.getByRole('menuitem', { name: 'Move', exact: true }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await expectAccessible(page, 'move dialog', '[role="dialog"]');
+      await page.keyboard.press('Escape');
+
+      await page.getByRole('treeitem', { name: 'Accessible Page', exact: true }).click({
+        button: 'right',
+      });
+      await expect(page.getByRole('menu')).toBeVisible();
+      await expectAccessible(page, 'tree context menu', '[role="menu"]');
+      await page.keyboard.press('Escape');
+
+      await page.getByRole('button', { name: 'New', exact: true }).click();
+      await expect(page.getByRole('dialog', { name: 'New document' })).toBeVisible();
+      await expectAccessible(page, 'new document dialog', '[role="dialog"]');
+      await page.keyboard.press('Escape');
+
+      await page.keyboard.press('ControlOrMeta+k');
+      await page.getByRole('combobox').fill('careful');
+      await expect(page.getByRole('option').first()).toBeVisible();
+      await expectAccessible(page, 'search palette', '[role="dialog"]');
+      await page.keyboard.press('Escape');
+
+      await page.getByRole('button', { name: 'User menu' }).click();
+      await expectAccessible(page, 'user menu', '[role="menu"]');
+      await page.keyboard.press('Escape');
+    });
+
+    test('editors have no WCAG AA violations', async ({ page, createDocument }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      const id = await createDocument('Accessible Editing', RICH);
+
+      await setDefaultEditor(page, 'visual');
+      await page.goto(`/doc/${id}/edit`);
+      await expect(page.getByRole('status', { name: 'Save status' })).toHaveText('Saved');
+      await expect(page.locator('.ProseMirror')).toContainText('Careful.');
+      await expect(page.getByRole('button', { name: 'Code block', exact: true })).toBeEnabled();
+      await expectAccessible(page, 'visual editor');
+
+      await newParagraphAtEnd(page);
+      await page.keyboard.type('/');
+      await expect(page.getByRole('menu', { name: 'Insert block' })).toBeVisible();
+      await expectAccessible(page, 'slash menu');
+      await page.keyboard.press('Escape');
+
+      await page.getByRole('tab', { name: 'Source' }).click();
+      await expect(page.locator('.cm-content')).toContainText('Careful.');
+      await expectAccessible(page, 'source editor');
+      await page.getByRole('button', { name: 'Done' }).click();
+    });
+
+    test('settings, not found and the mobile layout have no WCAG AA violations', async ({
+      page,
+    }) => {
+      for (const section of [
+        'general',
+        'editor',
+        'appearance',
+        'storage',
+        'index',
+        'links',
+        'security',
+        'about',
+      ]) {
+        await page.goto(`/settings/${section}`);
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+        await expectAccessible(page, `settings: ${section}`);
+      }
+
+      await page.goto('/no-such-page');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await expectAccessible(page, 'not found');
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await expectAccessible(page, 'mobile home');
+      await page.getByRole('button', { name: 'Open navigation' }).click();
+      await expect(
+        page.getByRole('navigation', { name: 'Documentation navigation' }),
+      ).toBeInViewport();
+      await expectAccessible(page, 'mobile navigation drawer');
+    });
+
+    test('the sign-in page has no WCAG AA violations', async ({ browser }) => {
+      const context = await browser.newContext({
+        storageState: { cookies: [], origins: [] },
+        colorScheme,
+      });
+      const page = await context.newPage();
+      await page.goto('http://127.0.0.1:18765/login');
+      await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
+      await expectAccessible(page, 'sign in');
+      await page.getByLabel('Username').fill('admin');
+      await page.getByLabel('Password', { exact: true }).fill('incorrect password');
+      await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+      await expect(page.getByRole('alert')).toBeVisible();
+      await expectAccessible(page, 'sign in error');
+      await context.close();
+    });
   });
-  await expect(page.getByRole('menu')).toBeVisible();
-  await expectAccessible(page, 'tree context menu', '[role="menu"]');
-  await page.keyboard.press('Escape');
-
-  await page.getByRole('button', { name: 'New', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'New document' })).toBeVisible();
-  await expectAccessible(page, 'new document dialog', '[role="dialog"]');
-  await page.keyboard.press('Escape');
-
-  await page.keyboard.press('ControlOrMeta+k');
-  await page.getByRole('combobox').fill('careful');
-  await expect(page.getByRole('option').first()).toBeVisible();
-  await expectAccessible(page, 'search palette', '[role="dialog"]');
-  await page.keyboard.press('Escape');
-
-  await page.getByRole('button', { name: 'User menu' }).click();
-  await expectAccessible(page, 'user menu', '[role="menu"]');
-  await page.keyboard.press('Escape');
-});
-
-test('editors have no WCAG AA violations', async ({ page, createDocument }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  const id = await createDocument('Accessible Editing', RICH);
-
-  await setDefaultEditor(page, 'visual');
-  await page.goto(`/doc/${id}/edit`);
-  await expect(page.getByRole('status', { name: 'Save status' })).toHaveText('Saved');
-  await expect(page.locator('.ProseMirror')).toContainText('Careful.');
-  await expect(page.getByRole('button', { name: 'Code block', exact: true })).toBeEnabled();
-  await expectAccessible(page, 'visual editor');
-
-  await newParagraphAtEnd(page);
-  await page.keyboard.type('/');
-  await expect(page.getByRole('menu', { name: 'Insert block' })).toBeVisible();
-  await expectAccessible(page, 'slash menu');
-  await page.keyboard.press('Escape');
-
-  await page.getByRole('tab', { name: 'Source' }).click();
-  await expect(page.locator('.cm-content')).toContainText('Careful.');
-  await expectAccessible(page, 'source editor');
-  await page.getByRole('button', { name: 'Done' }).click();
-});
-
-test('settings, not found and the mobile layout have no WCAG AA violations', async ({ page }) => {
-  for (const section of ['general', 'editor', 'storage', 'index', 'links', 'security', 'about']) {
-    await page.goto(`/settings/${section}`);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expectAccessible(page, `settings: ${section}`);
-  }
-
-  await page.goto('/no-such-page');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expectAccessible(page, 'not found');
-
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expectAccessible(page, 'mobile home');
-  await page.getByRole('button', { name: 'Open navigation' }).click();
-  await expect(page.getByRole('navigation', { name: 'Documentation navigation' })).toBeInViewport();
-  await expectAccessible(page, 'mobile navigation drawer');
-});
+}
 
 /** WCAG 1.4.10 Reflow: at 320 CSS px only tables and code scroll sideways, never the page. */
 test('pages reflow to 320 px without horizontal page scrolling', async ({
@@ -156,20 +196,6 @@ test('pages reflow to 320 px without horizontal page scrolling', async ({
     const width = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(width, url).toBeLessThanOrEqual(320);
   }
-});
-
-test('the sign-in page has no WCAG AA violations', async ({ browser }) => {
-  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
-  const page = await context.newPage();
-  await page.goto('http://127.0.0.1:18765/login');
-  await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
-  await expectAccessible(page, 'sign in');
-  await page.getByLabel('Username').fill('admin');
-  await page.getByLabel('Password', { exact: true }).fill('incorrect password');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByRole('alert')).toBeVisible();
-  await expectAccessible(page, 'sign in error');
-  await context.close();
 });
 
 test('every Tab stop shows a visible focus indicator', async ({ page, createDocument }) => {

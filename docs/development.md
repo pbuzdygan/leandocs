@@ -230,10 +230,13 @@ The setup token changes on server restart; reload an open setup form after resta
 
   ```bash
   pnpm build
-  docker run --rm --network host --user "$(id -u):$(id -g)" -e HOME=/tmp \
+  docker run --rm --memory 2g --memory-swap 2g --cpus 2 \
+    --network host --user "$(id -u):$(id -g)" -e HOME=/tmp \
     -v "$PWD:$PWD" -w "$PWD" mcr.microsoft.com/playwright:v1.63.0-noble \
     node_modules/.bin/playwright test
   ```
+
+  The memory and CPU limits keep a browser run from starving the machine: on a small host without swap (6 GiB), an unlimited WebKit run next to the editor froze it until it was restarted (2026-10-08). With the limit a run fails instead; 2 GiB is enough for each engine.
 
   The image contains all three engines; add `-e E2E_BROWSER=firefox` (or `webkit`) after `-e HOME=/tmp` to use another one.
 

@@ -2,6 +2,7 @@ import {
   AUTOSAVE_DELAYS,
   EDITOR_MODES,
   TAB_SIZES,
+  THEMES,
   type AppSettings,
   type UpdateSettingsRequest,
 } from '@leandocs/shared';
@@ -33,10 +34,17 @@ const updateSchema = {
         tabSize: { type: 'integer', enum: TAB_SIZES },
       },
     },
+    appearance: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        theme: { type: 'string', enum: THEMES },
+      },
+    },
   },
 } as const;
 
-/** App settings (UI_SPEC §81–83): `GET /settings`, `PATCH /settings` (partial update). */
+/** App settings (UI_SPEC §81–84): `GET /settings`, `PATCH /settings` (partial update). */
 export const settingsRoutes: FastifyPluginAsync<{ settings: SettingsService }> = async (
   app,
   { settings },

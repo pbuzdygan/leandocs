@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { EditorView } from '@codemirror/view';
 import { getIndentUnit } from '@codemirror/language';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   documentDto,
   mockApi,
@@ -11,7 +11,7 @@ import {
   type MockRequest,
 } from '../test/render';
 
-/** P16-01: General and Editor settings (UI_SPEC §81–83). */
+/** P16-01, P16-03: General, Editor and Appearance settings (UI_SPEC §81–84). */
 
 const ID = 'id-buzhulk';
 const PATH = 'Infrastructure/Servers/BUZHULK.md';
@@ -50,7 +50,16 @@ describe('Settings › General', () => {
       within(nav)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['General', 'Editor', 'Security', 'Storage', 'Index', 'Broken links', 'About']);
+    ).toEqual([
+      'General',
+      'Editor',
+      'Appearance',
+      'Security',
+      'Storage',
+      'Index',
+      'Broken links',
+      'About',
+    ]);
 
     const openLast = await screen.findByRole('checkbox', { name: 'Open last document on startup' });
     expect(openLast).not.toBeChecked();
@@ -225,5 +234,77 @@ describe('open last document on startup', () => {
     const { location } = renderApp('/');
     await waitFor(() => expect(window.localStorage.getItem('leandocs.lastDocument')).toBe('null'));
     expect(location()).toBe('/');
+  });
+});
+
+const theme = () => document.documentElement.dataset.theme;
+
+/** A `matchMedia` that reports the system colour scheme; widths behave as in `test/setup.ts`. */
+function systemScheme(dark: boolean) {
+  const original = window.matchMedia;
+  const listeners = new Set<() => void>();
+  const state = { dark };
+  vi.stubGlobal('matchMedia', (query: string) => {
+    if (!query.includes('prefers-color-scheme')) return original(query);
+    return {
+      get matches() {
+        return query.includes('dark') === state.dark;
+      },
+      media: query,
+      addEventListener: (_type: string, listener: () => void) => listeners.add(listener),
+      removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
+    };
+  });
+  return (next: boolean) => {
+    state.dark = next;
+    for (const listener of listeners) listener();
+  };
+}
+
+describe('Settings › Appearance', () => {
+  it('switches the theme at once, saves it and remembers it in this browser', async () => {
+    systemScheme(false);
+    const requests = api();
+    const { user } = renderApp('/settings/appearance');
+    const select = await screen.findByRole('combobox', { name: 'Theme' });
+    expect(select).toHaveValue('system');
+    expect(theme()).toBe('light');
+
+    await user.selectOptions(select, 'dark');
+    await waitFor(() => expect(theme()).toBe('dark'));
+    await user.selectOptions(select, 'light');
+    await waitFor(() => expect(theme()).toBe('light'));
+    await waitFor(() =>
+      expect(patches(requests)).toEqual([
+        { appearance: { theme: 'dark' } },
+        { appearance: { theme: 'light' } },
+      ]),
+    );
+    expect(window.localStorage.getItem('leandocs.theme')).toBe('"light"');
+  });
+
+  it('applies the stored theme when the app loads', async () => {
+    setTestSettings({ appearance: { theme: 'dark' } });
+    api();
+    renderApp('/');
+    await waitFor(() => expect(theme()).toBe('dark'));
+    expect(window.localStorage.getItem('leandocs.theme')).toBe('"dark"');
+  });
+
+  it('follows the system while set to System', async () => {
+    const setSystemDark = systemScheme(true);
+    api();
+    renderApp('/settings/appearance');
+    await screen.findByRole('combobox', { name: 'Theme' });
+    expect(theme()).toBe('dark');
+    setSystemDark(false);
+    await waitFor(() => expect(theme()).toBe('light'));
+  });
+
+  it('uses the theme remembered in this browser before signing in', async () => {
+    window.localStorage.setItem('leandocs.theme', '"dark"');
+    mockApi(() => undefined);
+    renderApp('/login');
+    expect(theme()).toBe('dark');
   });
 });

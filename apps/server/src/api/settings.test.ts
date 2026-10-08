@@ -8,7 +8,7 @@ import { buildApp } from '../test/authenticated-app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
 
-/** P16-01 (UI_SPEC §81–83). */
+/** P16-01, P16-03 (UI_SPEC §81–84). */
 
 const apps: FastifyInstance[] = [];
 afterEach(async () => {
@@ -42,11 +42,13 @@ describe('settings', () => {
     const updated = await patch(app, {
       general: { autosave: false, newDocumentFolder: 'Servers/Linux/' },
       editor: { defaultMode: 'source', tabSize: 4 },
+      appearance: { theme: 'dark' },
     });
     expect(updated.statusCode).toBe(200);
     const expected: AppSettings = {
       general: { ...DEFAULT_SETTINGS.general, autosave: false, newDocumentFolder: 'Servers/Linux' },
       editor: { ...DEFAULT_SETTINGS.editor, defaultMode: 'source', tabSize: 4 },
+      appearance: { theme: 'dark' },
     };
     expect(updated.json()).toEqual(expected);
     expect((await patch(app, { editor: { wordWrap: false } })).json<AppSettings>().editor).toEqual({
@@ -59,6 +61,7 @@ describe('settings', () => {
     const restarted = await start();
     expect((await get(restarted)).general).toEqual(expected.general);
     expect((await get(restarted)).editor.wordWrap).toBe(false);
+    expect((await get(restarted)).appearance.theme).toBe('dark');
   });
 
   it('rejects unknown fields, invalid values and folders that are not documentation folders', async () => {
@@ -70,6 +73,8 @@ describe('settings', () => {
       [{ editor: { tabSize: 3 } }, 400],
       [{ editor: { autosaveDelay: 1 } }, 400],
       [{ editor: { defaultMode: 'wysiwyg' } }, 400],
+      [{ appearance: { theme: 'sepia' } }, 400],
+      [{ appearance: { accent: 'red' } }, 400],
       [{ general: { newDocumentFolder: '../outside' } }, 400],
       [{ general: { newDocumentFolder: '.git' } }, 400],
       [{ general: { newDocumentFolder: 'Missing' } }, 404],
@@ -85,13 +90,14 @@ describe('settings', () => {
   it('reads invalid stored values as defaults', async () => {
     const { dataDir, start } = await setup();
     const app = await start();
-    await patch(app, { editor: { tabSize: 8, wordWrap: false } });
+    await patch(app, { editor: { tabSize: 8, wordWrap: false }, appearance: { theme: 'light' } });
     await app.close();
     // Values written by hand or by another version.
     const db = new Database(path.join(dataDir, 'system', 'app.db'));
     const write = db.prepare('UPDATE settings SET value = ? WHERE key = ?');
     write.run('3', 'editor.tabSize');
     write.run('not json', 'editor.wordWrap');
+    write.run('"sepia"', 'appearance.theme');
     db.prepare("INSERT INTO settings VALUES ('editor.theme', '\"dark\"', 'now')").run();
     db.close();
     const restarted = await start();
