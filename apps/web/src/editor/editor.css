@@ -1,0 +1,202 @@
+/* Editing UI — UI_SPEC §32–33, §69; PROJECT_SPEC §47. */
+.save-status-wrap {
+  display: inline-flex;
+}
+
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font-size: var(--font-size-meta);
+  white-space: nowrap;
+}
+
+button.save-status {
+  cursor: pointer;
+}
+
+button.save-status:hover {
+  background: var(--bg-subtle);
+}
+
+.save-status--warning {
+  color: var(--warning-text);
+  font-weight: 600;
+}
+
+.save-status--danger {
+  color: var(--danger-text);
+  font-weight: 600;
+}
+
+.draft-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--info);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  font-size: var(--font-size-sidebar);
+}
+
+.draft-notice > svg {
+  flex-shrink: 0;
+  color: var(--info);
+}
+
+.draft-notice__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  color: var(--text-secondary);
+}
+
+.draft-notice__text strong {
+  color: var(--text-primary);
+}
+
+.conflict-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-sidebar);
+}
+
+.conflict-facts dt {
+  color: var(--text-muted);
+}
+
+.conflict-facts dd {
+  margin: 0;
+}
+
+.diff {
+  max-height: 50vh;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.diff span {
+  display: block;
+  padding: 0 var(--space-3);
+  white-space: pre-wrap;
+}
+
+.diff__added {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.diff__removed {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.diff__same {
+  color: var(--text-muted);
+}
+
+.diff__note {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+}
+
+.doc-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Editing bar (owner feedback 2026-10-02): mode, save status, Save and Done stay visible while a
+   long document scrolls. The formatting toolbar sticks right below it. */
+.doc.doc--editing {
+  --editbar-height: 48px;
+  padding-top: 0;
+}
+
+.doc-editbar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: var(--editbar-height);
+  margin-bottom: var(--space-4);
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.doc-editbar__actions,
+.doc-editbar__layout,
+.doc-edit-actions__group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.doc-editbar__actions {
+  margin-left: auto;
+}
+
+.doc-editbar__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: var(--font-size-ui);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc--editing .visual-toolbar {
+  top: var(--editbar-height);
+}
+
+@media (max-width: 767px) {
+  /* Phones (UI_SPEC §102): title and layout buttons on the first row, editing controls below.
+     The height varies, so the bar stays sticky and the formatting toolbar scrolls. */
+  .doc-editbar {
+    flex-wrap: wrap;
+    row-gap: var(--space-1);
+    height: auto;
+    padding: var(--space-2) 0;
+  }
+
+  .doc-editbar__title {
+    flex: 1;
+  }
+
+  .doc-editbar__layout {
+    order: 1;
+  }
+
+  .doc-editbar__actions {
+    order: 2;
+    flex-basis: 100%;
+  }
+
+  .doc-edit-actions {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    row-gap: var(--space-1);
+  }
+
+  .doc--editing .visual-toolbar {
+    position: static;
+  }
+}

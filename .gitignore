@@ -1,0 +1,25 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+# Local runtime data (documents + SQLite) — never commit
+data/
+.vite/
+playwright-report/
+test-results/
+test_results/
+.DS_Store
+*.log
+# Disposable browser-test databases, documents and authentication keys
+.e2e*-data/
+# Local caches and temporary output
+.cache/
+tmp/
+temp/
+*.tmp
+*.bak
+__pycache__/
+*.pyc

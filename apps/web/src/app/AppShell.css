@@ -1,0 +1,86 @@
+/* App layout — UI_SPEC §14–15, §24. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app-shell__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--topbar-height);
+  padding: 0 var(--space-4);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.topbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-size: 17px;
+}
+
+.topbar__brand:hover {
+  text-decoration: none;
+}
+
+.topbar__spacer {
+  flex: 1;
+}
+
+.topbar__history {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: var(--space-4);
+}
+
+.workspace {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: var(--bg-app);
+}
+
+.user-menu__name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .topbar {
+    padding: 0 var(--space-2);
+  }
+
+  /* Phones have the system back gesture, and the topbar has no room (D-64). */
+  .topbar__history {
+    display: none;
+  }
+}
+
+/* Reflow down to 320 px (WCAG 1.4.10): the logo stays, the wordmark and long names give way. */
+@media (max-width: 479px) {
+  .topbar {
+    gap: var(--space-1);
+  }
+
+  .topbar .wordmark {
+    display: none;
+  }
+
+  .user-menu__name {
+    max-width: 72px;
+  }
+}

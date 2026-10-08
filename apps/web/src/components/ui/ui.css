@@ -1,0 +1,481 @@
+/* Shared primitives — UI_SPEC §117–123. Tokens only; no hard-coded colours. */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: var(--font-size-ui);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) ease-out,
+    border-color var(--duration-fast) ease-out;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--bg-subtle);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--small {
+  height: 28px;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sidebar);
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-surface);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.btn--danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--on-danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  filter: brightness(0.92);
+  background: var(--danger);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.icon-btn:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.tooltip {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--text-primary);
+  color: var(--bg-surface);
+  font-size: var(--font-size-meta);
+  box-shadow: var(--shadow-popover);
+  z-index: 60;
+}
+
+/* Fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.field__label {
+  font-size: var(--font-size-sidebar);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.field__hint {
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+}
+
+/* Checkbox first, label beside it; hint and error line up under the label. */
+.field--checkbox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--space-2);
+}
+
+.field--checkbox .field__label {
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.field--checkbox .field__hint,
+.field--checkbox .field__error {
+  grid-column: 2;
+}
+
+.checkbox {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.field__error,
+.form-error {
+  font-size: var(--font-size-meta);
+  color: var(--danger-text);
+}
+
+.form-error {
+  margin-bottom: var(--space-3);
+}
+
+.input {
+  height: var(--input-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+/* Dialog */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 40;
+}
+
+.dialog {
+  position: fixed;
+  top: 15vh;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100vw - var(--space-8));
+  max-height: 75vh;
+  overflow: auto;
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-popover);
+  z-index: 50;
+}
+
+.dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.dialog__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.dialog__description {
+  margin: 0 0 var(--space-4);
+  color: var(--text-secondary);
+}
+
+.dialog__body {
+  margin-top: var(--space-2);
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* Menus */
+.menu {
+  min-width: 200px;
+  padding: var(--space-1);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-popover);
+  z-index: 55;
+}
+
+.menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-ui);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.menu__item svg {
+  color: var(--text-muted);
+}
+
+.menu__item[data-highlighted] {
+  background: var(--bg-subtle);
+}
+
+/* Keyboard focus needs more than the faint highlight (WCAG 2.4.7, 1.4.11). */
+.menu__item:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.menu__item[data-disabled] {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.menu__item--danger,
+.menu__item--danger svg {
+  color: var(--danger-text);
+}
+
+.menu__separator {
+  height: 1px;
+  margin: var(--space-1) 0;
+  background: var(--border-default);
+}
+
+/* Toasts */
+.toast-viewport {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 360px;
+  max-width: calc(100vw - var(--space-8));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  z-index: 70;
+  outline: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-popover);
+}
+
+.toast--error {
+  border-left: 3px solid var(--danger);
+}
+
+.toast__message {
+  flex: 1;
+}
+
+.toast__action {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .toast-viewport {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+}
+
+/* States */
+.spinner {
+  color: var(--text-muted);
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeleton {
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 440px;
+  margin: var(--space-12) auto;
+  text-align: center;
+}
+
+.empty-state__icon {
+  color: var(--text-disabled);
+  margin-bottom: var(--space-2);
+}
+
+.empty-state__title {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.empty-state__text {
+  color: var(--text-secondary);
+}
+
+.empty-state__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.error-details {
+  margin-top: var(--space-3);
+}
+
+.error-details__body {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  font-size: var(--font-size-meta);
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+/* Tags editor (UI_SPEC §116) */
+.tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--input-height);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.tag-input:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.tag-input[aria-disabled='true'] {
+  background: var(--bg-subtle);
+}
+
+.tag-input__chips {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-input__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tag-input__remove {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tag-input__remove:hover {
+  color: var(--danger-text);
+}
+
+.tag-input__input {
+  flex: 1;
+  min-width: 80px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--font-size-ui);
+}

@@ -1,0 +1,221 @@
+/* Settings (UI_SPEC §81): left mini-sidebar + main panel, compact-medium density. */
+.settings {
+  display: flex;
+  gap: var(--space-8);
+  max-width: 960px;
+  padding: var(--space-8) var(--space-6);
+}
+
+.settings__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.settings__heading {
+  margin: 0 0 var(--space-3);
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.settings__link {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-ui);
+}
+
+.settings__link:hover {
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+
+.settings__link[aria-current='page'] {
+  background: var(--bg-selected);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.settings__panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings__title {
+  margin: 0 0 var(--space-4);
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.settings__subtitle {
+  margin: var(--space-8) 0 var(--space-2);
+  font-size: var(--font-size-ui-emphasis);
+  font-weight: 650;
+}
+
+.settings__form {
+  max-width: 480px;
+}
+
+.settings__form .settings__subtitle:first-child {
+  margin-top: 0;
+}
+
+.settings__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-6);
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-ui);
+}
+
+.settings__facts dt {
+  color: var(--text-secondary);
+}
+
+.settings__facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings__note {
+  max-width: 60ch;
+  margin: 0 0 var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--font-size-ui);
+}
+
+.settings__action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.settings__progress {
+  color: var(--text-secondary);
+  font-size: var(--font-size-ui);
+}
+
+.settings__issues {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-ui);
+}
+
+.settings__issues li {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.settings__issue-message {
+  color: var(--text-secondary);
+}
+
+.settings__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-ui);
+}
+
+.settings__table th {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-align: left;
+}
+
+.settings__table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .settings {
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+
+  .settings__nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: auto;
+  }
+
+  .settings__heading {
+    width: 100%;
+  }
+}
+
+.settings__auth-warning {
+  margin-bottom: var(--space-6);
+  padding: var(--space-3);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: var(--font-size-ui);
+}
+
+.settings__auth-warning p {
+  margin: var(--space-2) 0 0;
+}
+
+.settings__mfa-form {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  max-width: 440px;
+}
+
+.settings__mfa-form .field {
+  width: 100%;
+}
+
+.settings__mfa-form img {
+  max-width: 100%;
+  height: auto;
+}
+
+.settings__mfa-key {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.settings__recovery-codes {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-ui);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* About (UI_SPEC §88). */
+.settings__about {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-6);
+}
+
+.settings__about-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.settings__about-tagline {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-ui);
+}

@@ -1,0 +1,391 @@
+/* Document page — UI_SPEC §24–31, §43–49, §147. */
+.doc-layout {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100%;
+}
+
+.doc {
+  flex: 1;
+  min-width: 0;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-12) var(--space-12);
+}
+
+/* Full width (default, owner feedback 2026-10-02): the document uses the workspace between the
+   side panels; the reading width (900 px, UI_SPEC §27) stays available as a toggle. */
+.doc--wide {
+  max-width: none;
+}
+
+.doc__skeleton-title {
+  width: 45%;
+  height: 32px;
+  margin: var(--space-4) 0 var(--space-6);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+}
+
+.doc__breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+}
+
+.doc__crumb {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.doc__crumb:hover {
+  color: var(--accent);
+}
+
+.doc__crumb-separator {
+  margin: 0 var(--space-1);
+  color: var(--text-disabled);
+}
+
+.doc__header {
+  margin-bottom: var(--space-8);
+}
+
+.doc__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.doc__title {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.doc__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+  flex-shrink: 0;
+}
+
+.doc__tabs {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.doc__tab {
+  padding: var(--space-1) 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-ui);
+  cursor: pointer;
+}
+
+.doc__tab:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.doc__tab:disabled {
+  cursor: not-allowed;
+  color: var(--text-disabled);
+}
+
+.doc__tab[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+.doc__description {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-body);
+  color: var(--text-secondary);
+}
+
+.doc__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  padding: 1px var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  font-size: var(--font-size-meta);
+  color: var(--text-secondary);
+}
+
+.doc__meta {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+}
+
+.doc__warning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--warning);
+  background: var(--bg-subtle);
+  font-size: var(--font-size-sidebar);
+  color: var(--text-secondary);
+}
+
+.doc__body {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  color: var(--text-primary);
+}
+
+.doc__empty {
+  color: var(--text-muted);
+}
+
+/* Context sidebar (UI_SPEC §43–48) */
+.context {
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  width: 260px;
+  max-height: calc(100vh - var(--topbar-height));
+  overflow: auto;
+  padding: var(--space-6) var(--space-4);
+  border-left: 1px solid var(--border-default);
+  align-self: stretch;
+}
+
+.context--collapsed {
+  width: auto;
+  padding: var(--space-4) var(--space-2);
+  border-left: 0;
+}
+
+.context__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.context__title {
+  font-size: var(--font-size-meta);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.context__tabs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.context__tab {
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-size-meta);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.context__tab[aria-selected='true'] {
+  background: var(--bg-selected);
+  color: var(--text-primary);
+}
+
+.links-panel__heading {
+  margin: var(--space-4) 0 var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-meta);
+  font-weight: 600;
+}
+
+.links-panel section:first-child .links-panel__heading {
+  margin-top: var(--space-2);
+}
+
+.links-panel__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links-panel__list li {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1) var(--space-2);
+}
+
+.links-panel__link {
+  color: var(--text-primary);
+  font-size: var(--font-size-sidebar);
+}
+
+.links-panel__meta {
+  color: var(--text-muted);
+  font-size: var(--font-size-meta);
+}
+
+.doc__tags li {
+  list-style: none;
+}
+
+.tag--button {
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--font-size-meta);
+}
+
+.tag--button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.info-panel .field {
+  margin: 0;
+}
+
+.info-panel__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: var(--font-size-sidebar);
+}
+
+.info-panel__facts dt {
+  color: var(--text-muted);
+}
+
+.info-panel__facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.info-panel__move {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.info-panel__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.context__empty {
+  font-size: var(--font-size-sidebar);
+  color: var(--text-muted);
+}
+
+.toc {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc__link {
+  display: block;
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sidebar);
+  line-height: 1.4;
+}
+
+.toc__link:hover {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.toc__link--active {
+  border-left-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Below 1200 px (MEDIA.contextInline) the context panel is a drawer from the right (UI_SPEC
+   §100–101), opened from the document header. */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 40;
+}
+
+.context.context--drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(85vw, 320px);
+  max-height: none;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-popover);
+  z-index: 41;
+}
+
+.context--drawer:focus {
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  .doc__width-toggle {
+    display: none;
+  }
+}
+
+@media (max-width: 1279px) {
+  .doc {
+    padding: var(--space-8) var(--space-8) var(--space-12);
+  }
+}
+
+@media (max-width: 767px) {
+  .doc {
+    padding: var(--space-5) var(--space-4) var(--space-10);
+  }
+
+  .doc__heading {
+    flex-direction: column;
+  }
+
+  .doc__title {
+    font-size: 26px;
+  }
+}

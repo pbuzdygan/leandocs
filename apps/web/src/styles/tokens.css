@@ -1,0 +1,138 @@
+/*
+ * Design tokens — UI_SPEC §5–12, §85.
+ * Components must use these variables; never hard-code colours (UI_SPEC §142).
+ */
+:root {
+  color-scheme: light;
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-hover: #f8fafc;
+  --bg-selected: #eff6ff;
+
+  --border-default: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #5f6f86;
+  --text-disabled: #94a3b8;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #dbeafe;
+
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #0284c7;
+  /* Status colours for text: the base colours are for borders and icons (3:1) and are too
+     light for text (WCAG AA 4.5:1, P15-08). */
+  --success-text: #15803d;
+  --warning-text: #b45309;
+  --danger-text: #b91c1c;
+  --info-text: #0369a1;
+  /* Text on a solid --danger fill: white in both themes (4.8:1). */
+  --on-danger: #ffffff;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-popover: 0 8px 24px rgba(15, 23, 42, 0.1);
+  /* Solid accent: the earlier 50% tint had 2.2:1 contrast, below WCAG AA's 3:1 (P15-08). */
+  --focus-ring: 2px solid var(--accent);
+
+  --font-sans:
+    'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, 'Liberation Mono', monospace;
+
+  --font-size-meta: 12px;
+  --font-size-sidebar: 13px;
+  --font-size-ui: 14px;
+  --font-size-ui-emphasis: 15px;
+  --font-size-body: 16px;
+  --line-height-ui: 1.4;
+  --line-height-body: 1.7;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Brand (BRAND_SPEC.md §4) — mark colours; the wordmark uses --accent */
+  --brand-card-back: #1e293b;
+  --brand-card-middle: #1d4ed8;
+  --brand-card-front: #3b82f6;
+  --brand-fold: #bfdbfe;
+  --brand-bar: #ffffff;
+
+  --topbar-height: 52px;
+  --sidebar-width-default: 280px;
+  --tree-row-height: 30px;
+  --tree-indent: 16px;
+  --toolbar-height: 40px;
+  --control-height: 32px;
+  --input-height: 34px;
+  --overlay: rgba(15, 23, 42, 0.35);
+  --code-bg: #0f172a;
+  --code-text: #e2e8f0;
+  --code-muted: #94a3b8;
+  --code-border: rgba(148, 163, 184, 0.16);
+  --code-keyword: #c4b5fd;
+  --code-string: #a7f3d0;
+  --code-number: #fcd34d;
+  --code-title: #93c5fd;
+  --code-attr: #f9a8d4;
+
+  /* Source view (light): subtle, not an IDE (UI_SPEC §41) */
+  --source-heading: #1d4ed8;
+  --source-link: #0369a1;
+  --source-code: #9f1239;
+  --source-meta: #64748b;
+
+  --duration-fast: 120ms;
+  --duration-base: 160ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* UI_SPEC §84–85: as neutral as light mode (Technical Minimal); `data-theme` is set on <html> by
+   app/theme.ts and public/theme-init.js. */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-app: #0f172a;
+  --bg-surface: #111827;
+  --bg-subtle: #1e293b;
+  --bg-hover: #1e293b;
+  --bg-selected: #172554;
+
+  --border-default: #334155;
+  --border-strong: #475569;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --accent: #60a5fa;
+  --accent-hover: #93c5fd;
+  --accent-soft: #1e3a8a;
+  --success-text: #4ade80;
+  --warning-text: #fbbf24;
+  --danger-text: #f87171;
+  --info-text: #38bdf8;
+  --overlay: rgba(2, 6, 23, 0.6);
+  --brand-card-back: #1e3a8a;
+  --code-bg: #020617;
+  --source-heading: #93c5fd;
+  --source-link: #7dd3fc;
+  --source-code: #fda4af;
+  --source-meta: #94a3b8;
+}

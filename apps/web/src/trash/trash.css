@@ -1,0 +1,112 @@
+/* Trash (UI_SPEC §136): a plain table, as quiet as Settings › Broken links. */
+.trash {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-12);
+}
+
+.trash__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.trash__title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.trash__note {
+  margin-bottom: var(--space-6);
+  color: var(--text-secondary);
+}
+
+.trash__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.trash__table th,
+.trash__table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+  text-align: left;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.trash__table thead th {
+  border-bottom-color: var(--border-strong);
+  color: var(--text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.trash__deleted {
+  white-space: nowrap;
+}
+
+.trash__table td {
+  color: var(--text-secondary);
+}
+
+.trash__name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.trash__name svg {
+  margin-right: var(--space-2);
+  color: var(--text-muted);
+  vertical-align: -3px;
+}
+
+.trash__actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.trash__actions .btn + .btn {
+  margin-left: var(--space-2);
+}
+
+/* Phones: each item becomes a block with labelled lines (UI_SPEC §104: no sideways scrolling). */
+@media (max-width: 767px) {
+  .trash {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .trash__table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .trash__table tr {
+    display: block;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .trash__table th,
+  .trash__table td {
+    display: block;
+    padding: 2px 0;
+    border: 0;
+  }
+
+  .trash__table td[data-label]::before {
+    content: attr(data-label) ': ';
+    color: var(--text-muted);
+  }
+
+  .trash__table .trash__actions {
+    padding-top: var(--space-2);
+    white-space: normal;
+    text-align: left;
+  }
+}

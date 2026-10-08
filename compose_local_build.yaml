@@ -1,0 +1,44 @@
+# LeanDocs — local build: builds the image from this repository and runs it like compose.yaml.
+#
+#   mkdir -p data && docker compose -f compose_local_build.yaml up --build -d   → http://localhost:8080
+#
+# Run the same command again after pulling new code. Stop: docker compose -f compose_local_build.yaml down
+# For a deployment with the published image use compose.yaml. Every setting: docs/configuration.md.
+#
+# Optional `.env` next to this file (see .env.example):
+#   LEANDOCS_PORT=8090          host port, if 8080 is taken
+#   LEANDOCS_BIND=127.0.0.1     host address to listen on (default: all addresses)
+#   LEANDOCS_UID=1001           run as your user so files in ./data stay yours (`id -u`)
+#   LEANDOCS_GID=1001           (`id -g`)
+services:
+  leandocs:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: leandocs:local
+    user: '${LEANDOCS_UID:-1000}:${LEANDOCS_GID:-1000}'
+    environment:
+      AUTH_MODE: '${AUTH_MODE:-local}'
+      PUBLIC_ORIGIN: '${PUBLIC_ORIGIN:-}'
+      SESSION_COOKIE_SECURE: '${SESSION_COOKIE_SECURE:-false}'
+      PROXY_TRUSTED_IPS: '${PROXY_TRUSTED_IPS:-}'
+      PROXY_AUTH_HEADER: '${PROXY_AUTH_HEADER:-}'
+      PROXY_AUTH_USER: '${PROXY_AUTH_USER:-}'
+      MAX_UPLOAD_SIZE: '${MAX_UPLOAD_SIZE:-52428800}'
+      WATCH_MODE: '${WATCH_MODE:-native}'
+      ASSIGN_MISSING_IDS: '${ASSIGN_MISSING_IDS:-true}'
+      LOG_LEVEL: '${LOG_LEVEL:-info}'
+    ports:
+      - '${LEANDOCS_BIND:-0.0.0.0}:${LEANDOCS_PORT:-8080}:8080'
+    volumes:
+      - ./data:/data
+    # Same container restrictions as compose.yaml, so the local build behaves like production.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_grace_period: 20s

@@ -1,0 +1,30 @@
+/* Brand elements — BRAND_SPEC.md. Colours via tokens only. */
+.app-logo {
+  flex-shrink: 0;
+}
+
+.app-logo__back {
+  fill: var(--brand-card-middle);
+}
+
+.app-logo__front {
+  fill: var(--brand-card-front);
+}
+
+.app-logo__fold {
+  fill: var(--brand-fold);
+}
+
+.app-logo__bar {
+  fill: var(--brand-bar);
+}
+
+.wordmark {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.wordmark__accent {
+  color: var(--accent);
+}

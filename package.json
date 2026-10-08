@@ -1,0 +1,40 @@
+{
+  "name": "leandocs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LeanDocs — Documentation without the bloat.",
+  "type": "module",
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=24.7.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @leandocs/server --filter @leandocs/web dev",
+    "build": "pnpm --filter @leandocs/web build && pnpm --filter @leandocs/server build",
+    "start": "pnpm --filter @leandocs/server start",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck && tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:e2e": "playwright test",
+    "test:upgrade": "node scripts/upgrade-check.mjs",
+    "test:backup": "node scripts/backup-check.mjs",
+    "test:performance": "node scripts/performance-check.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.19.1",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^5.0.3"
+  }
+}
