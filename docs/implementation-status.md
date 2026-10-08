@@ -418,6 +418,15 @@ Major decisions are ADRs in [`docs/adr/`](adr/). Smaller decisions are listed he
 
 ## Work log
 
+### 2026-10-08 · @claude-code · CHANGELOG for 0.1.0
+
+- **Done:** The owner moved every entry under `0.1.0` (the first stable version on `main`; the `dev0.1.x` previews came before). Tidied for users: entries grouped by topic under the three sections, duplicates merged (links kept after rename appeared three times, the trash four), statements that only made sense between previews removed or rewritten ("Later, links…", "new icon set", "instead of 425 MB", Argon2id), the image tag example changed to `0.1.0`, bug fixes marked as fixed after the dev previews. Heading `[0.1.0] — 2026-10-08` with an empty `[Unreleased]` above it (AGENTS.md §8).
+- **Files:** `CHANGELOG.md`, this file.
+- **Verified:** format ✔; nothing parses the changelog (workflows, scripts, tests).
+- **Decisions:** none.
+- **Issues/notes:** Change the date in the `[0.1.0]` heading if the release is published on another day.
+- **Next:** P17-01: merge `dev` into `main`, publish release `0.1.0` (owner).
+
 ### 2026-10-08 · @claude-code · P16-07
 
 - **Done:** Checked every screen against UI_SPEC §160 with a temporary 29-screen sweep on the seeded visual server (home, document with Contents/Links/Info, document menu, Rename/Move/Delete/New document/New folder dialogs, tree context menu, quick open, search, slash menu, both editors, all eight Settings pages, Trash, 404, tablet 1024 px with drawer, phone editing and navigation) and mapped each criterion to tests. **Visual** ✔ (tokens only, accent on links/active/primary, no cards). **Navigation** ✔ after fix: the sidebar could not be hidden on wide screens → ☰ now hides/shows it (D-66); resizing worked but had no test → unit (keyboard, limits, remembered, double-click reset) and browser (drag) tests. **Document** ✔ (reading-width toggle, tables/code natural). **Editing** ✔ after fixes: slash menu lacked Attachment (§38) → added (opens the same picker); visual editor tables stretched full width with tall cells and the first heading kept its top margin → now as in View. Save status, Visual/Source tabs ✔. **Search** ✔ (Ctrl/Cmd+K, keyboard, `search.spec.ts`). **Context** ✔ (Contents, Info, Links/backlinks). **Responsive** ✔ (P16-02 + sweep). **Accessibility** ✔ (axe both themes, focus, keyboard; P15-08, P16-03).
