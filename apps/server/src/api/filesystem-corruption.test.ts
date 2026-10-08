@@ -176,8 +176,9 @@ describe('files that are not UTF-8', () => {
     // Once converted to UTF-8 it is an ordinary document and gets its id.
     await writeFile(path.join(content, 'Legacy.md'), '# Zródło\n');
     await app.inject({ method: 'POST', url: '/api/v1/index/rebuild' });
+    // The rebuild runs in the background; under a full parallel test run it can take over 1 s.
     await expect
-      .poll(async () => (await issues(app)).map((issue) => issue.path))
+      .poll(async () => (await issues(app)).map((issue) => issue.path), { timeout: 10_000 })
       .toEqual(['Wide.md']);
     expect(await readFile(path.join(content, 'Legacy.md'), 'utf8')).toMatch(/^---\nid: /);
   });

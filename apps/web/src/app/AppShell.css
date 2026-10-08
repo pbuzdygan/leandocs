@@ -39,6 +39,12 @@
   flex: 1;
 }
 
+.topbar__history {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: var(--space-4);
+}
+
 .topbar__menu {
   display: none;
 }
@@ -64,6 +70,11 @@
 
   .topbar__menu {
     display: inline-flex;
+  }
+
+  /* Phones have the system back gesture, and the topbar has no room (D-64). */
+  .topbar__history {
+    display: none;
   }
 }
 

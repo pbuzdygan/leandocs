@@ -83,9 +83,14 @@
   flex-shrink: 0;
 }
 
-.icon-btn:hover {
+.icon-btn:hover:not(:disabled) {
   background: var(--bg-subtle);
   color: var(--text-primary);
+}
+
+.icon-btn:disabled {
+  color: var(--text-disabled);
+  cursor: default;
 }
 
 .link-button {

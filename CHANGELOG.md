@@ -9,6 +9,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 - Settings has two new pages, General and Editor. You can choose which editor opens when you start editing (Visual or Source), turn autosave off or change how long it waits, and set line numbers, word wrap and tab size for the source editor. You can also pick the folder new documents go to, and have LeanDocs open the document you viewed last when it starts. Settings are stored with your data, so they apply in every browser and are kept in backups. Switching between Visual and Source while editing no longer changes the editor you start with next time.
 - LeanDocs has a dark mode. In Settings › Appearance choose Light, Dark or System; System follows your device and switches with it. The choice applies at once, including to diagrams, and the sign-in page uses it too.
 - You can now open the Trash from the bottom of the navigation. It lists deleted documents and folders with where they were and when they were deleted. You can put an item back where it was, delete it permanently, or empty the whole trash; permanent deletion always asks first.
+- The top bar has Back and Forward buttons, like a browser, to move between the pages you opened. They follow the browser's own Back and Forward and are greyed out when there is nowhere to go. On phones they are hidden; use the phone's back gesture.
 
 ### Improvements
 

@@ -1,6 +1,8 @@
 import {
   IconAlertCircle,
   IconAlertTriangle,
+  IconArrowLeft,
+  IconArrowRight,
   IconFolderSymlink,
   IconFileImport,
   IconBold,
@@ -94,6 +96,8 @@ export const ExpandWidthIcon = icon(IconViewportWide, 'ExpandWidthIcon');
 export const ShrinkWidthIcon = icon(IconViewportNarrow, 'ShrinkWidthIcon');
 export const MoreIcon = icon(IconDots, 'MoreIcon');
 export const CloseIcon = icon(IconX, 'CloseIcon');
+export const BackIcon = icon(IconArrowLeft, 'BackIcon');
+export const ForwardIcon = icon(IconArrowRight, 'ForwardIcon');
 export const ContextPanelIcon = icon(IconLayoutSidebarRight, 'ContextPanelIcon');
 export const ExternalLinkIcon = icon(IconExternalLink, 'ExternalLinkIcon');
 
