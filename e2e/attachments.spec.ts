@@ -2,7 +2,8 @@
 import { csrfRequest } from './csrf-request';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { expect, test, type Page } from './document-fixture';
+import { expect, newParagraphAtEnd, test, type Page } from './document-fixture';
+import { setDefaultEditor } from './settings';
 
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
@@ -228,4 +229,26 @@ test('direct SVG navigation cannot run scripts or access the app origin', async 
   ).toBeUndefined();
   expect(await page.evaluate(() => localStorage.getItem('attachmentScriptRan'))).toBeNull();
   await asset.close();
+});
+
+test('the slash menu attaches files at the caret (UI_SPEC §38)', async ({
+  page,
+  createDocument,
+}) => {
+  const id = await createDocument('Attachments Slash', 'Intro.\n');
+  await setDefaultEditor(page, 'visual');
+  await page.goto(`/doc/${id}/edit`);
+  await expect(page.locator('.ProseMirror')).toContainText('Intro.');
+  await newParagraphAtEnd(page);
+  await page.keyboard.type('/');
+  const menu = page.getByRole('menu', { name: 'Insert block' });
+  await expect(menu).toBeVisible();
+  const chooser = page.waitForEvent('filechooser');
+  await menu.getByRole('menuitem', { name: 'Attachment' }).click();
+  await (await chooser).setFiles({ name: 'slash.png', mimeType: 'image/png', buffer: png });
+  await expect(page.locator('.ProseMirror').getByRole('img', { name: 'slash.png' })).toBeVisible();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page.getByRole('status', { name: 'Save status' })).toHaveCount(0);
+  const saved = await (await page.request.get(`/api/v1/documents/${id}`)).json();
+  expect(saved.content).toContain('Attachments%20Slash.assets/slash.png');
 });

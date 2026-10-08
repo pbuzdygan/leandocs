@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, type RefObject } from 'react';
 import { Button } from '../components/ui/Button';
 
 export type UploadFiles = (files: File[]) => Promise<string>;
@@ -6,11 +6,15 @@ export type UploadFiles = (files: File[]) => Promise<string>;
 export function UploadControl({
   onFiles,
   disabled = false,
+  inputRef,
 }: {
   onFiles: (files: File[]) => void;
   disabled?: boolean;
+  /** Lets other controls open the same file picker (the slash menu's Attachment, UI_SPEC §38). */
+  inputRef?: RefObject<HTMLInputElement | null>;
 }) {
-  const input = useRef<HTMLInputElement>(null);
+  const ownInput = useRef<HTMLInputElement>(null);
+  const input = inputRef ?? ownInput;
   return (
     <>
       <Button

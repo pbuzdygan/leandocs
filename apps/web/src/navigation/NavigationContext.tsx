@@ -14,6 +14,9 @@ interface NavigationState {
   /** Mobile drawer state (UI_SPEC §101, §103). */
   drawerOpen: boolean;
   setDrawerOpen: (open: boolean) => void;
+  /** Tablets and desktops: the sidebar is hidden (UI_SPEC §160), remembered per browser. */
+  sidebarHidden: boolean;
+  setSidebarHidden: (hidden: boolean) => void;
 }
 
 const NavigationContext = createContext<NavigationState | null>(null);
@@ -25,6 +28,11 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     () => new Set(readPreference<string[]>(STORAGE_KEY, [])),
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarHidden, setHidden] = useState(() => readPreference('sidebar.hidden', false));
+  const setSidebarHidden = useCallback((hidden: boolean) => {
+    setHidden(hidden);
+    writePreference('sidebar.hidden', hidden);
+  }, []);
 
   const update = useCallback((change: (next: Set<string>) => void) => {
     setExpandedState((current) => {
@@ -47,8 +55,10 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         }),
       drawerOpen,
       setDrawerOpen,
+      sidebarHidden,
+      setSidebarHidden,
     }),
-    [expanded, update, drawerOpen],
+    [expanded, update, drawerOpen, sidebarHidden, setSidebarHidden],
   );
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }

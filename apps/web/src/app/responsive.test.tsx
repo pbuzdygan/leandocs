@@ -81,3 +81,51 @@ describe('phone navigation drawer', () => {
     expect(document.getElementById('navigation-drawer')).toHaveAttribute('inert');
   });
 });
+
+describe('navigation sidebar on wider screens', () => {
+  it('can be hidden and shown again, and stays as chosen (UI_SPEC §160)', async () => {
+    api();
+    const { user, unmount } = renderApp(`/doc/${ID}`);
+    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    const sidebar = document.getElementById('navigation-drawer')!;
+    const hide = screen.getByRole('button', { name: 'Hide navigation' });
+    expect(hide).toHaveAttribute('aria-expanded', 'true');
+    expect(hide).toHaveAttribute('aria-controls', 'navigation-drawer');
+    expect(sidebar).not.toHaveClass('sidebar--hidden');
+
+    await user.click(hide);
+    // `display: none` in CSS: out of view, out of the tab order and the accessibility tree.
+    expect(sidebar).toHaveClass('sidebar--hidden');
+    const show = screen.getByRole('button', { name: 'Show navigation' });
+    expect(show).toHaveAttribute('aria-expanded', 'false');
+    expect(window.localStorage.getItem('leandocs.sidebar.hidden')).toBe('true');
+
+    unmount();
+    api();
+    renderApp(`/doc/${ID}`);
+    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    expect(document.getElementById('navigation-drawer')).toHaveClass('sidebar--hidden');
+    await user.click(screen.getByRole('button', { name: 'Show navigation' }));
+    expect(document.getElementById('navigation-drawer')).not.toHaveClass('sidebar--hidden');
+  });
+
+  it('resizes with the keyboard within 220–400 px and remembers the width (UI_SPEC §17)', async () => {
+    api();
+    const { user } = renderApp(`/doc/${ID}`);
+    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    const separator = screen.getByRole('separator', { name: 'Resize navigation' });
+    const sidebar = document.getElementById('navigation-drawer')!;
+    expect(separator).toHaveAttribute('aria-valuenow', '280');
+    separator.focus();
+    await user.keyboard('{ArrowRight}{ArrowRight}');
+    expect(separator).toHaveAttribute('aria-valuenow', '312');
+    expect(sidebar.style.width).toBe('312px');
+    expect(window.localStorage.getItem('leandocs.sidebar.width')).toBe('312');
+    for (let i = 0; i < 20; i++) await user.keyboard('{ArrowRight}');
+    expect(separator).toHaveAttribute('aria-valuenow', '400');
+    for (let i = 0; i < 20; i++) await user.keyboard('{ArrowLeft}');
+    expect(separator).toHaveAttribute('aria-valuenow', '220');
+    await user.dblClick(separator);
+    expect(separator).toHaveAttribute('aria-valuenow', '280');
+  });
+});

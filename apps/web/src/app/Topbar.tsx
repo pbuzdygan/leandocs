@@ -19,6 +19,7 @@ import { NAVIGATION_DRAWER_ID, useNavigationState } from '../navigation/Navigati
 import { findDocument } from '../navigation/tree-utils';
 import { modifierLabel, useSearchControls } from '../search/SearchContext';
 import { parentPath } from '../utils/format';
+import { MEDIA, useMediaQuery } from '../utils/media';
 import { useHistoryPosition } from './history';
 
 /**
@@ -29,7 +30,8 @@ export function Topbar() {
   const actions = useContentActions();
   const search = useSearchControls();
   const navigate = useNavigate();
-  const { drawerOpen, setDrawerOpen } = useNavigationState();
+  const { drawerOpen, setDrawerOpen, sidebarHidden, setSidebarHidden } = useNavigationState();
+  const mobile = useMediaQuery(MEDIA.mobile);
   const tree = useTree();
   const history = useHistoryPosition();
   const match = useMatch('/doc/:id/*');
@@ -38,11 +40,20 @@ export function Topbar() {
 
   return (
     <header className="topbar">
+      {/* Phones: opens the navigation drawer. Wider screens: hides or shows the sidebar. */}
       <IconButton
-        label={drawerOpen ? 'Close navigation' : 'Open navigation'}
+        label={
+          mobile
+            ? drawerOpen
+              ? 'Close navigation'
+              : 'Open navigation'
+            : sidebarHidden
+              ? 'Show navigation'
+              : 'Hide navigation'
+        }
         className="topbar__menu"
-        onClick={() => setDrawerOpen(!drawerOpen)}
-        aria-expanded={drawerOpen}
+        onClick={() => (mobile ? setDrawerOpen(!drawerOpen) : setSidebarHidden(!sidebarHidden))}
+        aria-expanded={mobile ? drawerOpen : !sidebarHidden}
         aria-controls={NAVIGATION_DRAWER_ID}
       >
         <MenuIcon size={18} />

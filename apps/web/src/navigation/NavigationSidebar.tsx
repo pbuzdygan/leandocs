@@ -29,7 +29,7 @@ export function clampWidth(width: number): number {
 export function NavigationSidebar() {
   const tree = useTree();
   const actions = useContentActions();
-  const { reveal, drawerOpen, setDrawerOpen } = useNavigationState();
+  const { reveal, drawerOpen, setDrawerOpen, sidebarHidden } = useNavigationState();
   const match = useMatch('/doc/:id/*');
   const activeId = match?.params.id;
   const [width, setWidth] = useState(() =>
@@ -102,7 +102,14 @@ export function NavigationSidebar() {
       <nav
         ref={navRef}
         id={NAVIGATION_DRAWER_ID}
-        className={drawerOpen ? 'sidebar sidebar--open' : 'sidebar'}
+        className={[
+          'sidebar',
+          drawerOpen && 'sidebar--open',
+          // Hidden from view, focus and screen readers; phones use the drawer instead.
+          !mobile && sidebarHidden && 'sidebar--hidden',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         style={{ width }}
         aria-label="Documentation navigation"
         // A closed drawer is off-screen: keep it out of the tab order and the accessibility tree.

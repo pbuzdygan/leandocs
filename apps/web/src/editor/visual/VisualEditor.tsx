@@ -83,6 +83,7 @@ export function VisualEditor({
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const attach = useRef<(files: File[]) => void>(() => undefined);
+  const filePicker = useRef<HTMLInputElement>(null);
   const editor = useRef<Editor | null>(null);
   const callbacks = useRef({ onChange, onSave, onExit, onUpload, resolveUrl, linkTargets });
   useLayoutEffect(() => {
@@ -282,6 +283,10 @@ export function VisualEditor({
           view.dispatch(tr.scrollIntoView());
           break;
         }
+        case 'Attachment':
+          // The same picker as "Attach files"; files are inserted at the caret.
+          filePicker.current?.click();
+          break;
         case 'Link':
         case 'Image':
           setUrl('');
@@ -379,6 +384,7 @@ export function VisualEditor({
     'Table',
     'Callout',
     'Image',
+    ...(onUpload ? ['Attachment'] : []),
     'Divider',
   ];
   const toolbarButton = (item: (typeof buttons)[number]) => (
@@ -457,7 +463,11 @@ export function VisualEditor({
       <div className="visual-toolbar" role="toolbar" aria-label="Formatting">
         {buttons.map(toolbarButton)}
         {onUpload && (
-          <UploadControl disabled={loading || !!error} onFiles={(files) => attach.current(files)} />
+          <UploadControl
+            disabled={loading || !!error}
+            onFiles={(files) => attach.current(files)}
+            inputRef={filePicker}
+          />
         )}
         {context.table && (
           <div className="visual-toolbar__context" role="group" aria-label="Table">

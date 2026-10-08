@@ -10,6 +10,10 @@
   border-right: 1px solid var(--border-default);
 }
 
+.sidebar--hidden {
+  display: none;
+}
+
 .sidebar__header {
   display: flex;
   align-items: center;

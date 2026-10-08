@@ -115,3 +115,36 @@ test('phones: the editing bar keeps every control on screen', async ({ page, cre
     await expect(bar.getByRole('status', { name: 'Save status' })).toBeInViewport();
   }
 });
+
+test('the navigation sidebar can be resized by dragging and hidden on wide screens (UI_SPEC §160)', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  const sidebar = page.getByRole('navigation', { name: 'Documentation navigation' });
+  await expect(sidebar).toBeVisible();
+  const separator = page.getByRole('separator', { name: 'Resize navigation' });
+  const box = (await separator.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 60, box.y + 200, { steps: 5 });
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute('aria-valuenow', '340');
+  expect(Math.round((await sidebar.boundingBox())!.width)).toBe(340);
+  await page.reload();
+  await expect(page.getByRole('separator', { name: 'Resize navigation' })).toHaveAttribute(
+    'aria-valuenow',
+    '340',
+  );
+
+  await page.getByRole('button', { name: 'Hide navigation' }).click();
+  await expect(sidebar).toBeHidden();
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(sidebar).toBeHidden();
+  await page.getByRole('button', { name: 'Show navigation' }).click();
+  await expect(sidebar).toBeVisible();
+  // Leave the defaults for later tests (local storage of this test's browser context only).
+  await separator.dblclick();
+  await expect(separator).toHaveAttribute('aria-valuenow', '280');
+});

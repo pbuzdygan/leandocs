@@ -83,6 +83,10 @@
   padding-top: var(--space-4);
   outline: none;
 }
+/* As `.markdown > :first-child` in View: ProseMirror's own element sits in between. */
+.visual-content .ProseMirror > :first-child {
+  margin-top: 0;
+}
 .visual-content .ProseMirror:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
@@ -100,15 +104,15 @@
   font-family: var(--font-mono);
   font-size: 13px;
 }
-.visual-content table {
-  border-collapse: collapse;
-  width: 100%;
-}
+/* Tables look like View (.markdown table, UI_SPEC §160): natural width, same cell padding. Cells
+   keep a minimum width so a new, empty table still has room to click into. */
 .visual-content td,
 .visual-content th {
   min-width: 80px;
-  border: 1px solid var(--border-default);
-  padding: var(--space-2);
+}
+.visual-content td > p,
+.visual-content th > p {
+  margin: 0;
 }
 .visual-content li[data-checked] {
   list-style: none;
