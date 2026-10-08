@@ -52,6 +52,26 @@ export function attachmentName(input: string): string {
   return `${stem}${extension}`;
 }
 
+/**
+ * Checks the name of an attachment that already exists, for reads and deletion (KI-7). Files
+ * added outside the app keep their own spelling (`Photo.PNG`, decomposed accents, `Scan: 1.png`),
+ * which the upload sanitiser would change, so the name only has to be one plain path segment with
+ * an allowed type. Callers open it inside the resolved assets folder without following symlinks.
+ */
+export function existingAttachmentName(input: string): string {
+  if (
+    !input ||
+    input.includes('/') ||
+    input.includes('\\') ||
+    input.includes('\0') ||
+    input.startsWith('.') ||
+    Buffer.byteLength(input, 'utf8') > 255 ||
+    !isAttachmentFileName(input)
+  )
+    throw new AppError(400, 'INVALID_ATTACHMENT_NAME', 'Invalid attachment name');
+  return input;
+}
+
 export async function validateAttachment(
   name: string,
   declaredMime: string,

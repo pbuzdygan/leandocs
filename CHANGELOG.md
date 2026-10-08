@@ -28,6 +28,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### Bug fixes
 
+- Attachments copied into a document's folder outside LeanDocs can now be opened and deleted even when their names use capital letters in the extension (for example `Photo.PNG`), accents written by a Mac, or characters such as `:`. Before, they were listed but could not be opened.
 - Documents with very deeply nested quotes or lists no longer disappear from the library.
 - Importing an HTML page that is too complex to convert no longer makes the whole import fail. That page is skipped and the preview says why.
 - Documents saved in an older text encoding (for example by old Windows editors) are no longer damaged when LeanDocs starts or when you move a linked document. They are shown read-only with an explanation, and Settings › Index lists them so you can convert them.

@@ -173,6 +173,35 @@ describe('attachment API', () => {
     expect(await readFile(path.join(outside, 'secret.txt'), 'utf8')).toBe('secret');
   });
 
+  it('opens and deletes files added outside the app under their own spelling (KI-7)', async () => {
+    const { app, base, content } = await setup();
+    const folder = path.join(content, 'Doc.assets');
+    await mkdir(folder);
+    // Upper-case extension, a character uploads would replace, and accents as macOS writes them.
+    const names = ['Photo.PNG', 'Scan: 1.png', 'Zdje\u0328cie.Png'];
+    for (const name of names) await writeFile(path.join(folder, name), png);
+
+    const listed = (await app.inject(base)).json().items as { name: string; url: string }[];
+    expect(listed.map((item) => item.name).sort()).toEqual([...names].sort());
+    for (const item of listed) {
+      const read = await app.inject(item.url);
+      expect(read.statusCode, `${item.name}: ${read.body}`).toBe(200);
+      expect(read.rawPayload.equals(png)).toBe(true);
+    }
+    const remove = await app.inject({ method: 'DELETE', url: listed[0]!.url });
+    expect(remove.statusCode).toBe(204);
+    expect(await readdir(folder)).toHaveLength(2);
+
+    // Still one plain file name of an allowed type, nothing else.
+    for (const name of ['..%2FDoc.md', '.hidden.png', 'notes.exe']) {
+      expect((await app.inject(`${base}/${name}`)).statusCode, name).toBe(400);
+      expect((await app.inject({ method: 'DELETE', url: `${base}/${name}` })).statusCode).toBe(400);
+    }
+    // ".." is resolved by the router to another, unknown route before it reaches the service.
+    expect((await app.inject({ method: 'DELETE', url: `${base}/%2E%2E` })).statusCode).toBe(404);
+    expect(await readFile(path.join(content, 'Doc.md'), 'utf8')).toBeTruthy();
+  });
+
   it('keeps files available after move, rename, trash and restore, and rewrites own asset links', async () => {
     const { app, id, upload, base } = await setup();
     await upload('picture.png', 'image/png', png);

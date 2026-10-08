@@ -9,7 +9,12 @@ import { atomicCreateFile } from '../filesystem/atomic-write.js';
 import { assetsDirFor } from '../filesystem/file-name.js';
 import type { MutationLock } from '../filesystem/lock.js';
 import { resolveExistingDirectory, resolveInsideRoot } from '../filesystem/safe-path.js';
-import { attachmentName, ATTACHMENT_TYPES, validateAttachment } from './validation.js';
+import {
+  attachmentName,
+  ATTACHMENT_TYPES,
+  existingAttachmentName,
+  validateAttachment,
+} from './validation.js';
 import type { ContentSync } from '../watcher/content-sync.js';
 
 export class AttachmentService {
@@ -103,10 +108,9 @@ export class AttachmentService {
     });
   }
 
+  /** An existing file, under the spelling it has on disk (KI-7: not only names the app made). */
   private target(folder: string, name: string): string {
-    if (attachmentName(name) !== name)
-      throw new AppError(400, 'INVALID_ATTACHMENT_NAME', 'Invalid attachment name');
-    return path.join(folder, name);
+    return path.join(folder, existingAttachmentName(name));
   }
 
   private async directory(
