@@ -218,6 +218,16 @@ The setup token changes on server restart; reload an open setup form after resta
   `test-results/` before the content tests (project named after the browser, `chromium` by default). A separate `proxy` project checks gateway-mode access on port 18766 using disposable `.e2e-proxy-data/`. A `none` project on port 18767 uses `.e2e-none-data/` to verify anonymous access and the Settings warning. Never commit this state file.
   `e2e/accessibility.spec.ts` scans every screen with axe-core (WCAG AA) and checks focus, keyboard use and reflow; give new screens, menus and dialogs an `expectAccessible` call (see [accessibility.md](accessibility.md)).
 
+  **Visual regression (P16-06).** `e2e/visual.spec.ts` takes screenshots of the document view, both editors, the search palette, Settings and the phone document view in the light and dark theme, and compares them with the images in `e2e/visual.spec.ts-snapshots/`. A separate server (port 18770, `.e2e-visual-data/`) starts with the fixed documents in `e2e/visual-content/`, and `e2e/visual.setup.ts` signs in once. The baselines are rendered by Chromium in the official Playwright image, so these tests run only there (as in CI) or with `E2E_VISUAL=1`. When a failure is an intended change of the UI, look at the expected, actual and diff images in `test-results/` (in CI: the `playwright-traces-chromium` artifact), then update the baselines and commit them:
+
+  ```bash
+  pnpm build
+  docker run --rm --memory 2g --memory-swap 2g --cpus 2 \
+    --network host --user "$(id -u):$(id -g)" -e HOME=/tmp \
+    -v "$PWD:$PWD" -w "$PWD" mcr.microsoft.com/playwright:v1.63.0-noble \
+    node_modules/.bin/playwright test --project visual --update-snapshots
+  ```
+
   ```bash
   pnpm build
   pnpm exec playwright install --with-deps chromium   # once (needs system libraries)

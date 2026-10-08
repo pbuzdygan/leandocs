@@ -20,6 +20,15 @@ const browser = (process.env.E2E_BROWSER ?? 'chromium') as keyof typeof BROWSERS
 const device = BROWSERS[browser];
 if (!device) throw new Error(`E2E_BROWSER must be one of ${Object.keys(BROWSERS).join(', ')}`);
 
+/**
+ * Screenshot tests (P16-06) compare against baselines rendered by Chromium in the official
+ * Playwright image (as in CI); fonts render slightly differently elsewhere. They run there, or
+ * anywhere with `E2E_VISUAL=1`.
+ */
+const visual =
+  browser === 'chromium' &&
+  (process.env.PLAYWRIGHT_BROWSERS_PATH === '/ms-playwright' || process.env.E2E_VISUAL === '1');
+
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: false,
@@ -36,9 +45,28 @@ export default defineConfig({
     {
       name: browser,
       use: { ...device, storageState: 'test-results/auth-state.json' },
-      testIgnore: /(?:setup|proxy-auth|none-auth|mfa)\.spec\.ts/,
+      testIgnore: /(?:setup|proxy-auth|none-auth|mfa|visual)\.spec\.ts/,
       dependencies: ['setup'],
     },
+    ...(visual
+      ? [
+          {
+            name: 'visual-setup',
+            testMatch: /visual\.setup\.ts/,
+            use: { ...device, baseURL: 'http://127.0.0.1:18770' },
+          },
+          {
+            name: 'visual',
+            testMatch: /visual\.spec\.ts/,
+            use: {
+              ...device,
+              baseURL: 'http://127.0.0.1:18770',
+              storageState: 'test-results/visual-auth-state.json',
+            },
+            dependencies: ['visual-setup'],
+          },
+        ]
+      : []),
     {
       name: 'mfa',
       testMatch: /mfa\.spec\.ts/,
@@ -56,6 +84,17 @@ export default defineConfig({
     },
   ],
   webServer: [
+    ...(visual
+      ? [
+          {
+            command: 'node e2e/server.mjs',
+            url: 'http://127.0.0.1:18770/api/v1/health',
+            env: { PORT: '18770', AUTH_MODE: 'local', E2E_VISUAL: '1' },
+            reuseExistingServer: false,
+            timeout: 30_000,
+          },
+        ]
+      : []),
     {
       command: 'node e2e/server.mjs',
       url: 'http://127.0.0.1:18769/api/v1/health',

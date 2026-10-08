@@ -15,6 +15,7 @@ export default tseslint.config(
       '.e2e-proxy-data/**',
       '.e2e-none-data/**',
       '.e2e-mfa-data/**',
+      '.e2e-visual-data/**',
       'test-results/**',
       'playwright-report/**',
     ],
