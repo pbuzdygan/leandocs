@@ -9,7 +9,7 @@ what the review in P15-08 (2026-10-07) found.
   (`@axe-core/playwright`, WCAG 2.0/2.1/2.2 A and AA rules) in the browser tests against every
   screen: Home, a document with tables, task lists, callouts, code, Mermaid and wiki links (view,
   source, Info and Links panels), the visual and source editors with the slash menu, every menu
-  and dialog, the search palette, every Settings section, Not found, sign-in (with an error), the
+  and dialog, the search palette, every Settings section, Trash (with its confirmation), Not found, sign-in (with an error), the
   mobile layout with the navigation drawer, and — in `e2e/setup.spec.ts` — the first-run setup
   screens and the empty library. These scans run twice, in the light and the dark theme (P16-03;
   the browser's colour scheme is emulated and the theme setting stays on System).

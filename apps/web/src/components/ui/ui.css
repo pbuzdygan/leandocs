@@ -60,7 +60,7 @@
 .btn--danger {
   background: var(--danger);
   border-color: var(--danger);
-  color: var(--bg-surface);
+  color: var(--on-danger);
 }
 
 .btn--danger:hover:not(:disabled) {

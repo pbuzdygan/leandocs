@@ -89,6 +89,7 @@ export function useExternalChanges() {
               'tags',
               'index-status',
               'conflict',
+              'trash',
             ].includes(String(key))
           )
             return true;

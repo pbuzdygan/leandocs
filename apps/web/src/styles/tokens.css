@@ -32,6 +32,8 @@
   --warning-text: #b45309;
   --danger-text: #b91c1c;
   --info-text: #0369a1;
+  /* Text on a solid --danger fill: white in both themes (4.8:1). */
+  --on-danger: #ffffff;
 
   --radius-sm: 4px;
   --radius-md: 6px;

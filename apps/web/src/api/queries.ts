@@ -27,6 +27,7 @@ export const queryKeys = {
   outgoingLinks: (id: string) => ['links', 'outgoing', id] as const,
   backlinks: (id: string) => ['links', 'backlinks', id] as const,
   brokenLinks: ['links', 'broken'] as const,
+  trash: ['trash'] as const,
 };
 
 export function createQueryClient(): QueryClient {
@@ -58,7 +59,7 @@ export function useDocument(id: string) {
 
 /**
  * Wraps a content mutation and refreshes everything derived from the filesystem afterwards
- * (tree, recent list, open documents).
+ * (tree, recent list, open documents, trash).
  */
 export function useContentMutation<TVariables, TResult>(
   mutationFn: (variables: TVariables) => Promise<TResult>,
@@ -74,6 +75,7 @@ export function useContentMutation<TVariables, TResult>(
         queryClient.invalidateQueries({ queryKey: queryKeys.searches }),
         queryClient.invalidateQueries({ queryKey: queryKeys.links }),
         queryClient.invalidateQueries({ queryKey: queryKeys.pins }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.trash }),
       ]);
     },
   });
@@ -139,6 +141,11 @@ export function useTags() {
 /** Pinned documents (PROJECT_SPEC §40, P10-05). */
 export function usePins() {
   return useQuery({ queryKey: queryKeys.pins, queryFn: api.pins });
+}
+
+/** Items in the trash, newest first (UI_SPEC §136). */
+export function useTrash() {
+  return useQuery({ queryKey: queryKeys.trash, queryFn: api.trash, staleTime: 0 });
 }
 
 /** App settings (UI_SPEC §81–83). Changed only through this app, so they rarely refetch. */

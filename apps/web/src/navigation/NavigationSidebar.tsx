@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import { AddIcon, NewFileIcon, NewFolderIcon } from '../components/icons';
-import { useLocation, useMatch } from 'react-router';
+import { AddIcon, NewFileIcon, NewFolderIcon, TrashIcon } from '../components/icons';
+import { NavLink, useLocation, useMatch } from 'react-router';
 import { errorMessage } from '../api/client';
 import { useTree } from '../api/queries';
 import { useContentActions } from '../actions/ContentActions';
@@ -163,6 +163,12 @@ export function NavigationSidebar() {
               onDragChange={setDragging}
             />
           )}
+        </div>
+        <div className="sidebar__footer">
+          <NavLink to="/trash" className="sidebar__footer-link">
+            <TrashIcon size={15} />
+            Trash
+          </NavLink>
         </div>
         <div
           className="sidebar__resizer"

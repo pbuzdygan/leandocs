@@ -1,5 +1,5 @@
 import { expectAccessible } from './axe';
-import { expect, newParagraphAtEnd, test } from './document-fixture';
+import { createTrashedDocument, expect, newParagraphAtEnd, test } from './document-fixture';
 import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
 
 restoreSettingsAfterEach();
@@ -131,9 +131,10 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Done' }).click();
     });
 
-    test('settings, not found and the mobile layout have no WCAG AA violations', async ({
+    test('settings, trash, not found and the mobile layout have no WCAG AA violations', async ({
       page,
     }) => {
+      await createTrashedDocument(page, `Accessible Trash ${colorScheme}`, '# Trashed\n');
       for (const section of [
         'general',
         'editor',
@@ -148,6 +149,14 @@ for (const colorScheme of ['light', 'dark'] as const) {
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
         await expectAccessible(page, `settings: ${section}`);
       }
+
+      await page.goto('/trash');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await expectAccessible(page, 'trash');
+      await page.getByRole('button', { name: 'Empty trash' }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await expectAccessible(page, 'empty trash dialog', '[role="dialog"]');
+      await page.keyboard.press('Escape');
 
       await page.goto('/no-such-page');
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -190,7 +199,13 @@ test('pages reflow to 320 px without horizontal page scrolling', async ({
 }) => {
   const id = await createDocument('Reflow Check', RICH);
   await page.setViewportSize({ width: 320, height: 640 });
-  for (const url of [`/doc/${id}`, `/doc/${id}/edit`, '/settings/storage', '/settings/about']) {
+  for (const url of [
+    `/doc/${id}`,
+    `/doc/${id}/edit`,
+    '/settings/storage',
+    '/settings/about',
+    '/trash',
+  ]) {
     await page.goto(url);
     await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
     const width = await page.evaluate(() => document.documentElement.scrollWidth);

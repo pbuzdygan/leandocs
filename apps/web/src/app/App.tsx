@@ -42,6 +42,9 @@ const AboutSettings = lazy(() =>
   import('../settings/AboutSettings').then((module) => ({ default: module.AboutSettings })),
 );
 
+const TrashPage = lazy(() =>
+  import('../trash/TrashPage').then((module) => ({ default: module.TrashPage })),
+);
 const DocumentPage = lazy(() =>
   import('../documents/DocumentPage').then((module) => ({ default: module.DocumentPage })),
 );
@@ -100,6 +103,14 @@ export function AppRoutes() {
                 <Route path="security" element={<SecuritySettings />} />
                 <Route path="about" element={<AboutSettings />} />
               </Route>
+              <Route
+                path="trash"
+                element={
+                  <Suspense fallback={<DocumentFallback />}>
+                    <TrashPage />
+                  </Suspense>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Route>

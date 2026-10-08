@@ -39,6 +39,7 @@ import {
   type TagsResponse,
   type UpdatePropertiesRequest,
   type TrashItem,
+  type TrashResponse,
   type TreeResponse,
   type UpdateDocumentRequest,
   type UpdateSettingsRequest,
@@ -199,8 +200,12 @@ export const api = {
   moveDocument: (id: string, body: MoveDocumentRequest) =>
     documentMutation(request<DocumentDto>(`/documents/${enc(id)}/move`, json('POST', body))),
   trashDocument: (id: string) => request<TrashItem>(`/documents/${enc(id)}`, { method: 'DELETE' }),
+  trash: () => request<TrashResponse>('/trash'),
   restoreTrashItem: (trashId: string) =>
     request<RestoreResponse>(`/trash/${enc(trashId)}/restore`, { method: 'POST' }),
+  deleteTrashItem: (trashId: string) =>
+    request<void>(`/trash/${enc(trashId)}`, { method: 'DELETE' }),
+  emptyTrash: () => request<{ deleted: number }>('/trash', { method: 'DELETE' }),
   createFolder: (body: CreateFolderRequest) => request<FolderDto>('/folders', json('POST', body)),
   renameFolder: (body: RenameFolderRequest) =>
     request<FolderDto>('/folders/rename', json('POST', body)),
