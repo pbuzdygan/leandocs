@@ -1,6 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { MfaEnrollment, SessionResponse } from '@leandocs/shared';
+import {
+  MIN_ACCOUNT_PASSWORD_LENGTH,
+  validateNewPassword,
+  type MfaEnrollment,
+  type SessionResponse,
+} from '@leandocs/shared';
 import { api, errorMessage } from '../api/client';
 import { sessionKey, useSession } from '../auth/Login';
 import { Button } from '../components/ui/Button';
@@ -14,12 +19,111 @@ export function SecuritySettings() {
         <h2 className="settings__title">Security</h2>
         <p className="settings__note">
           {session.data?.authMode === 'proxy'
-            ? 'Two-factor authentication is managed by your gateway.'
-            : 'Enable local authentication to use two-factor authentication.'}
+            ? 'Passwords and two-factor authentication are managed by your gateway.'
+            : 'Enable local authentication to use a password and two-factor authentication.'}
         </p>
       </section>
     );
-  return <LocalSecurity />;
+  return (
+    <>
+      <ChangePassword />
+      <LocalSecurity />
+    </>
+  );
+}
+
+/**
+ * P16-10 (OQ-5): change the password of the signed-in account. The current password is always
+ * required; other browsers and devices are signed out, this one stays signed in.
+ */
+function ChangePassword() {
+  const client = useQueryClient();
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    setDone(false);
+    const invalid = validateNewPassword(next, confirm);
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const session = await api.changePassword({
+        currentPassword: current,
+        newPassword: next,
+        confirmPassword: confirm,
+      });
+      client.setQueryData(sessionKey, session);
+      setNext('');
+      setConfirm('');
+      setDone(true);
+    } catch (failure) {
+      setError(errorMessage(failure));
+    } finally {
+      // Never keep the current password around after an attempt.
+      setCurrent('');
+      setBusy(false);
+    }
+  }
+  return (
+    <section className="settings__section" aria-labelledby="password-title">
+      <h2 className="settings__title">Security</h2>
+      <h3 id="password-title" className="settings__subtitle">
+        Password
+      </h3>
+      <form
+        className="settings__mfa-form"
+        onSubmit={(event) => void submit(event)}
+        aria-busy={busy}
+      >
+        <TextField
+          label="Current password"
+          type="password"
+          autoComplete="current-password"
+          value={current}
+          onChange={(event) => setCurrent(event.target.value)}
+          required
+          disabled={busy}
+        />
+        <TextField
+          label="New password"
+          type="password"
+          autoComplete="new-password"
+          hint={`At least ${MIN_ACCOUNT_PASSWORD_LENGTH} characters.`}
+          value={next}
+          onChange={(event) => setNext(event.target.value)}
+          required
+          disabled={busy}
+        />
+        <TextField
+          label="Confirm new password"
+          type="password"
+          autoComplete="new-password"
+          value={confirm}
+          onChange={(event) => setConfirm(event.target.value)}
+          required
+          disabled={busy}
+        />
+        <FormError message={error} />
+        {done && (
+          <p className="settings__note" role="status">
+            Password changed. Other browsers and devices have been signed out.
+          </p>
+        )}
+        <Button type="submit" disabled={busy}>
+          Change password
+        </Button>
+      </form>
+    </section>
+  );
 }
 function LocalSecurity() {
   const client = useQueryClient();
@@ -59,9 +163,10 @@ function LocalSecurity() {
     }
   }
   return (
-    <section className="settings__section">
-      <h2 className="settings__title">Security</h2>
-      <h3 className="settings__subtitle">Two-factor authentication</h3>
+    <section className="settings__section" aria-labelledby="mfa-title">
+      <h3 id="mfa-title" className="settings__subtitle">
+        Two-factor authentication
+      </h3>
       <p className="settings__note">
         Use Microsoft Authenticator or another compatible authenticator app to protect local
         sign-in.

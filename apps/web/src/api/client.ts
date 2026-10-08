@@ -1,4 +1,5 @@
 import {
+  type ChangePasswordRequest,
   API_BASE_PATH,
   IMPORT_NAME_ONLY_TYPE,
   type SetupRequest,
@@ -85,7 +86,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     if (
       res.status === 401 &&
       path !== '/auth/login' &&
-      (!path.startsWith('/auth/mfa/') || body?.error.code === 'UNAUTHORIZED')
+      // Re-authentication forms report a wrong password with 401 too; only UNAUTHORIZED means
+      // the session itself is gone.
+      ((!path.startsWith('/auth/mfa/') && path !== '/auth/password') ||
+        body?.error.code === 'UNAUTHORIZED')
     )
       window.dispatchEvent(new Event('leandocs:unauthorized'));
     throw new ApiError(
@@ -112,6 +116,8 @@ export const api = {
       ...json('POST', body),
       headers: { 'X-LeanDocs-CSRF': csrfToken },
     }),
+  changePassword: (body: ChangePasswordRequest) =>
+    request<SessionResponse>('/auth/password', json('POST', body)),
   mfaStatus: () => request<MfaStatus>('/auth/mfa/status'),
   enrollMfa: (password: string) =>
     request<MfaEnrollment>('/auth/mfa/enroll', json('POST', { password })),

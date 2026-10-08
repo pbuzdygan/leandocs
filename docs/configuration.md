@@ -77,7 +77,7 @@ PUBLIC_ORIGIN=https://docs.example.com
 
 ### `AUTH_MODE=local` (default)
 
-LeanDocs has one administrator account, created on the first visit. Sign-in uses a password (at least 15 characters), and an authenticator app can be added in Settings › Security. Use this mode with an ordinary HTTPS proxy such as Nginx Proxy Manager.
+LeanDocs has one administrator account, created on the first visit. Sign-in uses a password (at least 15 characters). In Settings › Security you can change it and add an authenticator app. Use this mode with an ordinary HTTPS proxy such as Nginx Proxy Manager.
 
 ### `AUTH_MODE=proxy`
 

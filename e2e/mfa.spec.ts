@@ -30,16 +30,18 @@ test('enrolls an authenticator, requires MFA, recovers access and reauthenticate
       })
     ).status(),
   ).toBe(201);
-  const login = async () => {
+  const login = async (secret = password) => {
     await page.goto('/login');
     await page.getByLabel('Username').fill('owner');
-    await page.getByLabel('Password', { exact: true }).fill(password);
+    await page.getByLabel('Password', { exact: true }).fill(secret);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   };
   await login();
   await expect(page.getByText('No documentation yet')).toBeVisible();
   await page.goto('/settings/security');
-  await page.getByLabel('Current password').fill(password);
+  // The Password section has a "Current password" field too.
+  const twoFactor = page.getByRole('region', { name: 'Two-factor authentication' });
+  await twoFactor.getByLabel('Current password').fill(password);
   await page.getByRole('button', { name: 'Set up two-factor authentication' }).click();
   const key = await page.getByLabel('Manual setup key').textContent();
   expect(key).toMatch(/^[A-Z2-7]{32}$/);
@@ -76,10 +78,27 @@ test('enrolls an authenticator, requires MFA, recovers access and reauthenticate
   await page.getByRole('button', { name: 'Verify and sign in' }).click();
   await expect(page.getByText('No documentation yet')).toBeVisible();
   await page.goto('/settings/security');
-  await page.getByLabel('Current password').fill(password);
+  await twoFactor.getByLabel('Current password').fill(password);
   await page.getByLabel('Authenticator or recovery code').fill(codes[1]!);
   await page.getByRole('button', { name: 'Disable two-factor authentication' }).click();
   await expect(page.getByText('Not enabled.')).toBeVisible();
   await page.reload();
   await expect(page.getByText('Not enabled.')).toBeVisible();
+
+  // P16-10: change the password. This browser stays signed in; the new password signs in.
+  // (Two more sign-in attempts; the old password being refused is covered by server tests.)
+  const changed = 'a changed long MFA browser passphrase';
+  const passwordForm = page.getByRole('region', { name: 'Password' });
+  await passwordForm.getByLabel('Current password').fill(password);
+  await passwordForm.getByLabel('New password', { exact: true }).fill(changed);
+  await passwordForm.getByLabel('Confirm new password').fill(changed);
+  await passwordForm.getByRole('button', { name: 'Change password' }).click();
+  await expect(
+    passwordForm.getByText('Password changed. Other browsers and devices have been signed out.'),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Not enabled.')).toBeVisible();
+  await logout();
+  await login(changed);
+  await expect(page.getByText('No documentation yet')).toBeVisible();
 });

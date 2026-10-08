@@ -30,14 +30,26 @@ export type SetupStatus =
 export function validateSetup(input: SetupRequest): string | null {
   if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}$/.test(input.username.trim()))
     return 'Username must be 1–64 characters: letters, numbers, dots, underscores or hyphens, starting with a letter or number.';
-  if (/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(input.password))
+  return validateNewPassword(input.password, input.confirmPassword);
+}
+
+/** Rules for a new password, at setup and when changing it (P16-10). */
+export function validateNewPassword(password: string, confirmPassword: string): string | null {
+  if (/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(password))
     return 'Password must contain valid Unicode characters.';
-  if ([...input.password].length < MIN_ACCOUNT_PASSWORD_LENGTH)
+  if ([...password].length < MIN_ACCOUNT_PASSWORD_LENGTH)
     return `Password must contain at least ${MIN_ACCOUNT_PASSWORD_LENGTH} characters.`;
-  if (new TextEncoder().encode(input.password).byteLength > MAX_ACCOUNT_PASSWORD_BYTES)
+  if (new TextEncoder().encode(password).byteLength > MAX_ACCOUNT_PASSWORD_BYTES)
     return `Password must not exceed ${MAX_ACCOUNT_PASSWORD_BYTES} UTF-8 bytes.`;
-  if (input.password !== input.confirmPassword) return 'Passwords do not match.';
+  if (password !== confirmPassword) return 'Passwords do not match.';
   return null;
+}
+
+/** `POST /auth/password` (P16-10): the signed-in user changes their own password. */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface MfaChallenge {

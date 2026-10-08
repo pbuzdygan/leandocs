@@ -3,7 +3,12 @@ import type { MfaChallenge } from '@leandocs/shared';
 import { LoginRateLimiter, LoginRateLimitError } from './rate-limit.js';
 import { createHash, randomBytes } from 'node:crypto';
 import type Database from 'better-sqlite3';
-import type { LoginRequest, SessionResponse } from '@leandocs/shared';
+import {
+  validateNewPassword,
+  type ChangePasswordRequest,
+  type LoginRequest,
+  type SessionResponse,
+} from '@leandocs/shared';
 import { AppError } from '../errors.js';
 import {
   hashPassword,
@@ -254,6 +259,47 @@ export class AuthService {
       this.mfa!.disable();
       this.db.prepare('DELETE FROM sessions').run();
       return this.issue(user, undefined);
+    })();
+    this.enrollment = undefined;
+    this.challenges.clear();
+    return result;
+  }
+
+  /**
+   * P16-10: the signed-in user changes their password after confirming the current one (rate
+   * limited like sign-in). Every other session is signed out and this one gets a new token, as
+   * when two-factor authentication is turned on or off.
+   */
+  async changePassword(cookie: string | undefined, input: ChangePasswordRequest, ip: string) {
+    const invalid = validateNewPassword(input.newPassword, input.confirmPassword);
+    if (invalid) throw new AppError(400, 'INVALID_PASSWORD', invalid);
+    if (input.newPassword === input.currentPassword)
+      throw new AppError(
+        400,
+        'INVALID_PASSWORD',
+        'Choose a password different from the current one.',
+      );
+    const user = await this.reauthenticate(cookie, input.currentPassword, ip).catch(
+      (error: unknown) => {
+        if (error instanceof AppError && error.code === 'INVALID_CREDENTIALS')
+          throw new AppError(401, 'INVALID_CREDENTIALS', 'The current password is incorrect.');
+        throw error;
+      },
+    );
+    const hash = await hashPassword(input.newPassword);
+    const result = this.db.transaction(() => {
+      // Refuse if the password changed meanwhile (another tab), as `issue` does for sign-in.
+      const changed = this.db
+        .prepare('UPDATE users SET password_hash = ? WHERE id = ? AND password_hash = ?')
+        .run(hash, user.id, user.password_hash);
+      if (changed.changes !== 1)
+        throw new AppError(
+          409,
+          'PASSWORD_CHANGED',
+          'The password was just changed. Sign in again.',
+        );
+      this.db.prepare('DELETE FROM sessions').run();
+      return this.issue({ ...user, password_hash: hash }, undefined);
     })();
     this.enrollment = undefined;
     this.challenges.clear();

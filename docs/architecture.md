@@ -332,6 +332,10 @@ The `/login` page and authenticated route guard own session UI state. Search and
 mount only in the authenticated shell. Logout and API 401 responses clear cached documents.
 Ready now leads to login. See [ADR-0012](adr/0012-local-sessions-and-route-protection.md).
 
+### Changing the password (P16-10)
+
+`POST /auth/password` (`{ currentPassword, newPassword, confirmPassword }`, CSRF required) lets the signed-in local user change the password. The current password goes through the same re-authentication as MFA enrollment (shared sign-in rate limit; a wrong one is 401 `INVALID_CREDENTIALS`, which the client does not treat as a lost session). The new password follows the setup rules (`validateNewPassword` in `packages/shared`) and must differ from the current one. The hash is replaced only if it is still the one that was verified (409 `PASSWORD_CHANGED` otherwise); all sessions are deleted and the caller gets a new session cookie and CSRF token. The MFA secret is encrypted with `mfa.key`, not with the password, so two-factor sign-in keeps working.
+
 ### Optional local TOTP MFA
 
 P11-11 adds Settings › Security enrollment and two-stage sign-in, using OTPAuth and locally generated

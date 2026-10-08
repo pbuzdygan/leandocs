@@ -1,5 +1,5 @@
 import { LoginRateLimitError } from '../auth/rate-limit.js';
-import type { LoginRequest, SessionResponse } from '@leandocs/shared';
+import type { ChangePasswordRequest, LoginRequest, SessionResponse } from '@leandocs/shared';
 import type { FastifyPluginAsync, FastifyReply } from 'fastify';
 import { type AuthService, sessionCookie } from '../auth/session.js';
 import { AppError } from '../errors.js';
@@ -124,6 +124,27 @@ export const authRoutes: FastifyPluginAsync<{
         request.headers.cookie,
         request.body.password,
         request.body.code,
+        request.raw.socket.remoteAddress ?? '',
+      );
+      setSession(reply, result.token, secureCookie || request.protocol === 'https');
+      return result.session;
+    },
+  );
+
+  app.post<{ Body: ChangePasswordRequest }>(
+    '/auth/password',
+    {
+      bodyLimit: 8192,
+      schema: schema({
+        currentPassword: password,
+        newPassword: password,
+        confirmPassword: password,
+      }),
+    },
+    async (request, reply) => {
+      const result = await auth.changePassword(
+        request.headers.cookie,
+        request.body,
         request.raw.socket.remoteAddress ?? '',
       );
       setSession(reply, result.token, secureCookie || request.protocol === 'https');

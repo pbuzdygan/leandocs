@@ -207,7 +207,9 @@ LeanDocs refuses to start when `system/auth.initialized` exists but `system/app.
 
 ## Lost password
 
-There is no password reset by e-mail. As a last resort, someone with access to the server can recreate the account. Documents are not affected, but sessions, the authenticator setup and pinned documents are lost:
+While you are signed in, change the password in **Settings › Security** (you need the current one). This signs out every other browser and device.
+
+If the password is forgotten, there is no reset by e-mail. As a last resort, someone with access to the server can recreate the account. Documents are not affected, but sessions, the authenticator setup and pinned documents are lost:
 
 ```bash
 docker compose stop

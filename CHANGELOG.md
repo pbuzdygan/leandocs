@@ -10,6 +10,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 - LeanDocs has a dark mode. In Settings › Appearance choose Light, Dark or System; System follows your device and switches with it. The choice applies at once, including to diagrams, and the sign-in page uses it too.
 - You can now open the Trash from the bottom of the navigation. It lists deleted documents and folders with where they were and when they were deleted. You can put an item back where it was, delete it permanently, or empty the whole trash; permanent deletion always asks first.
 - The top bar has Back and Forward buttons, like a browser, to move between the pages you opened. They follow the browser's own Back and Forward and are greyed out when there is nowhere to go. On phones they are hidden; use the phone's back gesture.
+- You can change your password in Settings › Security. You confirm it with your current password; other browsers and devices are signed out, and you stay signed in.
 
 ### Improvements
 
