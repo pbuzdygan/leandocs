@@ -2,44 +2,6 @@
 
 What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in `AGENTS.md` §8.
 
-## [Unreleased]
-
-### New features
-
-- Settings has two new pages, General and Editor. You can choose which editor opens when you start editing (Visual or Source), turn autosave off or change how long it waits, and set line numbers, word wrap and tab size for the source editor. You can also pick the folder new documents go to, and have LeanDocs open the document you viewed last when it starts. Settings are stored with your data, so they apply in every browser and are kept in backups. Switching between Visual and Source while editing no longer changes the editor you start with next time.
-- LeanDocs has a dark mode. In Settings › Appearance choose Light, Dark or System; System follows your device and switches with it. The choice applies at once, including to diagrams, and the sign-in page uses it too.
-- You can now open the Trash from the bottom of the navigation. It lists deleted documents and folders with where they were and when they were deleted. You can put an item back where it was, delete it permanently, or empty the whole trash; permanent deletion always asks first.
-- The top bar has Back and Forward buttons, like a browser, to move between the pages you opened. They follow the browser's own Back and Forward and are greyed out when there is nowhere to go. On phones they are hidden; use the phone's back gesture.
-- You can change your password in Settings › Security. You confirm it with your current password; other browsers and devices are signed out, and you stay signed in.
-
-### Improvements
-
-- You can hide the navigation on tablets and computers with the menu button at the top left, to give the document more room. LeanDocs remembers your choice.
-- Typing / in the visual editor now also offers Attachment, which opens the file picker and inserts the files where you are typing.
-- The visual editor looks more like the finished document: tables keep their natural width instead of stretching across the page, and there is no longer a large gap above the first heading.
-- On tablets, phones and smaller laptop screens, the document's contents, links and info are now available from a button in the document header. Before, they were hidden on screens narrower than a large monitor.
-- On phones, the navigation menu closes when you open a page, closes with the Esc key and works properly with a keyboard. The editing bar now fits on narrow screens without controls ending up on a line of their own, and the reading-width button, which has no effect on phones, is no longer shown there.
-- Long documents, and documents with many quotes or nested lists, open, save and import much faster. Before, they could take minutes or even stop LeanDocs.
-- A document that is too large or too complex to display safely no longer slows LeanDocs down. It is shown as plain text with an explanation, can still be found by search and can be edited as Markdown source. Settings › Index lists such documents.
-- Searching is instant even when a very long document contains the search word thousands of times.
-- If LeanDocs is not allowed to write its own database files, for example after restoring a backup with the wrong owner, it now says which files are affected and how to fix it. Fixing the permissions is then enough; before, LeanDocs could keep refusing to start.
-- Saving and creating documents stays quick in large libraries. With 10,000 documents a save is now about six times faster.
-- Downloading large attachments no longer holds up saving, and uses less memory.
-- Renaming or moving a document that many other documents link to is about twice as fast, and importing many files is a little faster.
-- When LeanDocs starts for the first time with a large library, Docker no longer reports it as unhealthy while it reads all documents.
-- LeanDocs is easier to use with a keyboard, a screen reader or low vision. Grey and coloured text is easier to read, the keyboard focus is always clearly visible, closing a dialog puts you back where you were, checkboxes in documents and error messages in forms are read aloud, and every page has its own tab title.
-- On very narrow phone screens the top bar now fits without scrolling sideways.
-
-### Bug fixes
-
-- Attachments copied into a document's folder outside LeanDocs can now be opened and deleted even when their names use capital letters in the extension (for example `Photo.PNG`), accents written by a Mac, or characters such as `:`. Before, they were listed but could not be opened.
-- Documents with very deeply nested quotes or lists no longer disappear from the library.
-- Importing an HTML page that is too complex to convert no longer makes the whole import fail. That page is skipped and the preview says why.
-- Documents saved in an older text encoding (for example by old Windows editors) are no longer damaged when LeanDocs starts or when you move a linked document. They are shown read-only with an explanation, and Settings › Index lists them so you can convert them.
-- A folder LeanDocs is not allowed to read no longer empties the whole library. The other documents stay available, and Settings › Index names the folder.
-- Documents and folders whose names contain unusual characters that cannot be read no longer vanish without a trace. Settings › Index lists them so you can rename them.
-- A document whose header uses a very large number of repeated references is now listed with a header warning instead of disappearing from the library.
-
 ## 0.1.0
 
 ### New features
@@ -108,6 +70,12 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 - Deleted documents and folders go to a trash first, so you can restore them. They come back to their original place even if that folder was deleted in the meantime. Only emptying the trash deletes for good.
 - LeanDocs runs as a single Docker container with a built-in health check. No database server or other services are needed.
 
+- Settings has two new pages, General and Editor. You can choose which editor opens when you start editing (Visual or Source), turn autosave off or change how long it waits, and set line numbers, word wrap and tab size for the source editor. You can also pick the folder new documents go to, and have LeanDocs open the document you viewed last when it starts. Settings are stored with your data, so they apply in every browser and are kept in backups. Switching between Visual and Source while editing no longer changes the editor you start with next time.
+- LeanDocs has a dark mode. In Settings › Appearance choose Light, Dark or System; System follows your device and switches with it. The choice applies at once, including to diagrams, and the sign-in page uses it too.
+- You can now open the Trash from the bottom of the navigation. It lists deleted documents and folders with where they were and when they were deleted. You can put an item back where it was, delete it permanently, or empty the whole trash; permanent deletion always asks first.
+- The top bar has Back and Forward buttons, like a browser, to move between the pages you opened. They follow the browser's own Back and Forward and are greyed out when there is nowhere to go. On phones they are hidden; use the phone's back gesture.
+- You can change your password in Settings › Security. You confirm it with your current password; other browsers and devices are signed out, and you stay signed in.
+
 ### Improvements
 
 - Diagrams now use an updated drawing library that fixes known security problems in one of its components.
@@ -142,6 +110,21 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 - Scripts and other unsafe content inside documents are never executed, so pasting HTML from the internet into a document is safe to view.
 - Documents with a broken header or a duplicated ID are still shown and are never modified. LeanDocs reports the problem instead of failing.
 - File and folder names that could reach outside your documentation folder, or that would not work on Windows, are rejected or cleaned up automatically.
+- You can hide the navigation on tablets and computers with the menu button at the top left, to give the document more room. LeanDocs remembers your choice.
+- Typing / in the visual editor now also offers Attachment, which opens the file picker and inserts the files where you are typing.
+- The visual editor looks more like the finished document: tables keep their natural width instead of stretching across the page, and there is no longer a large gap above the first heading.
+- On tablets, phones and smaller laptop screens, the document's contents, links and info are now available from a button in the document header. Before, they were hidden on screens narrower than a large monitor.
+- On phones, the navigation menu closes when you open a page, closes with the Esc key and works properly with a keyboard. The editing bar now fits on narrow screens without controls ending up on a line of their own, and the reading-width button, which has no effect on phones, is no longer shown there.
+- Long documents, and documents with many quotes or nested lists, open, save and import much faster. Before, they could take minutes or even stop LeanDocs.
+- A document that is too large or too complex to display safely no longer slows LeanDocs down. It is shown as plain text with an explanation, can still be found by search and can be edited as Markdown source. Settings › Index lists such documents.
+- Searching is instant even when a very long document contains the search word thousands of times.
+- If LeanDocs is not allowed to write its own database files, for example after restoring a backup with the wrong owner, it now says which files are affected and how to fix it. Fixing the permissions is then enough; before, LeanDocs could keep refusing to start.
+- Saving and creating documents stays quick in large libraries. With 10,000 documents a save is now about six times faster.
+- Downloading large attachments no longer holds up saving, and uses less memory.
+- Renaming or moving a document that many other documents link to is about twice as fast, and importing many files is a little faster.
+- When LeanDocs starts for the first time with a large library, Docker no longer reports it as unhealthy while it reads all documents.
+- LeanDocs is easier to use with a keyboard, a screen reader or low vision. Grey and coloured text is easier to read, the keyboard focus is always clearly visible, closing a dialog puts you back where you were, checkboxes in documents and error messages in forms are read aloud, and every page has its own tab title.
+- On very narrow phone screens the top bar now fits without scrolling sideways.
 
 ### Bug fixes
 
@@ -156,3 +139,10 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 - Renaming a document keeps its own Markdown image and attachment links working.
 
 - Escape closes the editor’s search before leaving editing, and reloading a conflict immediately shows the disk version when you return to reading.
+- Attachments copied into a document's folder outside LeanDocs can now be opened and deleted even when their names use capital letters in the extension (for example `Photo.PNG`), accents written by a Mac, or characters such as `:`. Before, they were listed but could not be opened.
+- Documents with very deeply nested quotes or lists no longer disappear from the library.
+- Importing an HTML page that is too complex to convert no longer makes the whole import fail. That page is skipped and the preview says why.
+- Documents saved in an older text encoding (for example by old Windows editors) are no longer damaged when LeanDocs starts or when you move a linked document. They are shown read-only with an explanation, and Settings › Index lists them so you can convert them.
+- A folder LeanDocs is not allowed to read no longer empties the whole library. The other documents stay available, and Settings › Index names the folder.
+- Documents and folders whose names contain unusual characters that cannot be read no longer vanish without a trace. Settings › Index lists them so you can rename them.
+- A document whose header uses a very large number of repeated references is now listed with a header warning instead of disappearing from the library.
