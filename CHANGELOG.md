@@ -16,7 +16,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 - Nothing yet.
 
-## [0.1.0] — 2026-10-08
+## [0.1.0]
 
 The first stable release of LeanDocs. Earlier `dev` previews led up to it; their changes are included here.
 
