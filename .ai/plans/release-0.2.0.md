@@ -35,18 +35,21 @@ The shared agent workflow is in place, the database migration guard is complete,
 - [x] CI browser tests: Chromium on `dev` pushes, all three engines on pull requests and `main` (D-69).
 - [x] Release checks (PROJECT_SPEC §102) on `07eb99e`, image built with `LEANDOCS_VERSION=0.2.0`: CI green on `dev` and on the `dev` → `main` PR (all three engines); fresh install in the hardened configuration (reports 0.2.0, migrations 0 → 8, healthy, setup ready, CSP present); `pnpm test:upgrade` from `dev0.1.4`; `pnpm test:backup`.
 - [x] `CHANGELOG.md`: `[0.2.0] — 2026-10-15` (change the date if the release is published later) and a new empty `[Unreleased]`; release-facing docs updated (README status, `SECURITY.md`, deployment notes, `0.2.0` examples, image size).
-- [ ] Owner commits and pushes the release-preparation changes; CI green on the PR.
-- [ ] Merge `dev` → `main` through a pull request.
-- [ ] Owner publishes GitHub release `0.2.0` on `main`; the release workflow pushes `0.2.0` and `latest`.
+- [x] Owner committed and pushed the release preparation; CI green on the PR.
+- [x] Merged `dev` → `main` (PR #3, `fe64530`).
+- [x] Owner published release `0.2.0` on `main`; the owner's deployment shows 0.2.0 in Settings › About.
 - [x] `SECURITY.md` and PROJECT_SPEC §108 updated for the release (done with the release preparation).
-- [ ] After release: `latest` and `0.2.0` exist on GHCR, `docker compose pull` works without login (make the package public if needed), Dependabot runs from `main`.
+- [x] After release: `0.2.0` and `latest` pull anonymously from GHCR, same digest, `linux/amd64` + `linux/arm64`.
+- [ ] Fast-forward `dev` to `main` (`main` is one merge commit ahead) so the next pull request shows only new work.
+- [ ] Owner confirms Dependabot runs from `main` (GitHub › Insights › Dependency graph › Dependabot).
 - [ ] Owner decides the license (OQ-1 in `docs/decisions.md`), ideally before wider publicity.
 
 ## Stage 4 — Low-priority cleanup (independent items)
 
 - [ ] Restructure `README.md` following `.ai/README_GUIDE.md`.
 - [ ] Historical task IDs and "(Phase N)" headings in `docs/architecture.md`, `docs/development.md`, `docs/accessibility.md`: replace only when those sections are edited anyway (decided: no bulk rewrite).
-- [ ] Known issues in `docs/decisions.md`: close KI-13/KI-14 when `tsup`/Mermaid allow the fixed versions; watch KI-12 in CI.
+- [ ] KI-13/KI-14 are now fixable: `tsup` 9.0.0 (major; esbuild `^0.28.2`) and `mermaid` 12.2.0 (KaTeX `^0.18`). Update, run the full verification including browser tests, close both rows; release as 0.2.1 (Improvements entry).
+- [ ] Watch KI-12 (intermittent unit test) in CI.
 - [ ] Post-1.0 roadmap (PROJECT_SPEC §111): owner chooses next features; larger work gets its own plan here.
 
 ## Closing
