@@ -1,2 +1,4 @@
 # Shared locally by coding agents; excluded from public project history.
 /STATE.md
+# Unpublished security findings (SECURITY.md › Security completion checklist); never commit.
+/security-findings*.md

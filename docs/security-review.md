@@ -30,8 +30,8 @@ These are configuration and policy items, not exploitable defects in the reviewe
 
 1. **First-run exposure.** Before the first account exists, anyone who reaches the application can create it (ADR-0010). The Compose files listen on all host addresses over HTTP by default, so a fresh deployment on a reachable host is exposed until setup completes. The setup status also returns the resolved content folder. Options: bind to `127.0.0.1` by default, or deliver the setup token out of band (logs) instead of through the API; either needs an ADR.
 2. **`main` is not protected.** The release workflow publishes `:latest` from `main`, which is expected to change only through pull requests. Branch protection with required CI checks would enforce that.
-3. **No container resource limits.** Compose sets no memory or process limits; the analysis child process bounds parsing, but the server process itself is unbounded.
-4. **Supply chain hardening.** The Playwright CI image is pinned by tag, not digest; pnpm has no minimum release age for new versions; released images carry no SBOM or signature.
+3. **No container resource limits.** Resolved: both Compose files set a 2 GiB memory limit (`LEANDOCS_MEMORY`) and 256 processes; the published 0.2.0 image starts healthy with them.
+4. **Supply chain hardening.** Partly resolved: the Playwright CI image is pinned by digest and pnpm accepts only versions published at least one day ago (`minimumReleaseAge`). Released images still carry no SBOM or signature.
 5. **Personal infrastructure names in history.** Earlier fixtures used real host names, hardware and a private address; they were renamed. No credentials were included; history is not rewritten.
 
 ### Not verified

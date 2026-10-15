@@ -29,14 +29,15 @@ Boolean values accept `true`/`false`, `1`/`0` and `yes`/`no`.
 
 Compose-only variables (they configure the container, not LeanDocs):
 
-| Variable         | Default                      | Purpose                                                            |
-| ---------------- | ---------------------------- | ------------------------------------------------------------------ |
-| `LEANDOCS_TAG`   | `latest`                     | Image tag to run (`compose.yaml`): `0.2.0`, `latest`, `dev_latest` |
-| `LEANDOCS_IMAGE` | `ghcr.io/pbuzdygan/leandocs` | Image to run (`compose.yaml`), e.g. a mirror                       |
-| `LEANDOCS_PORT`  | `8080`                       | Port on the host                                                   |
-| `LEANDOCS_BIND`  | `0.0.0.0`                    | Host address to listen on; `127.0.0.1` keeps it local to the host  |
-| `LEANDOCS_UID`   | `1000`                       | User id the container runs as (`id -u`)                            |
-| `LEANDOCS_GID`   | `1000`                       | Group id the container runs as (`id -g`)                           |
+| Variable          | Default                      | Purpose                                                            |
+| ----------------- | ---------------------------- | ------------------------------------------------------------------ |
+| `LEANDOCS_TAG`    | `latest`                     | Image tag to run (`compose.yaml`): `0.2.0`, `latest`, `dev_latest` |
+| `LEANDOCS_IMAGE`  | `ghcr.io/pbuzdygan/leandocs` | Image to run (`compose.yaml`), e.g. a mirror                       |
+| `LEANDOCS_PORT`   | `8080`                       | Port on the host                                                   |
+| `LEANDOCS_BIND`   | `0.0.0.0`                    | Host address to listen on; `127.0.0.1` keeps it local to the host  |
+| `LEANDOCS_UID`    | `1000`                       | User id the container runs as (`id -u`)                            |
+| `LEANDOCS_GID`    | `1000`                       | Group id the container runs as (`id -g`)                           |
+| `LEANDOCS_MEMORY` | `2g`                         | Memory limit of the container, e.g. `4g` for very large libraries  |
 
 ## Storage
 
