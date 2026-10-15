@@ -29,7 +29,7 @@ jobs:
         with:
           # The workflow never pushes; do not leave the token in .git/config.
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .nvmrc
       # Node.js 25+ no longer bundles corepack; install the pinned release, which then provides
@@ -60,7 +60,7 @@ jobs:
           persist-credentials: false
           # All branches, so the release commit can be checked against main/dev.
           fetch-depth: 0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .nvmrc
 
