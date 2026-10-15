@@ -41,7 +41,7 @@
 
 .topbar__history {
   display: inline-flex;
-  gap: 2px;
+  gap: var(--space-1);
   margin-left: var(--space-4);
 }
 

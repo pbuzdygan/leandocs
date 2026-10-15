@@ -189,6 +189,16 @@ package or per coherent item, scope `web` (Conventional Commits).
    trash row menu, settings save status). UI_SPEC wording only where an owner decision changes
    it; record defaults taken as `D-xx` in `docs/decisions.md`.
 
+## Changes to the approach during implementation
+
+- WP2.2 (row actions on touch) and WP4.7 (menu icons) landed with WP1 and WP3.
+- WP5.1: a tree load error needs nothing extra on Home; the navigation already shows it with
+  Retry, and Home does not depend on the tree beyond the empty-library check.
+- WP5.3: only the off-grid gaps that are not prescribed were changed (topbar history, search
+  modes); 1–2 px values in tags, inline code, chips and stacked list meta stay as UI_SPEC shows.
+- WP6.3: snapshots were updated per work package after review, so no commit on `dev` carries a red
+  visual suite, instead of once at the end.
+
 ## Risks and verification
 
 - Visual snapshots will change in almost every WP; update them once at the end, not per commit,

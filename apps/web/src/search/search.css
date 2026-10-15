@@ -50,7 +50,7 @@
 
 .palette__modes {
   display: flex;
-  gap: 2px;
+  gap: var(--space-1);
   padding: 2px;
   border-radius: var(--radius-md);
   background: var(--bg-subtle);
@@ -204,7 +204,7 @@
 .topbar-search:focus-visible {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .topbar-search__label {

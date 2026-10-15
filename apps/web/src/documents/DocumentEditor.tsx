@@ -71,7 +71,7 @@ function DocumentEditor({
             const label = item.name.replace(/[\\[\]]/g, '\\$&');
             links.push(`${item.image ? '!' : ''}[${label}](${item.markdownUrl})`);
           } catch (error) {
-            notify.error(`Upload failed: ${errorMessage(error)}`);
+            notify.error(`Could not upload ${file.name}: ${errorMessage(error)}`);
           }
         }
         await queryClient.invalidateQueries({ queryKey: attachmentKey(document.id) });
@@ -116,7 +116,11 @@ function DocumentEditor({
     await session.saveNow();
     const { status, error } = session.getState();
     if (status === 'conflict') setConflictRequested(true);
-    else if (status === 'error') notify.error(`Not saved: ${error ?? 'unknown error'}`);
+    // Say what failed and what to do; the changes are still in the editor and this browser.
+    else if (status === 'error')
+      notify.error(
+        `The document was not saved (${error ?? 'unknown error'}). Your changes are kept here; try Save again.`,
+      );
     else void navigate(docUrl(document.id));
   }, [session, navigate, notify, document.id, uploadCount]);
   const doneSync = useCallback(() => void done(), [done]);

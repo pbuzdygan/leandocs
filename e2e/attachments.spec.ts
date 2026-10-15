@@ -188,7 +188,7 @@ for (const mode of ['Visual', 'Source'] as const) {
       .setInputFiles({ name: 'fake.png', mimeType: 'image/png', buffer: Buffer.from('not a PNG') });
     // Scoped to the toast body: Radix also mirrors the text into a transient aria-live region.
     await expect(
-      page.locator('.toast__message', { hasText: /Upload failed: The file contents/ }),
+      page.locator('.toast__message', { hasText: /Could not upload fake.png: The file contents/ }),
     ).toBeVisible();
     await expect(page.locator(selector)).not.toContainText('fake.png');
     await page.getByRole('button', { name: 'Save', exact: true }).click();

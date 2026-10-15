@@ -103,7 +103,10 @@ export function Home() {
             onRetry={() => void recent.refetch()}
           />
         )}
-        {recent.data && (
+        {recent.data?.items.length === 0 && (
+          <p className="home__empty">No documents have been updated yet.</p>
+        )}
+        {recent.data && recent.data.items.length > 0 && (
           <ul className="home__list">
             {recent.data.items.map((item) => (
               <li key={item.id}>

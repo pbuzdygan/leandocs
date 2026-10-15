@@ -108,3 +108,11 @@ describe('sign-out failure', () => {
     expect(within(screen.getByRole('banner')).queryByRole('alert')).toBeNull();
   });
 });
+
+describe('home', () => {
+  it('explains an empty "Recently updated" list instead of showing a bare border', async () => {
+    api();
+    renderApp('/');
+    expect(await screen.findByText('No documents have been updated yet.')).toBeInTheDocument();
+  });
+});

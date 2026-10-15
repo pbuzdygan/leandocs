@@ -205,7 +205,8 @@
 .input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  /* With the border: a 2 px accent indicator (UI_SPEC §96), not a faint tint. */
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .input[aria-invalid='true'] {
@@ -469,7 +470,7 @@
 
 .tag-input:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .tag-input__readonly {

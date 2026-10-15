@@ -1,4 +1,5 @@
 import { expectAccessible } from './axe';
+import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
 import { expect, test } from './document-fixture';
 
 /** P16-02 (UI_SPEC §98–106): desktop, tablet and phone layouts. */
@@ -147,4 +148,36 @@ test('the navigation sidebar can be resized by dragging and hidden on wide scree
   // Leave the defaults for later tests (local storage of this test's browser context only).
   await separator.dblclick();
   await expect(separator).toHaveAttribute('aria-valuenow', '280');
+});
+
+test.describe('phones: compact formatting toolbar (UI_SPEC §105)', () => {
+  restoreSettingsAfterEach();
+
+  test('shows the main tools and the rest in the insert menu', async ({ page, createDocument }) => {
+    const id = await createDocument('Layout Phone Toolbar', 'Text.\n');
+    await setDefaultEditor(page, 'visual');
+    await page.setViewportSize({ width: 390, height: 700 });
+    await page.goto(`/doc/${id}/edit`);
+    const toolbar = page.getByRole('toolbar', { name: 'Formatting', exact: true });
+    await expect(toolbar.getByRole('button', { name: 'Bold', exact: true })).toBeEnabled();
+    await expect(toolbar.getByRole('button', { name: 'Table', exact: true })).toHaveCount(0);
+    await toolbar.getByRole('button', { name: 'Insert', exact: true }).click();
+    await expect(page.getByRole('menuitem', { name: 'Table', exact: true })).toBeVisible();
+    await expectAccessible(page, 'phone insert menu', '[role="menu"]');
+  });
+});
+
+test.describe('touch screens', () => {
+  test.use({ hasTouch: true });
+
+  test('keep the item menu of a tree row visible without hover', async ({
+    page,
+    createDocument,
+  }) => {
+    await createDocument('Layout Touch Row', 'Text.\n');
+    await page.goto('/');
+    const row = page.getByRole('treeitem', { name: 'Layout Touch Row', exact: true });
+    const more = row.getByRole('button', { name: 'Actions for Layout Touch Row' });
+    await expect(more).toHaveCSS('opacity', '1');
+  });
 });

@@ -51,6 +51,15 @@ Run them with the rest of the browser tests (`pnpm build && pnpm test:e2e`, see
 - Icon-only buttons need `aria-label`; when a button shows text, the label must contain it
   (WCAG 2.5.3).
 - Dialogs use the shared `Dialog`, which handles focus return. Editors restore their own caret.
+- Tabs use the shared `Tabs` (Radix): one Tab stop, ← → between tabs, each tab linked to its
+  panel. A control that navigates (such as Edit) is a button next to the tabs, not a tab.
+- Toolbars use Radix `Toolbar`: one Tab stop and arrow keys; on/off tools carry `aria-pressed`
+  and show it by more than colour. Menus that keep focus in the text (slash, `[[`) point to the
+  highlighted item with `aria-activedescendant` on the editor.
+- Touch: under `(pointer: coarse)` rows are 40 px high and icon buttons get a larger hit area;
+  under `(hover: none)` actions that appear on hover stay visible.
+- A list of choices that is a tree (folder picker, navigation) uses the tree pattern with roving
+  focus, not a listbox with buttons inside its options.
 
 ## Findings of the P15-08 review (all fixed)
 
@@ -87,4 +96,3 @@ alone), `lang="en"`.
   the Source tab.
 - **Document content** is the author's: heading order, link text and image alternative text in
   Markdown files are not corrected by LeanDocs.
-- **Dark theme** tokens exist but no dark theme is offered yet; they were not reviewed.

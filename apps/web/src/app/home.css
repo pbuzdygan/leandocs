@@ -46,3 +46,7 @@
   font-size: var(--font-size-meta);
   color: var(--text-muted);
 }
+
+.home__empty {
+  color: var(--text-muted);
+}
