@@ -29,22 +29,22 @@ LeanDocs is a lightweight, self-hosted documentation manager for technical peopl
 
 ## Documentation
 
-| Document                                                         | Purpose                                                     |
-| ---------------------------------------------------------------- | ----------------------------------------------------------- |
-| [`docs/deployment.md`](docs/deployment.md)                       | Install, HTTPS reverse proxies, updates, backup and restore |
-| [`docs/configuration.md`](docs/configuration.md)                 | Every setting, storage layout, HTTPS and sign-in modes      |
-| [`docs/import.md`](docs/import.md)                               | Bringing existing Markdown, Obsidian or HTML notes in       |
-| [`docs/markdown.md`](docs/markdown.md)                           | Supported Markdown syntax                                   |
-| [`docs/attachments.md`](docs/attachments.md)                     | Pictures and files in documents                             |
-| [`CHANGELOG.md`](CHANGELOG.md)                                   | What changed in each version                                |
-| [`SECURITY.md`](SECURITY.md)                                     | Reporting vulnerabilities, security reviews                 |
-| [`PROJECT_SPEC.md`](PROJECT_SPEC.md)                             | Product and architecture specification (what LeanDocs does) |
-| [`UI_SPEC.md`](UI_SPEC.md)                                       | UI specification (how it looks and behaves)                 |
-| [`AGENTS.md`](AGENTS.md), [`CONTRIBUTING.md`](CONTRIBUTING.md)   | Rules and workflow for AI coding agents and contributors    |
-| [`docs/implementation-status.md`](docs/implementation-status.md) | Current phase, task board, work log                         |
-| [`docs/development.md`](docs/development.md)                     | Local development, tests and releases                       |
-| [`docs/architecture.md`](docs/architecture.md)                   | How the code is organised                                   |
-| [`docs/adr/`](docs/adr/)                                         | Architecture decision records                               |
+| Document                                                       | Purpose                                                     |
+| -------------------------------------------------------------- | ----------------------------------------------------------- |
+| [`docs/deployment.md`](docs/deployment.md)                     | Install, HTTPS reverse proxies, updates, backup and restore |
+| [`docs/configuration.md`](docs/configuration.md)               | Every setting, storage layout, HTTPS and sign-in modes      |
+| [`docs/import.md`](docs/import.md)                             | Bringing existing Markdown, Obsidian or HTML notes in       |
+| [`docs/markdown.md`](docs/markdown.md)                         | Supported Markdown syntax                                   |
+| [`docs/attachments.md`](docs/attachments.md)                   | Pictures and files in documents                             |
+| [`CHANGELOG.md`](CHANGELOG.md)                                 | What changed in each version                                |
+| [`SECURITY.md`](SECURITY.md)                                   | Reporting vulnerabilities, security reviews                 |
+| [`PROJECT_SPEC.md`](PROJECT_SPEC.md)                           | Product and architecture specification (what LeanDocs does) |
+| [`UI_SPEC.md`](UI_SPEC.md)                                     | UI specification (how it looks and behaves)                 |
+| [`AGENTS.md`](AGENTS.md), [`CONTRIBUTING.md`](CONTRIBUTING.md) | Rules and workflow for AI coding agents and contributors    |
+| [`docs/development.md`](docs/development.md)                   | Local development, tests and releases                       |
+| [`docs/architecture.md`](docs/architecture.md)                 | How the code is organised                                   |
+| [`docs/adr/`](docs/adr/)                                       | Architecture decision records                               |
+| [`docs/decisions.md`](docs/decisions.md)                       | Smaller decisions, open questions and known issues          |
 
 ## Try it
 

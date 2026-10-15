@@ -66,7 +66,7 @@ Authentication recovery deliberately changes the old corrupt-database and critic
 | Filesystem and uploads           | Contained lexical/real paths, ignored scanned symlinks, safe atomic writes, validated no-follow reads, bounded multipart uploads, extension/content checks                                                | Safe-path, document, lifecycle, template, attachment and upload tests                    |
 | Search and errors                | Parameterized SQL, escaped/bounded full-text input, plain-text snippets rendered by React, controlled public error messages                                                                               | Search/API tests; code review                                                            |
 
-The recorded verification totals and commands are in the P11-09 work-log entry in [implementation status](implementation-status.md), the single task tracker.
+The recorded verification totals and commands are in the P11-09 work-log entry of the retired task board (Git history: `git show 2f34c27:docs/implementation-status.md`).
 
 ### Trust and deployment constraints
 

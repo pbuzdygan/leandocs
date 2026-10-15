@@ -1,6 +1,6 @@
 # Changelog
 
-What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in `AGENTS.md` §8.
+What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in [`CONTRIBUTING.md`](CONTRIBUTING.md#changelog).
 
 ## [Unreleased]
 
