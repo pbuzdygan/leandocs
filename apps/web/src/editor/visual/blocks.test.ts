@@ -7,7 +7,7 @@ import {
 import { TextSelection } from '@milkdown/kit/prose/state';
 import type { EditorView } from '@milkdown/kit/prose/view';
 import { afterEach, describe, expect, it } from 'vitest';
-import { blockContext, wikiSource } from './blocks';
+import { activeFormats, blockContext, wikiSource } from './blocks';
 import { createVisualEditor } from './create-editor';
 
 /** Owner feedback 2026-10-02: callouts, code blocks and tables in the visual editor. */
@@ -218,5 +218,24 @@ describe('wiki links in Visual (P9-06)', () => {
     expect(wikiSource({ target: 'A]]<b>', heading: 'x|y#z', alias: 'Label]' })).toBe(
       '[[Ab#xyz|Label]]',
     );
+  });
+});
+
+describe('toolbar state (guidelines §9)', () => {
+  it('reports the marks and block type at the caret', async () => {
+    const editor = await start('## Title\n\nSome **bold** text\n\n- item\n\n> quoted\n');
+    withView(editor.editor, (view) => {
+      const at = (text: string) => {
+        view.dispatch(
+          view.state.tr.setSelection(TextSelection.create(view.state.doc, after(view, text))),
+        );
+        return activeFormats(view.state);
+      };
+      expect(at('Tit')).toEqual(['Heading 2']);
+      expect(at('bo')).toEqual(['Bold', 'Paragraph']);
+      expect(at('Some ')).toEqual(['Paragraph']);
+      expect(at('ite')).toEqual(['Paragraph', 'Bullet list']);
+      expect(at('quo')).toEqual(['Paragraph', 'Quote']);
+    });
   });
 });

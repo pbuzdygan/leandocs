@@ -98,7 +98,7 @@ export function ConflictDialog({
         open
         onOpenChange={(open) => !open && onClose()}
         title="Review changes"
-        description="Red lines exist only on disk; green lines exist only in your editor."
+        description="Lines marked - (red) exist only on disk; lines marked + (green) exist only in your editor."
         width={760}
         actions={
           <>

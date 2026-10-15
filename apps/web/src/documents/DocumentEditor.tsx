@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { api, errorMessage } from '../api/client';
 import { useSettings, useTree } from '../api/queries';
 import { Button } from '../components/ui/Button';
+import { LoadingLines } from '../components/ui/States';
 import { useNotify } from '../components/ui/Toast';
 import { ConflictDialog } from '../editor/ConflictDialog';
 import { DraftNotice } from '../editor/DraftNotice';
@@ -20,6 +21,7 @@ import { useEditorSession } from '../editor/useEditorSession';
 import { resolveAttachmentUrl } from '../markdown/links';
 import { FileDropSurface } from '../attachments/FileDropSurface';
 import { attachmentKey } from '../attachments/AttachmentPanel';
+import { Tab, TabPanel, Tabs, TabsList } from '../components/ui/Tabs';
 import { DocumentLayout } from './DocumentLayout';
 import { collectTargets, docUrl, MoreMenu, useRendered, useToggleShortcut } from './document-utils';
 
@@ -32,8 +34,8 @@ export function EditDocument(props: { document: DocumentDto; missing?: boolean }
   const settings = useSettings();
   if (settings.isPending)
     return (
-      <article className="doc" aria-busy="true">
-        <p role="status">Loading editor…</p>
+      <article className="doc">
+        <LoadingLines label="Loading editor…" />
       </article>
     );
   // Editing must not depend on the settings: fall back to the defaults when they fail to load.
@@ -123,21 +125,17 @@ function DocumentEditor({
   const actions = (
     <div className="doc-edit-actions">
       <div className="doc-edit-actions__group">
-        <div className="doc__tabs" role="tablist" aria-label="Editor mode">
+        <TabsList label="Editor mode">
           {(['visual', 'source'] as const).map((mode) => (
-            <button
+            <Tab
               key={mode}
-              type="button"
-              role="tab"
-              aria-selected={editorMode === mode}
+              value={mode}
               disabled={uploadCount > 0 || (mode === 'visual' && Boolean(document.analysisLimited))}
-              className="doc__tab"
-              onClick={() => setEditorMode(mode)}
             >
               {mode === 'visual' ? 'Visual' : 'Source'}
-            </button>
+            </Tab>
           ))}
-        </div>
+        </TabsList>
         <SaveStatus
           state={state}
           onRetry={() => void session.saveNow()}
@@ -161,68 +159,82 @@ function DocumentEditor({
   );
 
   return (
-    <DocumentLayout document={document} headings={rendered.headings} editBar={actions}>
-      {draft && (
-        <DraftNotice
-          draft={draft}
-          onRestore={() => {
-            session.restoreDraft(draft);
-            setDraft(undefined);
-          }}
-          onDiscard={() => {
-            session.discardDraft();
-            setDraft(undefined);
-          }}
-        />
-      )}
-      <FileDropSurface>
-        {editorMode === 'visual' ? (
-          <Suspense fallback={<p role="status">Loading editor…</p>}>
-            <VisualEditor
+    // Manual activation: arrowing across the tabs must not rebuild the editor each time.
+    <Tabs
+      className="tabs-root"
+      activationMode="manual"
+      value={editorMode}
+      onValueChange={(mode) => !uploadCount && setEditorMode(mode as EditorMode)}
+    >
+      <DocumentLayout
+        document={document}
+        headings={rendered.headings}
+        editBar={actions}
+        titleInContent={editorMode === 'visual' && rendered.titleHeading}
+      >
+        {draft && (
+          <DraftNotice
+            draft={draft}
+            onRestore={() => {
+              session.restoreDraft(draft);
+              setDraft(undefined);
+            }}
+            onDiscard={() => {
+              session.discardDraft();
+              setDraft(undefined);
+            }}
+          />
+        )}
+        <FileDropSurface>
+          <TabPanel value="visual" tabIndex={-1}>
+            <Suspense fallback={<LoadingLines label="Loading editor…" />}>
+              <VisualEditor
+                key={state.externalVersion}
+                initialValue={state.content}
+                onChange={(value) => session.setContent(value)}
+                onSave={() => void session.saveNow()}
+                onExit={doneSync}
+                onSource={() => !uploadCount && setEditorMode('source')}
+                onUpload={upload}
+                resolveUrl={resolveUrl}
+                linkTargets={linkTargets}
+                documentId={document.id}
+              />
+            </Suspense>
+          </TabPanel>
+          <TabPanel value="source" tabIndex={-1}>
+            <SourceEditor
               key={state.externalVersion}
               initialValue={state.content}
               onChange={(value) => session.setContent(value)}
               onSave={() => void session.saveNow()}
               onExit={doneSync}
-              onSource={() => !uploadCount && setEditorMode('source')}
+              lineNumbers={settings.editor.lineNumbers}
+              wordWrap={settings.editor.wordWrap}
+              tabSize={settings.editor.tabSize}
               onUpload={upload}
-              resolveUrl={resolveUrl}
               linkTargets={linkTargets}
               documentId={document.id}
             />
-          </Suspense>
-        ) : (
-          <SourceEditor
-            key={state.externalVersion}
-            initialValue={state.content}
-            onChange={(value) => session.setContent(value)}
-            onSave={() => void session.saveNow()}
-            onExit={doneSync}
-            lineNumbers={settings.editor.lineNumbers}
-            wordWrap={settings.editor.wordWrap}
-            tabSize={settings.editor.tabSize}
-            onUpload={upload}
-            linkTargets={linkTargets}
-            documentId={document.id}
+          </TabPanel>
+        </FileDropSurface>
+        {uploadCount > 0 && (
+          <p className="upload-status" role="status">
+            Uploading attachments… You can keep writing.
+          </p>
+        )}
+        {conflictOpen && (
+          <ConflictDialog
+            document={document}
+            session={session}
+            state={state}
+            onClose={() => {
+              setConflictRequested(false);
+              setDismissedConflict(state.conflictRevision ?? '');
+            }}
           />
         )}
-      </FileDropSurface>
-      {uploadCount > 0 && (
-        <p className="upload-status" role="status">
-          Uploading attachments… You can keep writing.
-        </p>
-      )}
-      {conflictOpen && (
-        <ConflictDialog
-          document={document}
-          session={session}
-          state={state}
-          onClose={() => {
-            setConflictRequested(false);
-            setDismissedConflict(state.conflictRevision ?? '');
-          }}
-        />
-      )}
-    </DocumentLayout>
+      </DocumentLayout>
+    </Tabs>
   );
 }

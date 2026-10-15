@@ -2,12 +2,13 @@ import {
   CopyIcon,
   DownloadIcon,
   EditIcon,
-  ExternalLinkIcon,
+  FileIcon,
   LinkIcon,
   MoveIcon,
   NewFileIcon,
   NewFolderIcon,
   PinIcon,
+  RenameIcon,
   TrashIcon,
   UnpinIcon,
 } from '../components/icons';
@@ -29,7 +30,7 @@ export function itemMenuEntries(
 ): MenuEntry[] {
   if (target.kind === 'document') {
     return [
-      ...(open ? [{ label: 'Open', icon: <ExternalLinkIcon {...icon} />, onSelect: open }] : []),
+      ...(open ? [{ label: 'Open', icon: <FileIcon {...icon} />, onSelect: open }] : []),
       ...(open
         ? [
             {
@@ -40,7 +41,7 @@ export function itemMenuEntries(
           ]
         : []),
       'separator',
-      { label: 'Rename', icon: <EditIcon {...icon} />, onSelect: () => actions.rename(target) },
+      { label: 'Rename', icon: <RenameIcon {...icon} />, onSelect: () => actions.rename(target) },
       { label: 'Move', icon: <MoveIcon {...icon} />, onSelect: () => actions.move(target) },
       actions.isPinned(target.id)
         ? {
@@ -90,7 +91,7 @@ export function itemMenuEntries(
       onSelect: () => actions.newFolder(target.path),
     },
     'separator',
-    { label: 'Rename', icon: <EditIcon {...icon} />, onSelect: () => actions.rename(target) },
+    { label: 'Rename', icon: <RenameIcon {...icon} />, onSelect: () => actions.rename(target) },
     { label: 'Move', icon: <MoveIcon {...icon} />, onSelect: () => actions.move(target) },
     'separator',
     {

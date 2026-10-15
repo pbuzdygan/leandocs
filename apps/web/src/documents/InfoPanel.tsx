@@ -141,44 +141,71 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
           This file is not UTF-8 text, so its properties cannot be changed here.
         </p>
       )}
-      <FormError message={error} />
-      <TextField
-        label="Title"
-        value={draft.title}
-        disabled={locked}
-        onChange={(event) => setDraft({ ...draft, title: event.target.value })}
-      />
-      <TextField
-        label="Description"
-        value={draft.description}
-        disabled={locked}
-        onChange={(event) => setDraft({ ...draft, description: event.target.value })}
-      />
-      <TagInput
-        label="Tags"
-        values={draft.tags}
-        disabled={locked}
-        suggestions={(tags.data?.items ?? []).map((tag) => tag.name)}
-        onChange={(values) => setDraft({ ...draft, tags: values })}
-      />
-      <TagInput
-        label="Aliases"
-        values={draft.aliases}
-        disabled={locked}
-        onChange={(values) => setDraft({ ...draft, aliases: values })}
-      />
-      {!locked && (
-        <div className="info-panel__actions">
-          <Button size="small" type="submit" variant="primary" disabled={!dirty} loading={saving}>
-            Save properties
-          </Button>
-          {dirty && (
-            <Button size="small" variant="ghost" onClick={() => setDraft(original)}>
-              Cancel
+      {locked ? (
+        // Read-only: plain facts, not disabled fields (guidelines §12).
+        <dl className="info-panel__facts">
+          <dt>Title</dt>
+          <dd>{original.title}</dd>
+          <dt>Description</dt>
+          <dd>{original.description || <span className="context__empty">None</span>}</dd>
+          <dt>Tags</dt>
+          <dd>
+            <ReadOnlyList values={original.tags} />
+          </dd>
+          <dt>Aliases</dt>
+          <dd>
+            <ReadOnlyList values={original.aliases} />
+          </dd>
+        </dl>
+      ) : (
+        <>
+          <FormError message={error} />
+          <TextField
+            label="Title"
+            value={draft.title}
+            onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+          />
+          <TextField
+            label="Description"
+            value={draft.description}
+            onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+          />
+          <TagInput
+            label="Tags"
+            values={draft.tags}
+            suggestions={(tags.data?.items ?? []).map((tag) => tag.name)}
+            onChange={(values) => setDraft({ ...draft, tags: values })}
+          />
+          <TagInput
+            label="Aliases"
+            values={draft.aliases}
+            onChange={(values) => setDraft({ ...draft, aliases: values })}
+          />
+          <div className="info-panel__actions">
+            <Button size="small" type="submit" variant="primary" disabled={!dirty} loading={saving}>
+              Save properties
             </Button>
-          )}
-        </div>
+            {dirty && (
+              <Button size="small" variant="ghost" onClick={() => setDraft(original)}>
+                Cancel
+              </Button>
+            )}
+          </div>
+        </>
       )}
     </form>
+  );
+}
+
+function ReadOnlyList({ values }: { values: string[] }) {
+  if (values.length === 0) return <span className="context__empty">None</span>;
+  return (
+    <ul className="tag-input__readonly">
+      {values.map((value) => (
+        <li key={value} className="tag">
+          {value}
+        </li>
+      ))}
+    </ul>
   );
 }

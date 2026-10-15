@@ -24,6 +24,8 @@ export interface TocHeading {
 export interface RenderedMarkdown {
   tree: HastRoot;
   headings: TocHeading[];
+  /** The Markdown starts with an `# H1` that repeats the title; View leaves it out (P4-09). */
+  titleHeading: boolean;
 }
 
 export const highlightLanguages = { ...common, dockerfile, nginx, powershell };
@@ -105,7 +107,7 @@ function rehypeTaskListLabels() {
  */
 export function renderMarkdown(markdown: string, context: RenderContext): RenderedMarkdown {
   const mdast = parseMarkdown(markdown);
-  applyRenderContext(mdast, context);
+  const titleHeading = applyRenderContext(mdast, context);
   const headings: TocHeading[] = [];
   const processor = unified()
     .use(remarkRehype, { allowDangerousHtml: true, clobberPrefix: '' })
@@ -120,5 +122,5 @@ export function renderMarkdown(markdown: string, context: RenderContext): Render
     .use(rehypeFixFragments)
     .use(rehypeTaskListLabels);
   const tree = processor.runSync(mdast) as HastRoot;
-  return { tree, headings };
+  return { tree, headings, titleHeading };
 }

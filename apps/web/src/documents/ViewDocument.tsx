@@ -5,6 +5,7 @@ import { DraftNotice } from '../editor/DraftNotice';
 import { localDraftStore, type Draft } from '../editor/drafts';
 import { HastContent } from '../markdown/MarkdownView';
 import { SourceView } from '../markdown/SourceView';
+import { Tab, TabPanel, Tabs, TabsList } from '../components/ui/Tabs';
 import { DocumentLayout } from './DocumentLayout';
 import { docUrl, MoreMenu, useRendered, useToggleShortcut } from './document-utils';
 
@@ -30,29 +31,21 @@ export function ViewDocument({ document }: { document: DocumentDto }) {
     if (hash) window.document.getElementById(hash)?.scrollIntoView({ block: 'start' });
   }, [rendered]);
 
-  const tabs = (
+  const actions = (
     <>
-      <div className="doc__tabs" role="tablist" aria-label="Document mode">
-        {(['view', 'source'] as const).map((value) => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={mode === value}
-            className="doc__tab"
-            onClick={() => setMode(value)}
-          >
-            {value === 'view' ? 'View' : 'Source'}
-          </button>
-        ))}
+      <div className="doc__modes">
+        <TabsList label="Document mode">
+          <Tab value="view">View</Tab>
+          <Tab value="source">Source</Tab>
+        </TabsList>
+        {/* Edit opens the editor route, so it is a button next to the tabs, not a tab. */}
         <button
           type="button"
-          role="tab"
-          aria-selected={false}
-          className="doc__tab"
+          className="tabs__tab"
           onClick={edit}
           disabled={readOnly}
           title={readOnly ? 'This file is not UTF-8 text and cannot be edited here' : undefined}
+          aria-keyshortcuts="Control+E Meta+E"
         >
           Edit
         </button>
@@ -60,37 +53,33 @@ export function ViewDocument({ document }: { document: DocumentDto }) {
       <MoreMenu document={document} />
     </>
   );
+  // A document read as plain text shows its source in both tabs (ADR-0025).
+  const body = document.analysisLimited ? <SourceView source={document.content} plain /> : null;
 
   return (
-    <DocumentLayout document={document} headings={rendered.headings} actions={tabs}>
-      {draft && (
-        <DraftNotice
-          draft={draft}
-          restoreLabel="Continue editing"
-          onRestore={edit}
-          onDiscard={() => {
-            localDraftStore.remove(document.id);
-            setDraft(undefined);
-          }}
-        />
-      )}
-      {document.analysisLimited ? (
-        <div role="tabpanel">
-          <SourceView source={document.content} plain />
-        </div>
-      ) : mode === 'view' ? (
-        <div className="doc__body markdown" role="tabpanel">
-          {document.content.trim() === '' ? (
-            <p className="doc__empty">This document is empty.</p>
-          ) : (
-            <HastContent tree={rendered.tree} />
-          )}
-        </div>
-      ) : (
-        <div role="tabpanel">
-          <SourceView source={document.content} />
-        </div>
-      )}
-    </DocumentLayout>
+    <Tabs className="tabs-root" value={mode} onValueChange={(value) => setMode(value as ViewMode)}>
+      <DocumentLayout document={document} headings={rendered.headings} actions={actions}>
+        {draft && (
+          <DraftNotice
+            draft={draft}
+            restoreLabel="Continue editing"
+            onRestore={edit}
+            onDiscard={() => {
+              localDraftStore.remove(document.id);
+              setDraft(undefined);
+            }}
+          />
+        )}
+        <TabPanel value="view" className={body ? undefined : 'doc__body markdown'}>
+          {body ??
+            (document.content.trim() === '' ? (
+              <p className="doc__empty">This document is empty.</p>
+            ) : (
+              <HastContent tree={rendered.tree} />
+            ))}
+        </TabPanel>
+        <TabPanel value="source">{body ?? <SourceView source={document.content} />}</TabPanel>
+      </DocumentLayout>
+    </Tabs>
   );
 }

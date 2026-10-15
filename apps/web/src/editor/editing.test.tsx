@@ -58,12 +58,25 @@ describe('editing a document (Phase 5)', () => {
     api((request) => saved(request));
     const { user, location } = renderApp(`/doc/${ID}`);
     await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
-    await user.click(screen.getByRole('tab', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
     await waitFor(() => expect(location()).toBe(`/doc/${ID}/edit`));
     expect(await screen.findByTestId('source-editor')).toBeInTheDocument();
     expect(editorView().state.doc.toString()).toBe('# ATLAS\n\nHello\n');
     expect(screen.getByRole('heading', { level: 1, name: 'ATLAS' })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Save status' })).toHaveTextContent('Saved');
+  });
+
+  it('shows the title once in the visual editor, where the content H1 takes its place', async () => {
+    api((request) => saved(request));
+    const { user } = renderApp(`/doc/${ID}/edit`);
+    await screen.findByTestId('source-editor');
+    // Source shows the raw "# ATLAS" line, so the header keeps the visible title.
+    const header = () => document.querySelector('.doc__header h1');
+    expect(header()).toHaveClass('doc__title');
+    await user.click(screen.getByRole('tab', { name: 'Visual' }));
+    // Still in the accessibility tree, but not drawn a second time (owner decision A).
+    await waitFor(() => expect(header()).toHaveClass('visually-hidden'));
+    expect(screen.getAllByRole('heading', { level: 1, name: 'ATLAS' }).length).toBeGreaterThan(0);
   });
 
   it('marks changes as unsaved and saves with Ctrl+S using the expected revision', async () => {

@@ -64,17 +64,18 @@ export function resolveAttachmentUrl(url: string, context: RenderContext): strin
  * - drops a leading `# H1` that repeats the document title (P4-09);
  * - resolves `[[wiki links]]` and relative `.md` links to `/doc/<id>` URLs;
  * - marks unresolved document links as broken (UI_SPEC §76).
+ *
+ * Returns whether a title heading was dropped.
  */
-export function applyRenderContext(tree: Root, context: RenderContext): void {
+export function applyRenderContext(tree: Root, context: RenderContext): boolean {
   const first = tree.children[0];
-  if (
+  const titleHeading = Boolean(
     context.title &&
     first?.type === 'heading' &&
     first.depth === 1 &&
-    toString(first).trim().toLowerCase() === context.title.trim().toLowerCase()
-  ) {
-    tree.children.shift();
-  }
+    toString(first).trim().toLowerCase() === context.title.trim().toLowerCase(),
+  );
+  if (titleHeading) tree.children.shift();
 
   // Same resolution as the server's link index (title, alias, file name, path; P9-02).
   const resolver = createLinkResolver(context.documents);
@@ -102,4 +103,5 @@ export function applyRenderContext(tree: Root, context: RenderContext): void {
     if (target) node.url = documentUrl(target.id, parsed.fragment);
     else node.data = { ...node.data, ...BROKEN };
   });
+  return titleHeading;
 }

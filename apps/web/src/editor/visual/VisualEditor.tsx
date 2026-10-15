@@ -1,4 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
+import { Toolbar, Tooltip } from 'radix-ui';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import type { Editor } from '@milkdown/kit/core';
 import { commandsCtx, editorViewCtx } from '@milkdown/kit/core';
@@ -29,6 +38,7 @@ import {
 import { deleteColumn, deleteRow, deleteTable } from '@milkdown/kit/prose/tables';
 import { CALLOUT_TYPES, createLinkResolver } from '@leandocs/shared';
 import {
+  AddIcon,
   BoldIcon,
   BulletListIcon,
   ChecklistIcon,
@@ -44,8 +54,12 @@ import {
   QuoteIcon,
   StrikethroughIcon,
   TableIcon,
+  type IconComponent,
 } from '../../components/icons';
+import { DropdownMenuButton } from '../../components/ui/Menu';
+import { MEDIA, useMediaQuery } from '../../utils/media';
 import { Button } from '../../components/ui/Button';
+import { ErrorState, LoadingLines } from '../../components/ui/States';
 import { Dialog } from '../../components/ui/Dialog';
 import { TextField, FormError } from '../../components/ui/Field';
 import { createVisualEditor, type CaretRect } from './create-editor';
@@ -100,11 +114,14 @@ export function VisualEditor({
     code: null,
     callout: null,
     wiki: null,
+    active: [],
   });
   const [dialog, setDialog] = useState<'Link' | 'Image' | null>(null);
   const [url, setUrl] = useState('');
   const [label, setLabel] = useState('');
   const [urlError, setUrlError] = useState<string>();
+  const phone = useMediaQuery(MEDIA.mobile);
+  const popupId = useId();
 
   useEffect(() => {
     if (!host.current) return;
@@ -191,6 +208,22 @@ export function VisualEditor({
       : [];
   const [wikiActive, setWikiActive] = useState(0);
   const wikiIndex = Math.min(wikiActive, Math.max(0, wikiItems.length - 1));
+  // The slash and `[[` menus keep focus in the text: tell assistive technology which item is
+  // highlighted through the editor's own textbox (aria-activedescendant).
+  const popupOpen = slash ? 'slash' : wikiItems.length > 0 ? 'wiki' : null;
+  const activeOption = slash ? active : wikiIndex;
+  useEffect(() => {
+    const textbox = host.current?.querySelector<HTMLElement>('.ProseMirror');
+    if (!textbox) return;
+    if (!popupOpen) return;
+    textbox.setAttribute('aria-controls', `${popupId}-${popupOpen}`);
+    textbox.setAttribute('aria-activedescendant', `${popupId}-${popupOpen}-${activeOption}`);
+    return () => {
+      textbox.removeAttribute('aria-controls');
+      textbox.removeAttribute('aria-activedescendant');
+    };
+  }, [popupOpen, activeOption, popupId]);
+
   const insertWikiLink = (document: LinkTarget) => {
     editor.current?.action((ctx) => {
       const view = ctx.get(editorViewCtx);
@@ -342,7 +375,7 @@ export function VisualEditor({
     });
   };
   const tableButton = (label: string, disabled = false) => (
-    <button
+    <Toolbar.Button
       key={label}
       type="button"
       className="visual-toolbar__text"
@@ -351,28 +384,8 @@ export function VisualEditor({
       onClick={() => runContext(label)}
     >
       {label}
-    </button>
+    </Toolbar.Button>
   );
-  const buttons = [
-    { label: 'Paragraph', icon: ParagraphIcon },
-    { label: 'Heading 1', text: 'H1' },
-    { label: 'Heading 2', text: 'H2' },
-    { label: 'Heading 3', text: 'H3' },
-    { label: 'Bold', icon: BoldIcon },
-    { label: 'Italic', icon: ItalicIcon },
-    { label: 'Strikethrough', icon: StrikethroughIcon },
-    { label: 'Inline code', icon: InlineCodeIcon },
-    { label: 'Bullet list', icon: BulletListIcon },
-    { label: 'Numbered list', icon: NumberedListIcon },
-    { label: 'Checklist', icon: ChecklistIcon },
-    { label: 'Quote', icon: QuoteIcon },
-    { label: 'Link', icon: LinkIcon },
-    { label: 'Image', icon: ImageIcon },
-    { label: 'Table', icon: TableIcon },
-    { label: 'Code block', icon: CodeBlockIcon },
-    { label: 'Callout', icon: InfoIcon },
-    { label: 'Divider', icon: DividerIcon },
-  ];
   const slashItems = [
     'Heading 1',
     'Heading 2',
@@ -387,18 +400,39 @@ export function VisualEditor({
     ...(onUpload ? ['Attachment'] : []),
     'Divider',
   ];
-  const toolbarButton = (item: (typeof buttons)[number]) => (
-    <button
+  const unavailable = loading || !!error;
+  const toolbarButton = (item: ToolItem) => (
+    <ToolButton
       key={item.label}
-      type="button"
-      aria-label={item.label}
-      title={item.label}
-      disabled={loading || !!error}
-      onMouseDown={(event) => event.preventDefault()}
-      onClick={() => run(item.label)}
-    >
-      {item.icon ? <item.icon size={16} aria-hidden="true" /> : item.text}
-    </button>
+      item={item}
+      pressed={TOGGLES.has(item.label) ? context.active.includes(item.label) : undefined}
+      disabled={unavailable}
+      onRun={() => run(item.label)}
+    />
+  );
+  // Phones (UI_SPEC §105): the most used tools, the rest in the "+" insert menu.
+  const insertMenu = (
+    <DropdownMenuButton
+      align="start"
+      entries={[
+        ...TOOL_GROUPS.flatMap((group) => group.items)
+          .filter((item) => !PHONE_TOOLS.includes(item.label))
+          .map((item) => ({
+            label: item.label,
+            icon: item.icon ? <item.icon size={15} /> : undefined,
+            disabled: unavailable,
+            onSelect: () => run(item.label),
+          })),
+        ...(onUpload
+          ? [{ label: 'Attachment', disabled: unavailable, onSelect: () => run('Attachment') }]
+          : []),
+      ]}
+      trigger={
+        <Toolbar.Button type="button" aria-label="Insert" title="Insert" disabled={unavailable}>
+          <AddIcon size={16} aria-hidden="true" />
+        </Toolbar.Button>
+      }
+    />
   );
   const submit = () => {
     if (!url.trim() || !safeEditorUrl(url.trim())) {
@@ -460,11 +494,39 @@ export function VisualEditor({
         }
       }}
     >
-      <div className="visual-toolbar" role="toolbar" aria-label="Formatting">
-        {buttons.map(toolbarButton)}
-        {onUpload && (
+      <Toolbar.Root className="visual-toolbar" aria-label="Formatting" loop={false}>
+        {phone ? (
+          <>
+            {TOOL_GROUPS.flatMap((group) => group.items)
+              .filter((item) => PHONE_TOOLS.includes(item.label))
+              .map(toolbarButton)}
+            {insertMenu}
+          </>
+        ) : (
+          TOOL_GROUPS.map((group, index) => (
+            <Fragment key={group.label}>
+              {index > 0 && <Toolbar.Separator className="visual-toolbar__separator" />}
+              <div className="visual-toolbar__group" role="group" aria-label={group.label}>
+                {group.items.map(toolbarButton)}
+              </div>
+            </Fragment>
+          ))
+        )}
+        {onUpload && !phone && (
+          <>
+            <Toolbar.Separator className="visual-toolbar__separator" />
+            <UploadControl
+              toolbar
+              disabled={unavailable}
+              onFiles={(files) => attach.current(files)}
+              inputRef={filePicker}
+            />
+          </>
+        )}
+        {/* Phones reach Attachment through the insert menu; the picker input stays mounted. */}
+        {onUpload && phone && (
           <UploadControl
-            disabled={loading || !!error}
+            hiddenTrigger
             onFiles={(files) => attach.current(files)}
             inputRef={filePicker}
           />
@@ -513,23 +575,21 @@ export function VisualEditor({
             </select>
           </div>
         )}
-      </div>
+      </Toolbar.Root>
       {selected && (
-        <div
+        <Toolbar.Root
           className="visual-bubble"
-          role="toolbar"
           aria-label="Selection formatting"
           style={floatingStyle(caret, 'above')}
         >
-          {buttons
-            .filter((item) =>
-              ['Bold', 'Italic', 'Strikethrough', 'Inline code', 'Link'].includes(item.label),
-            )
+          {TOOL_GROUPS.flatMap((group) => group.items)
+            .filter((item) => BUBBLE_TOOLS.includes(item.label))
             .map(toolbarButton)}
-        </div>
+        </Toolbar.Root>
       )}
       {wikiItems.length > 0 && (
         <div
+          id={`${popupId}-wiki`}
           className="visual-slash visual-wiki"
           role="listbox"
           aria-label="Link to document"
@@ -538,6 +598,7 @@ export function VisualEditor({
           {wikiItems.map((item, index) => (
             <button
               key={item.id}
+              id={`${popupId}-wiki-${index}`}
               type="button"
               role="option"
               aria-selected={index === wikiIndex}
@@ -553,6 +614,7 @@ export function VisualEditor({
       )}
       {slash && (
         <div
+          id={`${popupId}-slash`}
           className="visual-slash"
           role="menu"
           aria-label="Insert block"
@@ -561,6 +623,7 @@ export function VisualEditor({
           {slashItems.map((item, index) => (
             <button
               key={item}
+              id={`${popupId}-slash-${index}`}
               type="button"
               role="menuitem"
               className={active === index ? 'is-active' : ''}
@@ -572,15 +635,19 @@ export function VisualEditor({
           ))}
         </div>
       )}
-      {loading && <p role="status">Loading editor…</p>}
+      {loading && <LoadingLines label="Loading editor…" />}
       {error && (
         <div role="alert">
-          <p>Unable to load the visual editor.</p>
-          <Button onClick={onSource}>Edit in Source</Button>
-          <details>
-            <summary>Details</summary>
-            {error}
-          </details>
+          <ErrorState
+            title="Unable to load the visual editor"
+            message="Your document was not changed. You can continue in the Source editor."
+            details={error}
+            action={
+              <Button variant="primary" onClick={onSource}>
+                Edit in Source
+              </Button>
+            }
+          />
         </div>
       )}
       <div ref={host} className="markdown visual-content" />
@@ -653,4 +720,116 @@ function floatingStyle(caret: CaretRect | undefined, prefer: 'above' | 'below'):
         bottom: window.innerHeight - caret.top + 4,
         maxHeight: caret.top - 12,
       };
+}
+
+interface ToolItem {
+  label: string;
+  icon?: IconComponent;
+  text?: string;
+}
+
+/** Toolbar groups (UI_SPEC §35–36); separators sit between the groups. */
+const TOOL_GROUPS: { label: string; items: ToolItem[] }[] = [
+  {
+    label: 'Text',
+    items: [
+      { label: 'Paragraph', icon: ParagraphIcon },
+      { label: 'Heading 1', text: 'H1' },
+      { label: 'Heading 2', text: 'H2' },
+      { label: 'Heading 3', text: 'H3' },
+    ],
+  },
+  {
+    label: 'Formatting',
+    items: [
+      { label: 'Bold', icon: BoldIcon },
+      { label: 'Italic', icon: ItalicIcon },
+      { label: 'Strikethrough', icon: StrikethroughIcon },
+      { label: 'Inline code', icon: InlineCodeIcon },
+    ],
+  },
+  {
+    label: 'Structure',
+    items: [
+      { label: 'Bullet list', icon: BulletListIcon },
+      { label: 'Numbered list', icon: NumberedListIcon },
+      { label: 'Checklist', icon: ChecklistIcon },
+      { label: 'Quote', icon: QuoteIcon },
+    ],
+  },
+  {
+    label: 'Insert',
+    items: [
+      { label: 'Link', icon: LinkIcon },
+      { label: 'Image', icon: ImageIcon },
+      { label: 'Table', icon: TableIcon },
+      { label: 'Code block', icon: CodeBlockIcon },
+      { label: 'Callout', icon: InfoIcon },
+      { label: 'Divider', icon: DividerIcon },
+    ],
+  },
+];
+
+/** Buttons that show an on/off state (`aria-pressed`). Insert actions have none. */
+const TOGGLES = new Set([
+  'Paragraph',
+  'Heading 1',
+  'Heading 2',
+  'Heading 3',
+  'Bold',
+  'Italic',
+  'Strikethrough',
+  'Inline code',
+  'Bullet list',
+  'Numbered list',
+  'Checklist',
+  'Quote',
+]);
+const PHONE_TOOLS = [
+  'Bold',
+  'Italic',
+  'Heading 2',
+  'Bullet list',
+  'Numbered list',
+  'Inline code',
+  'Link',
+];
+const BUBBLE_TOOLS = ['Bold', 'Italic', 'Strikethrough', 'Inline code', 'Link'];
+
+/**
+ * One toolbar button: a Radix toolbar item (one Tab stop, arrow keys between items) with the
+ * shared tooltip (UI_SPEC §117). Mouse down keeps the editor's selection.
+ */
+function ToolButton({
+  item,
+  pressed,
+  disabled,
+  onRun,
+}: {
+  item: ToolItem;
+  pressed: boolean | undefined;
+  disabled: boolean;
+  onRun: () => void;
+}) {
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <Toolbar.Button
+          type="button"
+          aria-label={item.label}
+          aria-pressed={pressed}
+          disabled={disabled}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={onRun}
+        >
+          {item.icon ? <item.icon size={16} aria-hidden="true" /> : item.text}
+        </Toolbar.Button>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content className="tooltip" sideOffset={6}>
+          {item.label}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
 }

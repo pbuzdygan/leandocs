@@ -562,6 +562,11 @@
 }
 
 /* Tabs and segmented controls (UI_SPEC §31): accent text and a bottom border when selected. */
+/* The tabs root only groups tabs and panels; it must not add a box to the layout. */
+.tabs-root {
+  display: contents;
+}
+
 .tabs__list {
   display: flex;
   gap: var(--space-3);
@@ -578,7 +583,8 @@
   cursor: pointer;
 }
 
-.tabs__tab:hover:not(:disabled) {
+/* Hover must not hide which tab is selected. */
+.tabs__tab:hover:not(:disabled):not([data-state='active']) {
   color: var(--text-primary);
 }
 

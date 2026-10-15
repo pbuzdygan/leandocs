@@ -75,6 +75,12 @@ describe('Markdown rendering', () => {
     expect(html('Intro\n\n# ATLAS\n')).toContain('<h1');
   });
 
+  it('reports whether the content starts with the title heading', () => {
+    expect(renderMarkdown('# ATLAS\n\nText\n', context).titleHeading).toBe(true);
+    expect(renderMarkdown('# Other\n', context).titleHeading).toBe(false);
+    expect(renderMarkdown('Intro\n\n# ATLAS\n', context).titleHeading).toBe(false);
+  });
+
   it('renders callouts with title and type class', () => {
     const out = html(':::warning\nDo not enable Secure Boot.\n:::\n');
     expect(out).toContain('<div class="callout callout--warning" data-callout="warning">');

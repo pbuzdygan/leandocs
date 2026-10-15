@@ -22,6 +22,7 @@ export function DocumentLayout({
   headings,
   actions,
   editBar,
+  titleInContent = false,
   children,
 }: {
   document: DocumentDto;
@@ -29,6 +30,12 @@ export function DocumentLayout({
   actions?: ReactNode;
   /** Editing controls kept visible while scrolling (owner feedback, UI_SPEC §150). */
   editBar?: ReactNode;
+  /**
+   * The editable content starts with the title as its H1 (visual editor). The header title is then
+   * only kept for assistive technology, so the title is not shown twice and the document keeps
+   * its place when View turns into Edit (UI_SPEC §34, owner decision A, 2026-10-15).
+   */
+  titleInContent?: boolean;
   children: ReactNode;
 }) {
   const { showFolder } = useNavigationState();
@@ -108,7 +115,7 @@ export function DocumentLayout({
 
         <header className="doc__header">
           <div className="doc__heading">
-            <h1 className="doc__title">{document.title}</h1>
+            <h1 className={titleInContent ? 'visually-hidden' : 'doc__title'}>{document.title}</h1>
             {actions && (
               <div className="doc__actions">
                 {actions}

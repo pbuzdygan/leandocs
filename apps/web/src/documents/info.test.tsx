@@ -68,7 +68,9 @@ describe('Info tab (P10-04)', () => {
     const { user } = renderApp('/doc/id-vlan/edit');
     await user.click(await screen.findByRole('tab', { name: 'Info' }));
     const form = await screen.findByRole('form', { name: 'Properties' });
-    expect(within(form).getByLabelText('Title')).toBeDisabled();
+    // Plain facts instead of disabled fields.
+    expect(within(form).queryByRole('textbox')).toBeNull();
+    expect(within(form).getByText('Title').nextElementSibling).toHaveTextContent('VLAN');
     expect(within(form).queryByRole('button', { name: 'Save properties' })).toBeNull();
     expect(form).toHaveTextContent('Finish editing (Done) to change properties here.');
   });

@@ -1,6 +1,7 @@
 import type { OutgoingLink } from '@leandocs/shared';
 import { Link } from 'react-router';
 import { useDocumentLinks } from '../api/queries';
+import { LoadingLines } from '../components/ui/States';
 import { displayFolder, parentPath } from '../utils/format';
 
 function describeBroken(link: OutgoingLink): string {
@@ -19,7 +20,7 @@ export function LinksPanel({ documentId }: { documentId: string }) {
         {backlinks.isError ? (
           <p className="context__empty">Backlinks are unavailable.</p>
         ) : !backlinks.data ? (
-          <p className="context__empty">Loading…</p>
+          <LoadingLines label="Loading backlinks…" count={2} />
         ) : backlinks.data.items.length === 0 ? (
           <p className="context__empty">No documents link here yet.</p>
         ) : (
@@ -45,7 +46,7 @@ export function LinksPanel({ documentId }: { documentId: string }) {
         {outgoing.isError ? (
           <p className="context__empty">Links are unavailable.</p>
         ) : !outgoing.data ? (
-          <p className="context__empty">Loading…</p>
+          <LoadingLines label="Loading links…" count={2} />
         ) : outgoing.data.items.length === 0 ? (
           <p className="context__empty">This document has no links to other documents.</p>
         ) : (

@@ -80,33 +80,10 @@
   flex-shrink: 0;
 }
 
-.doc__tabs {
+.doc__modes {
   display: flex;
+  align-items: center;
   gap: var(--space-3);
-}
-
-.doc__tab {
-  padding: var(--space-1) 0;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--text-secondary);
-  font-size: var(--font-size-ui);
-  cursor: pointer;
-}
-
-.doc__tab:hover:not(:disabled) {
-  color: var(--text-primary);
-}
-
-.doc__tab:disabled {
-  cursor: not-allowed;
-  color: var(--text-disabled);
-}
-
-.doc__tab[aria-selected='true'] {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
 }
 
 .doc__description {
@@ -167,6 +144,7 @@
   top: 0;
   flex-shrink: 0;
   width: 260px;
+  min-width: 0;
   max-height: calc(100vh - var(--topbar-height));
   overflow: auto;
   padding: var(--space-6) var(--space-4);
@@ -196,27 +174,33 @@
 }
 
 .context__tabs {
-  display: flex;
-  gap: var(--space-1);
+  gap: var(--space-3);
 }
 
-.context__tab {
-  padding: var(--space-1) var(--space-2);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--font-size-meta);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
+/* The handle on the panel's left edge (UI_SPEC §108): 1 px line, wider hit area. */
+.context__resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 5;
 }
 
-.context__tab[aria-selected='true'] {
-  background: var(--bg-selected);
-  color: var(--text-primary);
+.context__resizer:hover {
+  background: linear-gradient(
+    to right,
+    transparent 2px,
+    var(--accent-soft) 2px,
+    var(--accent-soft) 4px,
+    transparent 4px
+  );
+}
+
+.context__resizer:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .links-panel__heading {

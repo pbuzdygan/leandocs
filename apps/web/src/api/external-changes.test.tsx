@@ -87,7 +87,7 @@ describe('frontend external changes', () => {
     backend.update();
     act(() => source().emit('ready', { resync: true }));
     await screen.findByRole('heading', { name: 'After view' });
-    await user.click(screen.getByRole('tab', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
     await screen.findByTestId('source-editor');
     expect(EventSourceMock.instances).toHaveLength(1);
   });
