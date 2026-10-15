@@ -8,8 +8,8 @@ Each reverse proxy setup below was tested with LeanDocs: sign-in over HTTPS, sav
 
 - Docker with the Compose plugin (`docker compose version`).
 - For access from other devices: a domain name pointing at the server and a reverse proxy for HTTPS.
-- Disk space for your documentation. LeanDocs itself needs about 250 MB for the image.
-- A current browser: Chrome, Edge, Firefox or Safari. The oldest versions LeanDocs is built for are Chrome/Edge 111, Firefox 114 and Safari 16.4 (2023); every change is tested automatically on the latest Chrome, Firefox and Safari engines.
+- Disk space for your documentation. LeanDocs itself needs about 300 MB for the image.
+- A current browser: Chrome, Edge, Firefox or Safari. The oldest versions LeanDocs is built for are Chrome/Edge 111, Firefox 114 and Safari 16.4 (2023); every release is tested automatically on the latest Chrome, Firefox and Safari engines.
 
 ## 1. Install
 
@@ -23,7 +23,7 @@ Create a `.env` file next to `compose.yaml`:
 
 ```dotenv
 # The version to run (see the releases page)
-LEANDOCS_TAG=1.0.0
+LEANDOCS_TAG=0.2.0
 # Your user and group (`id -u`, `id -g`), so you own the files in ./data
 LEANDOCS_UID=1000
 LEANDOCS_GID=1000
@@ -43,14 +43,14 @@ Published image tags:
 
 | Tag                     | What it is                                                     |
 | ----------------------- | -------------------------------------------------------------- |
-| `1.0.0` (any `X.Y.Z`)   | A stable release. Pin this in `.env`.                          |
+| `0.2.0` (any `X.Y.Z`)   | A stable release. Pin this in `.env`.                          |
 | `latest`                | The newest stable release.                                     |
 | `dev1.1.0` (`devX.Y.Z`) | A development preview of the next version. Not for production. |
 | `dev_latest`            | The newest development preview.                                |
 
 Stable and development tags never replace each other: `latest` is always a stable release.
 
-> **Before the first stable release** there is no `latest` image and no `compose.yaml` on the `main` branch yet. Download the file from the `dev` branch instead (`…/leandocs/dev/compose.yaml` in the `curl` command) and set `LEANDOCS_TAG=dev_latest` or a `devX.Y.Z` tag. Development previews are for trying LeanDocs out; back up `./data` before every update. You can also build the image from a checkout of the repository: `docker compose -f compose_local_build.yaml up --build -d`. It uses the same `.env` and data folder.
+> **Development previews:** to try the newest unreleased changes, download `compose.yaml` from the `dev` branch instead (`…/leandocs/dev/compose.yaml` in the `curl` command) and set `LEANDOCS_TAG=dev_latest` or a `devX.Y.Z` tag. Development previews are for trying LeanDocs out; back up `./data` before every update. You can also build the image from a checkout of the repository: `docker compose -f compose_local_build.yaml up --build -d`. It uses the same `.env` and data folder.
 
 To use existing Markdown files, copy them into `data/content/` before or after the first start, or use **Import** in the app ([importing](import.md)).
 

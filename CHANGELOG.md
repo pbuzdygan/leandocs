@@ -2,7 +2,21 @@
 
 What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in [`CONTRIBUTING.md`](CONTRIBUTING.md#changelog).
 
-## [0.2.0] — Unreleased
+## [Unreleased]
+
+### New features
+
+- Nothing yet.
+
+### Improvements
+
+- Nothing yet.
+
+### Bug fixes
+
+- Nothing yet.
+
+## [0.2.0] — 2026-10-15
 
 The first stable release of LeanDocs. Earlier `dev` previews led up to it; their changes are included here.
 

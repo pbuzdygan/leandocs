@@ -31,7 +31,7 @@ Compose-only variables (they configure the container, not LeanDocs):
 
 | Variable         | Default                      | Purpose                                                            |
 | ---------------- | ---------------------------- | ------------------------------------------------------------------ |
-| `LEANDOCS_TAG`   | `latest`                     | Image tag to run (`compose.yaml`): `1.0.0`, `latest`, `dev_latest` |
+| `LEANDOCS_TAG`   | `latest`                     | Image tag to run (`compose.yaml`): `0.2.0`, `latest`, `dev_latest` |
 | `LEANDOCS_IMAGE` | `ghcr.io/pbuzdygan/leandocs` | Image to run (`compose.yaml`), e.g. a mirror                       |
 | `LEANDOCS_PORT`  | `8080`                       | Port on the host                                                   |
 | `LEANDOCS_BIND`  | `0.0.0.0`                    | Host address to listen on; `127.0.0.1` keeps it local to the host  |
@@ -124,7 +124,7 @@ Logs are JSON lines on standard output (`docker compose logs`). `info` reports s
 
 ```dotenv
 # .env next to compose.yaml
-LEANDOCS_TAG=1.0.0
+LEANDOCS_TAG=0.2.0
 LEANDOCS_UID=1000
 LEANDOCS_GID=1000
 SESSION_COOKIE_SECURE=true

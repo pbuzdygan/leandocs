@@ -1480,15 +1480,15 @@ Never report a feature as complete if it does not work.
 
 ## 108. Product decision sequence
 
-| #   | Step                                   | Status                                                                   |
-| --- | -------------------------------------- | ------------------------------------------------------------------------ |
-| 1   | Product / architecture spec            | ✅ Done (this document)                                                  |
-| 2   | UI concepts                            | ✅ Done                                                                  |
-| 3   | UI selection                           | ✅ Done — A: Technical Minimal                                           |
-| 4   | UI specification                       | ✅ Done — `UI_SPEC.md`                                                   |
-| 5   | Product name                           | ✅ Done — **LeanDocs** / _Documentation without the bloat._              |
-| 6   | Branding (logo, icon, banner, colours) | ✅ Done — `BRAND_SPEC.md` (mark "Folded Stack", Inter wordmark)          |
-| 7   | Implementation                         | ▶ Phases 0–16 done; first stable release 0.2.0 prepared — `CHANGELOG.md` |
+| #   | Step                                   | Status                                                           |
+| --- | -------------------------------------- | ---------------------------------------------------------------- |
+| 1   | Product / architecture spec            | ✅ Done (this document)                                          |
+| 2   | UI concepts                            | ✅ Done                                                          |
+| 3   | UI selection                           | ✅ Done — A: Technical Minimal                                   |
+| 4   | UI specification                       | ✅ Done — `UI_SPEC.md`                                           |
+| 5   | Product name                           | ✅ Done — **LeanDocs** / _Documentation without the bloat._      |
+| 6   | Branding (logo, icon, banner, colours) | ✅ Done — `BRAND_SPEC.md` (mark "Folded Stack", Inter wordmark)  |
+| 7   | Implementation                         | ✅ Phases 0–16 done; first stable release 0.2.0 — `CHANGELOG.md` |
 
 The name and logo must not affect the architecture.
 

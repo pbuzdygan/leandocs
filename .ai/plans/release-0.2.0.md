@@ -26,18 +26,20 @@ The shared agent workflow is in place, the database migration guard is complete,
 - [x] Verified on Node 26: format, lint, typecheck, 726 unit/API tests, build; Docker build (296 MB, was 256 MB: base image only); `pnpm test:upgrade` from `dev0.1.4`; `pnpm test:backup`.
 - [x] Browser tests (Chromium) with the server on Node 26: 81 passed, including visual baselines.
 - [x] Owner committed and pushed (`aef38fa`).
-- [ ] CI green on `dev` for `aef38fa` and the next commit.
+- [x] CI green on `dev` (owner, `07eb99e`).
 
 ## Stage 3 — Release 0.2.0 (owner publishes)
 
 - [x] `[0.1.0]` was never released on `main`: folded into `[0.2.0] — Unreleased` as the first stable release (owner decision).
 - [x] Version: releases use only the tag (D-53); non-release builds now report the fixed `0.0.0-dev` (D-68), so no file is edited per release.
 - [x] CI browser tests: Chromium on `dev` pushes, all three engines on pull requests and `main` (D-69).
-- [ ] Release checks (PROJECT_SPEC §102) on the final `dev` commit: CI green, fresh install from the image, `pnpm test:upgrade` from the newest `devX.Y.Z`, `pnpm test:backup`.
-- [ ] `CHANGELOG.md`: date the `[0.2.0]` heading on release day.
+- [x] Release checks (PROJECT_SPEC §102) on `07eb99e`, image built with `LEANDOCS_VERSION=0.2.0`: CI green on `dev` and on the `dev` → `main` PR (all three engines); fresh install in the hardened configuration (reports 0.2.0, migrations 0 → 8, healthy, setup ready, CSP present); `pnpm test:upgrade` from `dev0.1.4`; `pnpm test:backup`.
+- [x] `CHANGELOG.md`: `[0.2.0] — 2026-10-15` (change the date if the release is published later) and a new empty `[Unreleased]`; release-facing docs updated (README status, `SECURITY.md`, deployment notes, `0.2.0` examples, image size).
+- [ ] Owner commits and pushes the release-preparation changes; CI green on the PR.
 - [ ] Merge `dev` → `main` through a pull request.
 - [ ] Owner publishes GitHub release `0.2.0` on `main`; the release workflow pushes `0.2.0` and `latest`.
-- [ ] After release: update `SECURITY.md` and PROJECT_SPEC §108 (no longer "being prepared"); confirm Dependabot runs from `main`.
+- [x] `SECURITY.md` and PROJECT_SPEC §108 updated for the release (done with the release preparation).
+- [ ] After release: `latest` and `0.2.0` exist on GHCR, `docker compose pull` works without login (make the package public if needed), Dependabot runs from `main`.
 - [ ] Owner decides the license (OQ-1 in `docs/decisions.md`), ideally before wider publicity.
 
 ## Stage 4 — Low-priority cleanup (independent items)

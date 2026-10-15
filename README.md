@@ -14,7 +14,7 @@ LeanDocs is a lightweight, self-hosted documentation manager for technical peopl
 - **Fast search.** SQLite FTS5 index, rebuildable from the files at any time.
 - **One container.** No Postgres, no Redis, no telemetry.
 
-> **Status:** development previews (`dev0.1.x`) are published; the first stable release (1.0) is being prepared. See [`CHANGELOG.md`](CHANGELOG.md) for what is new.
+> **Status:** 0.2.0 is the first stable release; development previews (`devX.Y.Z`) continue on the `dev` branch. See [`CHANGELOG.md`](CHANGELOG.md) for what is new.
 
 ## Features
 
