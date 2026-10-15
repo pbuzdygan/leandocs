@@ -65,7 +65,8 @@ export function MoveDialog({ target, onClose }: { target: ItemTarget; onClose: (
           <Button
             type="submit"
             variant="primary"
-            disabled={selected === currentParent || isInvalid(selected) || mutation.isPending}
+            disabled={selected === currentParent || isInvalid(selected)}
+            loading={mutation.isPending}
           >
             Move
           </Button>

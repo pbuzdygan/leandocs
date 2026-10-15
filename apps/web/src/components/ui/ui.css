@@ -24,9 +24,23 @@
   background: var(--bg-subtle);
 }
 
+.btn:active:not(:disabled) {
+  background: var(--border-default);
+}
+
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* A busy button keeps its full colour: it is waiting, not unavailable. */
+.btn[aria-busy='true']:disabled {
+  opacity: 1;
+  cursor: progress;
+}
+
+.btn .spinner {
+  color: currentColor;
 }
 
 .btn--small {
@@ -44,6 +58,11 @@
 .btn--primary:hover:not(:disabled) {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
+}
+
+.btn--primary:active:not(:disabled) {
+  background: var(--accent-hover);
+  filter: brightness(0.92);
 }
 
 .btn--ghost {
@@ -68,6 +87,11 @@
   background: var(--danger);
 }
 
+.btn--danger:active:not(:disabled) {
+  filter: brightness(0.84);
+  background: var(--danger);
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -86,6 +110,10 @@
 .icon-btn:hover:not(:disabled) {
   background: var(--bg-subtle);
   color: var(--text-primary);
+}
+
+.icon-btn:active:not(:disabled) {
+  background: var(--border-default);
 }
 
 .icon-btn:disabled {
@@ -218,7 +246,7 @@
 
 .dialog__title {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-size-h4);
   font-weight: 650;
 }
 
@@ -325,6 +353,11 @@
   border-left: 3px solid var(--danger);
 }
 
+.toast__icon {
+  flex-shrink: 0;
+  color: var(--danger);
+}
+
 .toast__message {
   flex: 1;
 }
@@ -393,7 +426,7 @@
 }
 
 .empty-state__title {
-  font-size: 17px;
+  font-size: var(--font-size-h4);
   font-weight: 650;
 }
 
@@ -439,8 +472,18 @@
   box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
-.tag-input[aria-disabled='true'] {
-  background: var(--bg-subtle);
+.tag-input__readonly {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-input__none {
+  color: var(--text-muted);
+  font-size: var(--font-size-sidebar);
 }
 
 .tag-input__chips {
@@ -453,7 +496,7 @@
 .tag-input__chip {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-1);
 }
 
 .tag-input__remove {
@@ -478,4 +521,97 @@
   color: var(--text-primary);
   font: inherit;
   font-size: var(--font-size-ui);
+}
+
+/* Navigation item (UI_SPEC §22): pinned documents, Trash and Settings sections share the tree
+   row's look, so "where am I" reads the same everywhere. */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tree-row-height);
+  padding: 0 var(--space-2);
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sidebar);
+}
+
+.nav-item svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.nav-item:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.nav-item[aria-current='page'],
+.nav-item.active {
+  background: var(--bg-selected);
+  border-left-color: var(--accent);
+  color: var(--accent-hover);
+  font-weight: 500;
+}
+
+.nav-item[aria-current='page'] svg,
+.nav-item.active svg {
+  color: var(--accent);
+}
+
+/* Tabs and segmented controls (UI_SPEC §31): accent text and a bottom border when selected. */
+.tabs__list {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.tabs__tab {
+  padding: var(--space-1) 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--font-size-ui);
+  cursor: pointer;
+}
+
+.tabs__tab:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.tabs__tab:disabled {
+  cursor: not-allowed;
+  color: var(--text-disabled);
+}
+
+.tabs__tab[data-state='active'] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Touch screens (guidelines §17): bigger hit areas, without changing the desktop layout. */
+@media (pointer: coarse) {
+  .icon-btn,
+  .tag-input__remove {
+    position: relative;
+  }
+
+  .icon-btn::after,
+  .tag-input__remove::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+
+  /* Grows away from the tag's own text, so a tap on the name never removes the tag. */
+  .tag-input__remove::after {
+    inset: -12px -10px -12px -2px;
+  }
+
+  .menu__item {
+    height: 40px;
+  }
 }

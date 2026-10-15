@@ -34,7 +34,7 @@
   background: transparent;
   color: var(--text-primary);
   font: inherit;
-  font-size: 15px;
+  font-size: var(--font-size-ui-emphasis);
 }
 
 .palette__input:focus,
@@ -232,5 +232,11 @@
 
   .topbar-search-icon {
     display: inline-flex;
+  }
+}
+
+@media (pointer: coarse) {
+  .palette__mode {
+    height: 32px;
   }
 }

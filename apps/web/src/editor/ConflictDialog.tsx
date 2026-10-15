@@ -153,7 +153,7 @@ export function ConflictDialog({
       actions={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button onClick={copy} disabled={saveCopy.isPending}>
+          <Button onClick={copy} loading={saveCopy.isPending}>
             Save as copy
           </Button>
           <Button onClick={reload} disabled={!disk.data}>

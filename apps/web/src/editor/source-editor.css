@@ -11,7 +11,7 @@
 }
 
 .source-editor .cm-editor {
-  font-size: 14px;
+  font-size: var(--font-size-source-editor);
   background: var(--bg-surface);
   color: var(--text-primary);
 }

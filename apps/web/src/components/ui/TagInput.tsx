@@ -34,41 +34,57 @@ export function TagInput({
       onChange(values.slice(0, -1));
     }
   };
+  // Read-only: a plain list, not a disabled control with a label pointing at nothing.
+  if (disabled)
+    return (
+      <div className="field">
+        <span className="field__label" id={`${id}-label`}>
+          {label}
+        </span>
+        {values.length > 0 ? (
+          <ul className="tag-input__readonly" aria-labelledby={`${id}-label`}>
+            {values.map((value) => (
+              <li key={value} className="tag">
+                {value}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <span className="tag-input__none">None</span>
+        )}
+      </div>
+    );
   return (
     <div className="field">
       <label className="field__label" htmlFor={id}>
         {label}
       </label>
-      <div className="tag-input" aria-disabled={disabled || undefined}>
+      <div className="tag-input">
         <ul className="tag-input__chips" aria-label={`Current ${label.toLowerCase()}`}>
           {values.map((value) => (
             <li key={value} className="tag tag-input__chip">
               {value}
-              {!disabled && (
-                <button
-                  type="button"
-                  className="tag-input__remove"
-                  aria-label={`Remove ${value}`}
-                  onClick={() => onChange(values.filter((existing) => existing !== value))}
-                >
-                  <CloseIcon size={12} />
-                </button>
-              )}
+              <button
+                type="button"
+                className="tag-input__remove"
+                aria-label={`Remove ${value}`}
+                onClick={() => onChange(values.filter((existing) => existing !== value))}
+              >
+                <CloseIcon size={12} />
+              </button>
             </li>
           ))}
         </ul>
-        {!disabled && (
-          <input
-            id={id}
-            className="tag-input__input"
-            value={draft}
-            placeholder="Add…"
-            list={suggestions.length > 0 ? `${id}-suggestions` : undefined}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={onKeyDown}
-            onBlur={() => draft.trim() && add(draft)}
-          />
-        )}
+        <input
+          id={id}
+          className="tag-input__input"
+          value={draft}
+          placeholder="Add…"
+          list={suggestions.length > 0 ? `${id}-suggestions` : undefined}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={onKeyDown}
+          onBlur={() => draft.trim() && add(draft)}
+        />
         {suggestions.length > 0 && (
           <datalist id={`${id}-suggestions`}>
             {suggestions

@@ -157,7 +157,12 @@ export function ImportDialog({ folder, onClose }: { folder: string; onClose: () 
       <Button onClick={back} disabled={busy}>
         Back
       </Button>
-      <Button type="submit" variant="primary" disabled={report.summary.documents === 0 || busy}>
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={report.summary.documents === 0 || busy}
+        loading={run.isPending}
+      >
         {run.isPending ? 'Importing…' : `Import ${plural(report.summary.documents, 'document')}`}
       </Button>
     </>
@@ -167,6 +172,7 @@ export function ImportDialog({ folder, onClose }: { folder: string; onClose: () 
       <Button
         variant="primary"
         disabled={busy}
+        loading={preview.isPending}
         onClick={() => (SOURCES[source].directory ? directoryInput : filesInput).current?.click()}
       >
         {preview.isPending ? 'Preparing preview…' : 'Select files'}

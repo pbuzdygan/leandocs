@@ -20,7 +20,7 @@
   margin-bottom: var(--space-4);
 }
 .setup__content h1 {
-  font-size: 24px;
+  font-size: var(--font-size-h2);
   margin: 0;
 }
 .setup__content p {

@@ -57,7 +57,8 @@ export function RenameDialog({ target, onClose }: { target: ItemTarget; onClose:
           <Button
             type="submit"
             variant="primary"
-            disabled={name.trim() === '' || unchanged || mutation.isPending}
+            disabled={name.trim() === '' || unchanged}
+            loading={mutation.isPending}
           >
             Rename
           </Button>

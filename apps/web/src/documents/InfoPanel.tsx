@@ -169,8 +169,8 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
       />
       {!locked && (
         <div className="info-panel__actions">
-          <Button size="small" type="submit" variant="primary" disabled={!dirty || saving}>
-            {saving ? 'Saving…' : 'Save properties'}
+          <Button size="small" type="submit" variant="primary" disabled={!dirty} loading={saving}>
+            Save properties
           </Button>
           {dirty && (
             <Button size="small" variant="ghost" onClick={() => setDraft(original)}>

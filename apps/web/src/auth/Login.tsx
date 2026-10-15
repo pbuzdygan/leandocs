@@ -195,8 +195,13 @@ export function LoginPage() {
               </>
             )}
             <FormError message={error} />
-            <Button type="submit" variant="primary" disabled={saving || !session.data?.csrfToken}>
-              {saving ? 'Signing in…' : challenge ? 'Verify and sign in' : 'Sign in'}
+            <Button
+              type="submit"
+              variant="primary"
+              loading={saving}
+              disabled={!session.data?.csrfToken}
+            >
+              {challenge ? 'Verify and sign in' : 'Sign in'}
             </Button>
           </form>
         )}

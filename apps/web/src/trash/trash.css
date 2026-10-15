@@ -14,7 +14,7 @@
 }
 
 .trash__title {
-  font-size: 24px;
+  font-size: var(--font-size-h2);
   font-weight: 700;
 }
 

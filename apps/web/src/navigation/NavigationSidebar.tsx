@@ -172,7 +172,7 @@ export function NavigationSidebar() {
           )}
         </div>
         <div className="sidebar__footer">
-          <NavLink to="/trash" className="sidebar__footer-link">
+          <NavLink to="/trash" className="nav-item">
             <TrashIcon size={15} />
             Trash
           </NavLink>

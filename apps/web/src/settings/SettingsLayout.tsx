@@ -26,7 +26,7 @@ export function SettingsLayout() {
       <nav className="settings__nav" aria-label="Settings">
         <h1 className="settings__heading">Settings</h1>
         {SECTIONS.map((section) => (
-          <NavLink key={section.to} to={section.to} className="settings__link">
+          <NavLink key={section.to} to={section.to} className="nav-item">
             {section.label}
           </NavLink>
         ))}

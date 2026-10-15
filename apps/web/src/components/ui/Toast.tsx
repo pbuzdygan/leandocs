@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { Toast as RadixToast } from 'radix-ui';
-import { CloseIcon } from '../icons';
+import { AlertIcon, CloseIcon } from '../icons';
 import './ui.css';
 
 export interface ToastOptions {
@@ -35,6 +35,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             duration={toast.tone === 'error' ? 10_000 : 5_000}
             onOpenChange={(open) => !open && remove(toast.id)}
           >
+            {/* Errors are marked by more than the red edge (UI_SPEC §97). */}
+            {toast.tone === 'error' && (
+              <AlertIcon className="toast__icon" size={16} aria-label="Error" role="img" />
+            )}
             <RadixToast.Description className="toast__message">
               {toast.message}
             </RadixToast.Description>

@@ -11,8 +11,7 @@ Acceptance:
 - Required checks pass: `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build`,
   plus `pnpm test:e2e` (UI change) in the Playwright container with `--memory 2g --cpus 2`.
 - axe scans stay clean in both themes; visual snapshots are updated on purpose and reviewed.
-- The owner checkpoints (end of this plan) are answered, or the stated default is used and
-  recorded in `docs/decisions.md`.
+- The owner decisions A–C (end of this plan) are implemented and recorded in `docs/decisions.md`.
 
 ## Analysis basis
 
@@ -73,7 +72,9 @@ package or per coherent item, scope `web` (Conventional Commits).
    accent text), Trash link (same), pinned link (accent text, no bar, different padding), Settings
    nav (selected bg, primary text, no bar, invisible on `--bg-app`), TOC (bar + accent). Define one
    `.nav-item` pattern (height `--tree-row-height`, hover `--bg-subtle`, active = UI_SPEC §22) and
-   use it in tree, pinned, Trash link, Settings nav and TOC. Pinned rows align with tree rows.
+   use it in pinned, Trash link and Settings nav; the tree rows already match it. Pinned rows align
+   with tree rows. The TOC keeps its scroll-spy bar (UI_SPEC §45), which is a position marker,
+   not a selection.
    Guideline §11, §25, §37.
 
 ### WP2 — Shell and navigation (`app/`, `navigation/`)
@@ -105,7 +106,7 @@ package or per coherent item, scope `web` (Conventional Commits).
 2. **Edit mode repeats the title three times** and shifts the layout (snapshot
    `visual-editor-light`: editing-bar title, header `h1`, and the content's own `# ATLAS`, which
    View hides). Breaks UI_SPEC §34/§152 ("practically identical", no layout rebuild). Default fix
-   (owner checkpoint A): while editing, hide the header `h1` when the content starts with the H1
+   (owner decision A): while editing, hide the header `h1` when the content starts with the H1
    the renderer would drop, so the editable H1 takes its place; the editing-bar title stays.
 3. **Split `DocumentPage.tsx`** (641 lines, UI_SPEC §139) into `DocumentLayout.tsx`,
    `ViewDocument.tsx`, `DocumentEditor.tsx`; no behaviour change. Do it before WP3.1–3.2.
@@ -149,12 +150,12 @@ package or per coherent item, scope `web` (Conventional Commits).
    (`Setup.tsx:167`); show the step ("Step 1 of 3") for the three-step flow (UI_SPEC §90).
 6. **Trash rows:** each row has a solid red "Delete permanently" (many equal red buttons; guideline
    §6, §13). Keep Restore as a button; move "Delete permanently" into a row `…` menu
-   (`menu__item--danger`), keep "Empty trash" as the one danger button. Owner checkpoint C.
+   (`menu__item--danger`), keep "Empty trash" as the one danger button. Owner decision C.
 7. **Menu icons:** Rename and Edit both use the pencil; Open uses the external-link icon (suggests
    a new tab). Give Rename and Open their own icons (`menu-entries.tsx`, `icons.tsx`). Guideline §10.
 8. **Page headers.** Page titles differ: Home 32 px, Trash 24 px, Settings 20 px, Login 24 px; page
    paddings differ too. Add a `PageHeader` (title, optional description, primary action) and one
-   page container for Home, Trash and Settings. Default (owner checkpoint B): application pages
+   page container for Home, Trash and Settings. Owner decision B: application pages
    24 px/700 (`--font-size-h2`), document titles stay 32 px (UI_SPEC §28). Guideline §36.
 
 ### WP5 — States and copy
@@ -185,7 +186,7 @@ package or per coherent item, scope `web` (Conventional Commits).
    setting exists and axe runs in both themes); add rules for tabs, toolbars and coarse-pointer
    targets.
 5. `CHANGELOG.md` entry (user-visible: context panel resize, empty folder state, phone toolbar,
-   trash row menu, settings save status). UI_SPEC wording only where an owner checkpoint changes
+   trash row menu, settings save status). UI_SPEC wording only where an owner decision changes
    it; record defaults taken as `D-xx` in `docs/decisions.md`.
 
 ## Risks and verification
@@ -202,13 +203,16 @@ package or per coherent item, scope `web` (Conventional Commits).
 - No new dependencies: Radix Tabs, Toolbar and ToggleGroup ship in the existing `radix-ui`.
 - Never touch `data/`, `.env` or shipped migrations (none needed).
 
-## Owner checkpoints (defaults used if unanswered)
+## Owner decisions (accepted 2026-10-15)
+
+The owner accepted all three defaults. Record them as `D-xx` in `docs/decisions.md` with the
+commit that implements each one.
 
 - **A.** Edit-mode title: hide the header `h1` while editing when the content starts with the
-  matching H1 (default), or keep both.
-- **B.** Application page titles (Home, Trash, Settings) at 24 px (default) or 32 px like documents.
-- **C.** Trash: "Delete permanently" in a row `…` menu (default) or keep it as a visible button,
-  restyled as secondary with danger text.
+  matching H1 (the one View already drops).
+- **B.** Application page titles (Home, Trash, Settings) at 24 px; document titles stay 32 px.
+- **C.** Trash: "Delete permanently" moves into a row `…` menu; "Empty trash" stays the one danger
+  button.
 
 ## References
 

@@ -118,7 +118,7 @@ function ChangePassword() {
             Password changed. Other browsers and devices have been signed out.
           </p>
         )}
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" loading={busy}>
           Change password
         </Button>
       </form>
@@ -230,7 +230,7 @@ function LocalSecurity() {
                     required
                     disabled={busy}
                   />
-                  <Button type="submit" disabled={busy}>
+                  <Button type="submit" loading={busy}>
                     Confirm and enable
                   </Button>
                   <Button
@@ -281,12 +281,10 @@ function LocalSecurity() {
                       disabled={busy}
                     />
                   )}
-                  <Button type="submit" disabled={busy}>
-                    {busy
-                      ? 'Checking…'
-                      : status.data.enabled
-                        ? 'Disable two-factor authentication'
-                        : 'Set up two-factor authentication'}
+                  <Button type="submit" loading={busy}>
+                    {status.data.enabled
+                      ? 'Disable two-factor authentication'
+                      : 'Set up two-factor authentication'}
                   </Button>
                 </>
               )}

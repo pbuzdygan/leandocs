@@ -177,8 +177,8 @@ export function SetupPage() {
                   disabled={saving}
                 />
                 <FormError message={error} />
-                <Button type="submit" variant="primary" disabled={saving}>
-                  {saving ? 'Creating account…' : 'Create account'}
+                <Button type="submit" variant="primary" loading={saving}>
+                  Create account
                 </Button>
               </form>
             </>

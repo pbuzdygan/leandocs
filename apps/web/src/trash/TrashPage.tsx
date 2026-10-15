@@ -192,7 +192,7 @@ export function TrashPage() {
               <Button onClick={closeConfirm} autoFocus>
                 Cancel
               </Button>
-              <Button variant="danger" onClick={onConfirm} disabled={pending.isPending}>
+              <Button variant="danger" onClick={onConfirm} loading={pending.isPending}>
                 {confirm.type === 'item' ? 'Delete permanently' : 'Empty trash'}
               </Button>
             </>

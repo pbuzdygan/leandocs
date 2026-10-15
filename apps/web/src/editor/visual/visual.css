@@ -102,7 +102,7 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-code);
 }
 /* Tables look like View (.markdown table, UI_SPEC §160): natural width, same cell padding. Cells
    keep a minimum width so a new, empty table still has room to click into. */
@@ -142,7 +142,7 @@
   background: var(--code-bg);
   color: var(--code-text);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-code);
 }
 
 /* Contextual tools for the block at the caret: table, code block, callout (P6-09…P6-11). */

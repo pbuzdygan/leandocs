@@ -15,14 +15,12 @@ export function PinnedSection({ activeId }: { activeId: string | undefined }) {
           <li key={item.id}>
             <Link
               to={`/doc/${encodeURIComponent(item.id)}`}
-              className={
-                item.id === activeId ? 'pinned__link pinned__link--active' : 'pinned__link'
-              }
+              className="nav-item"
               aria-current={item.id === activeId ? 'page' : undefined}
               title={item.path}
             >
               <PinIcon size={14} />
-              <span>{item.title}</span>
+              <span className="pinned__label">{item.title}</span>
             </Link>
           </li>
         ))}
