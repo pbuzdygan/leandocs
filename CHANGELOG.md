@@ -10,7 +10,8 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### Improvements
 
-- Nothing yet.
+- **LeanDocs is now open source** under the MIT License: you may use, change and share it freely, as long as the copyright notice stays with it.
+- Diagrams are drawn with an updated version of the diagram component that includes its latest security fixes.
 
 ### Bug fixes
 

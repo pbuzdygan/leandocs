@@ -149,6 +149,7 @@ jobs:
             org.opencontainers.image.title=LeanDocs
             org.opencontainers.image.description=Documentation without the bloat.
             org.opencontainers.image.source=https://github.com/pbuzdygan/leandocs
+            org.opencontainers.image.licenses=MIT
             org.opencontainers.image.version=${{ steps.release.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
           push: true

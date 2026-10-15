@@ -40,15 +40,16 @@ The shared agent workflow is in place, the database migration guard is complete,
 - [x] Owner published release `0.2.0` on `main`; the owner's deployment shows 0.2.0 in Settings › About.
 - [x] `SECURITY.md` and PROJECT_SPEC §108 updated for the release (done with the release preparation).
 - [x] After release: `0.2.0` and `latest` pull anonymously from GHCR, same digest, `linux/amd64` + `linux/arm64`.
-- [ ] Fast-forward `dev` to `main` (`main` is one merge commit ahead) so the next pull request shows only new work.
-- [ ] Owner confirms Dependabot runs from `main` (GitHub › Insights › Dependency graph › Dependabot).
-- [ ] Owner decides the license (OQ-1 in `docs/decisions.md`), ideally before wider publicity.
+- [x] `dev` recreated from `main`; the plan commit was rebased onto it and pushed (`09b0c41`).
+- [x] Dependabot runs from `main` (owner confirmed).
+- [x] License: MIT (owner, D-70; replaced AGPL-3.0, which conflicted with the bundled EPL-2.0 `elkjs`).
 
 ## Stage 4 — Low-priority cleanup (independent items)
 
 - [ ] Restructure `README.md` following `.ai/README_GUIDE.md`.
 - [ ] Historical task IDs and "(Phase N)" headings in `docs/architecture.md`, `docs/development.md`, `docs/accessibility.md`: replace only when those sections are edited anyway (decided: no bulk rewrite).
-- [ ] KI-13/KI-14 are now fixable: `tsup` 9.0.0 (major; esbuild `^0.28.2`) and `mermaid` 12.2.0 (KaTeX `^0.18`). Update, run the full verification including browser tests, close both rows; release as 0.2.1 (Improvements entry).
+- [x] KI-14: `mermaid` 12.2.0 (KaTeX 0.18.10); format, lint, typecheck, 726 tests, build, 81 Chromium browser tests incl. visual baselines.
+- [ ] KI-13: `tsup` 9.0.0 (esbuild `^0.28.2`; only breaking change drops Node <22.18). Published 2026-10-14 13:47 UTC: install after pnpm's 24-hour minimum release age has passed, without a `minimumReleaseAgeExclude` entry; then verify, close KI-13, release 0.2.1.
 - [ ] Watch KI-12 (intermittent unit test) in CI.
 - [ ] Post-1.0 roadmap (PROJECT_SPEC §111): owner chooses next features; larger work gets its own plan here.
 

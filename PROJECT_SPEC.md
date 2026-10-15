@@ -1227,7 +1227,7 @@ BRAND_SPEC.md
 CONTRIBUTING.md
 CHANGELOG.md
 SECURITY.md
-LICENSE                        (pending owner decision)
+LICENSE                        (MIT)
 
 docs/
 ├── adr/                       (architecture decision records)

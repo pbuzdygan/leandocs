@@ -55,8 +55,8 @@ docker compose -f compose_local_build.yaml up --build -d               # http://
 
 `compose_local_build.yaml` builds the image from this repository. `compose.yaml` runs the published image (`ghcr.io/pbuzdygan/leandocs`); for a server installation follow [`docs/deployment.md`](docs/deployment.md).
 
-For development with hot reload: `corepack enable && pnpm install && pnpm dev` (http://localhost:5173). Details are in [`docs/development.md`](docs/development.md).
+For development with hot reload (Node.js 26): `npm install --global corepack@0.36.0 && corepack enable && pnpm install && pnpm dev` (http://localhost:5173). Details are in [`docs/development.md`](docs/development.md).
 
 ## License
 
-To be decided (see open questions in the status file).
+LeanDocs is open source under the [MIT License](LICENSE). Bundled third-party libraries keep their own licenses.
