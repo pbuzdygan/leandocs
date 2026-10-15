@@ -31,6 +31,8 @@ const RELEASED_SCHEMAS: Record<number, string> = {
   5: 'c6d07d813829',
   6: '2ba1cabd5694',
   7: 'ac7379b2aad1',
+  // Data-only migration (re-reads every document once), so the schema matches version 7.
+  8: 'ac7379b2aad1',
 };
 
 function schemaFingerprint(db: Database.Database): string {

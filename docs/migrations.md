@@ -35,9 +35,10 @@
 | 5       | Authenticator-app sign-in (MFA) and one-use recovery codes | all                  |
 | 6       | Documents read as plain text (`analysis_limited`)          | all                  |
 | 7       | Documents that are not UTF-8 (`not_utf8`)                  | all                  |
+| 8       | Re-read every document once after the update (data only)   | all                  |
 
-Dev releases count as releases: `dev0.1.0` shipped version 5, `dev0.1.1` versions 6 and 7.
-Version 8 (re-read every document once after the update) is not released yet.
+Dev releases count as releases: `dev0.1.0` shipped version 5, `dev0.1.1` versions 6 and 7, `dev0.1.2` version 8.
+Version 8 changes only data, so its schema fingerprint equals version 7's.
 
 ## Upgrade check
 

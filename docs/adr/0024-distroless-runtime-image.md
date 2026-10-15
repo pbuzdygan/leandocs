@@ -52,3 +52,7 @@ shell and a package manager, although the server never starts other processes.
   (P14-07).
 - Multi-architecture builds (amd64/arm64) work, because each platform's build stage keeps its own
   `linux-<arch>` binary.
+
+## Amendment (2026-10-15): Node.js 26 and Debian 13
+
+Owner decision before the next stable release: the runtime moves to **Node.js 26** (LTS from 2026-10-28, supported until 2029-04-30; Node.js 24 enters maintenance on 2026-10-20). Distroless publishes Node.js 26 only on Debian 13, so both stages move together to keep the same glibc: build `node:26-trixie-slim`, runtime `gcr.io/distroless/nodejs26-debian13:nonroot`, both pinned by digest. Node.js 25+ no longer bundles corepack, so the build stage installs the pinned `corepack@0.36.0` from npm before `corepack enable`; CI and the release workflow do the same. better-sqlite3 uses Node-API prebuilds, which load unchanged on Node.js 26. Existing `/data` volumes need no change (UID/GID 1000, same SQLite file format); the upgrade check from `dev0.1.4` verifies this. The image grows from 256 MB to 296 MB; the whole difference is the larger distroless base (243 MB instead of 203 MB), the application layers are unchanged.

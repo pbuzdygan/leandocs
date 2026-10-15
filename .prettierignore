@@ -11,3 +11,11 @@ branding/**/*.svg
 .cache
 tmp
 temp
+# Shared AI-workflow kit files: kept verbatim so kit updates can be copied in as-is.
+# Project-owned files (.ai/PROJECT.md, .ai/plans/*) stay formatted.
+AGENTS.md
+CLAUDE.md
+.ai/README_GUIDE.md
+.ai/SECURITY.md
+.ai/UI_DESIGN_GUIDELINES.md
+.ai/plans/README.md

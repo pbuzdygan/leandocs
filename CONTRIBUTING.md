@@ -13,7 +13,7 @@ Scope is intentionally narrow. Read PROJECT_SPEC §99 ("out of scope") and §104
 
 ## Changelog
 
-`CHANGELOG.md` is written **for users, not developers**. Every change a user will notice gets an entry under `## [Unreleased]`, in exactly one of three sections, always in this order:
+`CHANGELOG.md` is written **for users, not developers**. Every change a user will notice gets an entry in the topmost section, `## [x.y.z] — Unreleased` (the version being prepared; `## [Unreleased]` when none is chosen yet), in exactly one of three sections, always in this order:
 
 | Section            | What goes there                                                                        |
 | ------------------ | -------------------------------------------------------------------------------------- |
@@ -27,8 +27,8 @@ How to write an entry:
 - **No technical jargon**: no file names, function names, libraries, HTTP codes or task IDs. Words the user sees in the UI or in their files (e.g. "Markdown", "folder", "Docker") are fine.
 - Start with what changed for the user, then why it matters if that is not obvious.
 - Purely internal work (refactoring, tests, CI, tooling, specs) gets **no entry** unless it has a noticeable effect, and then the entry describes that effect.
-- Keep all three section headings in `[Unreleased]` even when a section is empty. Write `- Nothing yet.` in an empty section.
-- On release, rename `[Unreleased]` to `[x.y.z] — YYYY-MM-DD` and start a new empty `[Unreleased]`.
+- Keep all three section headings in the unreleased section even when a section is empty. Write `- Nothing yet.` in an empty section.
+- On release, replace `Unreleased` in the heading with the release date (`[x.y.z] — YYYY-MM-DD`) and start a new empty section above it.
 
 Examples:
 

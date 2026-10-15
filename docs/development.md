@@ -2,10 +2,11 @@
 
 ## Prerequisites
 
-- **Node.js 24 LTS, minimum 24.7.0 (built-in Argon2id)** (see `.nvmrc`)
-- **pnpm** through corepack. The version is pinned in `package.json` → `packageManager`.
+- **Node.js 26 LTS** (see `.nvmrc`; with nvm: `nvm install` in the repository folder)
+- **pnpm** through corepack. The version is pinned in `package.json` → `packageManager`. Node.js 25 and later no longer include corepack, so install the pinned release once per Node.js installation:
 
 ```bash
+npm install --global corepack@0.36.0
 corepack enable          # needs write access to Node's bin dir; otherwise:
 # corepack enable --install-directory ~/.local/bin   (and make sure it is on PATH)
 pnpm install
@@ -27,7 +28,7 @@ docker compose -f compose_local_build.yaml up --build -d   # http://localhost:80
 
 Optional `.env` next to the compose file: `LEANDOCS_PORT=8090` if 8080 is taken, and `LEANDOCS_UID`/`LEANDOCS_GID` (output of `id -u` / `id -g`) so the files in `./data` stay owned by you. After pulling new code, run the same command again. Stop with `docker compose -f compose_local_build.yaml down`. `compose.yaml` is the production file: it runs the published image instead of building one. A plain `docker compose up` therefore pulls from GHCR. Both files use the same project and service names, so switching between them replaces the container but keeps `./data`. Your documents in `./data/content` are plain files and stay where they are.
 
-**2. Development server** (hot reload while coding; needs Node 24 + pnpm):
+**2. Development server** (hot reload while coding; needs Node 26 + pnpm):
 
 ```bash
 DATA_DIR=./data pnpm dev    # http://localhost:5173 (API on PORT, default 8080)
@@ -280,7 +281,7 @@ Published images report the **release tag** as their version (D-53): the release
 
 - **Version ranges.** Most dependencies use caret ranges and the lockfile pins exact versions. Security-sensitive parsers and storage libraries are pinned exactly (`@milkdown/kit`, `remark-directive`, `@fastify/multipart`, `better-sqlite3`, `chokidar`, `file-type`, `hast-util-*`, `mdast-util-*` in the server, `otpauth`, `qrcode`, `@tabler/icons-react`); change them deliberately and re-run their round-trip and security tests. Major upgrades (for example TypeScript 7) are separate tasks.
 - **Local patches.** `patches/` holds fixes to dependencies, applied by pnpm on install (`patchedDependencies` in `pnpm-workspace.yaml`). `micromark-util-edit-map@1.0.0`: linear-time edits; without it, documents with many quotes or list items parse in quadratic time (100 KiB of quotes took ~7 s) and large documents exhaust memory. Guarded by `packages/shared/src/markdown/performance.test.ts`. When the package is updated, check whether upstream fixed it and drop or re-create the patch (`pnpm patch`).
-- **Base images.** `docker/Dockerfile` pins `node:24-bookworm-slim` (build) and `gcr.io/distroless/nodejs24-debian12:nonroot` (runtime) by digest, so the same commit always builds from the same images. Dependabot (`.github/dependabot.yml`) opens a weekly pull request against `dev` with new digests (security fixes in Debian and Node.js 24), grouped with GitHub Actions SHA updates in a second weekly pull request. CI builds and starts the image for every pull request. By hand: `docker buildx imagetools inspect <image:tag>` prints the `Digest` of the multi-platform index; use that one, not a per-platform digest. A new Node.js major or Debian release is a deliberate task, not an automatic update.
+- **Base images.** `docker/Dockerfile` pins `node:26-trixie-slim` (build) and `gcr.io/distroless/nodejs26-debian13:nonroot` (runtime) by digest, so the same commit always builds from the same images. Dependabot (`.github/dependabot.yml`) opens a weekly pull request against `dev` with new digests (security fixes in Debian and Node.js 26), grouped with GitHub Actions SHA updates in a second weekly pull request. CI builds and starts the image for every pull request. By hand: `docker buildx imagetools inspect <image:tag>` prints the `Digest` of the multi-platform index; use that one, not a per-platform digest. A new Node.js major or Debian release is a deliberate task, not an automatic update; both images move together so they keep the same glibc (ADR-0024 amendment).
 - **Updating.** `pnpm update -r` stays within the ranges; then run the full verification, including the browser tests.
 - **Audit.** CI and the release workflow run `pnpm audit --audit-level=moderate`, so moderate, high and critical advisories fail the build. Low advisories are reviewed and, when accepted, recorded with the reason in [decisions.md](decisions.md#known-issues).
 - **Licences.** Runtime dependencies are permissive (MIT, ISC, BSD, Apache-2.0, 0BSD, BlueOak, Unlicense; DOMPurify under Apache-2.0 of its dual licence; fonts under OFL-1.1). `elkjs`, which Mermaid uses, is EPL-2.0 and is shipped unmodified. Check `pnpm licenses list --prod` when adding a runtime dependency; no GPL/AGPL/SSPL-style licences.

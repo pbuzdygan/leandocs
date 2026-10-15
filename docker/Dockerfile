@@ -7,9 +7,10 @@
 # updates for it. Update both images together and run the full verification, including Docker.
 
 # ---- build: install, compile and assemble a production server folder -------------------------
-FROM node:24-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS build
+FROM node:26-trixie-slim@sha256:0d1e33586362bb9e608c4e751e7a9e7edb55c9ac11461ed5666af696cc461dd4 AS build
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-RUN corepack enable
+# Node.js 25+ no longer bundles corepack; the pinned release provides package.json › packageManager.
+RUN npm install --global corepack@0.36.0 && corepack enable
 WORKDIR /repo
 # Dependencies first, so source changes reuse the cached download layer.
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
@@ -42,7 +43,7 @@ RUN set -eu; \
 RUN cd /out/server && node -e "new (require('better-sqlite3'))(':memory:').prepare('select 1').get()"
 
 # ---- runtime: Node.js only — no shell, no package manager ---------------------------------------
-FROM gcr.io/distroless/nodejs24-debian12:nonroot@sha256:14d42e2511532589a7c7e01a753667a74fcc96266e137e8125006b87b0c32d0a AS runtime
+FROM gcr.io/distroless/nodejs26-debian13:nonroot@sha256:044d090d0c3ccfd30722126ebe46704885698970c8a303419dc0d704d628f0da AS runtime
 ENV NODE_ENV=production \
     PORT=8080 \
     HOST=0.0.0.0 \

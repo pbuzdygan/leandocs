@@ -2,7 +2,7 @@
 
 What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in [`CONTRIBUTING.md`](CONTRIBUTING.md#changelog).
 
-## [Unreleased]
+## [0.2.0] — Unreleased
 
 ### New features
 
@@ -10,7 +10,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### Improvements
 
-- Nothing yet.
+- The Docker image is built on newer, long-term supported foundations, so it keeps receiving security updates until 2029. Updating works as usual, and your documents and settings stay as they are.
 
 ### Bug fixes
 
