@@ -13,6 +13,8 @@ import { useSettings, useTree, useUpdateSettings } from '../api/queries';
 import { CheckboxField, FormError, SelectField } from '../components/ui/Field';
 import { ErrorState, SkeletonLines } from '../components/ui/States';
 import { collectFolders } from '../navigation/tree-utils';
+import { AlertIcon, CheckIcon, LoadingIcon } from '../components/icons';
+import '../editor/editor.css';
 import { displayFolder } from '../utils/format';
 
 /** Loads the settings and saves every change at once (no Save button). */
@@ -47,13 +49,48 @@ function SettingsForm({
   if (!shown) return <SkeletonLines count={4} />;
   return (
     <section aria-labelledby={id}>
-      <h2 id={id} className="settings__title">
-        {title}
-      </h2>
+      <div className="settings__heading-row">
+        <h2 id={id} className="settings__title">
+          {title}
+        </h2>
+        <SettingsSaveStatus status={update.status} onRetry={update.retry} />
+      </div>
       <FormError message={update.error ? `Not saved: ${errorMessage(update.error)}` : null} />
       <div className="settings__form">{children(shown, save)}</div>
-      <p className="settings__note">Changes are saved automatically and apply on every device.</p>
     </section>
+  );
+}
+
+/**
+ * Feedback for the automatic save (guidelines §16), as quiet as the editor's save status: what
+ * happens before the first change, then Saving… / Saved, or Not saved with Retry.
+ */
+function SettingsSaveStatus({
+  status,
+  onRetry,
+}: {
+  status: 'idle' | 'pending' | 'success' | 'error';
+  onRetry: () => void;
+}) {
+  return (
+    <div className="settings__save-status" role="status" aria-live="polite">
+      {status === 'idle' && 'Changes are saved automatically and apply on every device.'}
+      {status === 'pending' && (
+        <>
+          <LoadingIcon size={14} className="spinner" aria-hidden="true" /> Saving…
+        </>
+      )}
+      {status === 'success' && (
+        <>
+          <CheckIcon size={14} aria-hidden="true" /> Saved
+        </>
+      )}
+      {status === 'error' && (
+        <button type="button" className="save-status save-status--danger" onClick={onRetry}>
+          <AlertIcon size={14} aria-hidden="true" /> Not saved — retry
+        </button>
+      )}
+    </div>
   );
 }
 

@@ -114,13 +114,15 @@ describe('Trash', () => {
   it('deletes one item permanently only after confirming', async () => {
     const requests = api([trashedDoc, folder]);
     const { user } = renderApp('/trash');
-    await user.click(await screen.findByRole('button', { name: 'Delete permanently Archive' }));
+    await user.click(await screen.findByRole('button', { name: 'More actions for Archive' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Delete permanently' }));
     const dialog = screen.getByRole('dialog', { name: 'Delete permanently?' });
     expect(dialog).toHaveTextContent('Archive and everything in it will be deleted from disk.');
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(requests.some((request) => request.method === 'DELETE')).toBe(false);
 
-    await user.click(screen.getByRole('button', { name: 'Delete permanently Archive' }));
+    await user.click(screen.getByRole('button', { name: 'More actions for Archive' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Delete permanently' }));
     await user.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete permanently' }),
     );

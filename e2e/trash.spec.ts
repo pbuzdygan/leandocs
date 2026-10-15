@@ -25,7 +25,8 @@ test('restores a document and deletes another one permanently', async ({ page })
   await expect(page.getByRole('treeitem', { name: 'Trash Keep', exact: true })).toBeVisible();
   expect(existsSync(path.join(content, 'Trash Keep.md'))).toBe(true);
 
-  await page.getByRole('button', { name: 'Delete permanently Trash Gone' }).click();
+  await page.getByRole('button', { name: 'More actions for Trash Gone' }).click();
+  await page.getByRole('menuitem', { name: 'Delete permanently' }).click();
   const dialog = page.getByRole('dialog', { name: 'Delete permanently?' });
   await dialog.getByRole('button', { name: 'Delete permanently' }).click();
   await expect(page.getByText('"Trash Gone" deleted permanently', { exact: true })).toBeVisible();

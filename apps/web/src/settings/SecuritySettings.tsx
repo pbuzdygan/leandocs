@@ -10,6 +10,7 @@ import { api, errorMessage } from '../api/client';
 import { sessionKey, useSession } from '../auth/Login';
 import { Button } from '../components/ui/Button';
 import { TextField, FormError } from '../components/ui/Field';
+import { CheckIcon, InfoIcon } from '../components/icons';
 
 export function SecuritySettings() {
   const session = useSession();
@@ -180,10 +181,24 @@ function LocalSecurity() {
         </>
       ) : (
         <>
-          <p className="settings__note">
-            {status.data.enabled
-              ? `Enabled. ${status.data.recoveryCodesRemaining} recovery codes remaining.`
-              : 'Not enabled.'}
+          {/* A status, not a sentence: label with icon, not colour alone (guidelines §13, §18). */}
+          <p
+            className={
+              status.data.enabled
+                ? 'status-label status-label--success'
+                : 'status-label status-label--neutral'
+            }
+          >
+            {status.data.enabled ? (
+              <>
+                <CheckIcon size={14} aria-hidden="true" /> Enabled ·{' '}
+                {status.data.recoveryCodesRemaining} recovery codes remaining
+              </>
+            ) : (
+              <>
+                <InfoIcon size={14} aria-hidden="true" /> Not enabled
+              </>
+            )}
           </p>
           {codes ? (
             <div>
@@ -230,6 +245,7 @@ function LocalSecurity() {
                     required
                     disabled={busy}
                   />
+                  <FormError message={error} />
                   <Button type="submit" loading={busy}>
                     Confirm and enable
                   </Button>
@@ -281,6 +297,7 @@ function LocalSecurity() {
                       disabled={busy}
                     />
                   )}
+                  <FormError message={error} />
                   <Button type="submit" loading={busy}>
                     {status.data.enabled
                       ? 'Disable two-factor authentication'
@@ -292,7 +309,6 @@ function LocalSecurity() {
           )}
         </>
       )}
-      <FormError message={error} />
     </section>
   );
 }

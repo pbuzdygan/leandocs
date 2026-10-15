@@ -22,7 +22,7 @@ export function SettingsLayout() {
   const section = SECTIONS.find((item) => pathname.endsWith(`/${item.to}`));
   usePageTitle(section ? `${section.label} · Settings` : 'Settings');
   return (
-    <div className="settings">
+    <div className="page settings">
       <nav className="settings__nav" aria-label="Settings">
         <h1 className="settings__heading">Settings</h1>
         {SECTIONS.map((section) => (

@@ -523,6 +523,76 @@
   font-size: var(--font-size-ui);
 }
 
+/* Application pages (Home, Trash, Settings): one container and header (guidelines §34, §36). */
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-12);
+}
+
+.page--narrow {
+  max-width: 760px;
+}
+
+.page-header {
+  margin-bottom: var(--space-6);
+}
+
+.page-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.page-header__title {
+  font-size: var(--font-size-h2);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.page-header__actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-2);
+}
+
+.page-header__description {
+  max-width: 70ch;
+  margin-top: var(--space-2);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1279px) {
+  .page {
+    padding: var(--space-8);
+  }
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+/* Status label (guidelines §13): a compact state with an icon, e.g. "Enabled". */
+.status-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-ui);
+  font-weight: 500;
+}
+
+.status-label--success {
+  color: var(--success-text);
+}
+
+.status-label--neutral {
+  color: var(--text-secondary);
+}
+
 /* Navigation item (UI_SPEC §22): pinned documents, Trash and Settings sections share the tree
    row's look, so "where am I" reads the same everywhere. */
 .nav-item {

@@ -1,28 +1,4 @@
 /* Trash (UI_SPEC §136): a plain table, as quiet as Settings › Broken links. */
-.trash {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: var(--space-10) var(--space-12);
-}
-
-.trash__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-2);
-}
-
-.trash__title {
-  font-size: var(--font-size-h2);
-  font-weight: 700;
-}
-
-.trash__note {
-  margin-bottom: var(--space-6);
-  color: var(--text-secondary);
-}
-
 .trash__table {
   width: 100%;
   border-collapse: collapse;
@@ -68,16 +44,16 @@
   text-align: right;
 }
 
-.trash__actions .btn + .btn {
+.trash__actions > * + * {
   margin-left: var(--space-2);
+}
+
+.trash__actions .icon-btn {
+  vertical-align: middle;
 }
 
 /* Phones: each item becomes a block with labelled lines (UI_SPEC §104: no sideways scrolling). */
 @media (max-width: 767px) {
-  .trash {
-    padding: var(--space-6) var(--space-4);
-  }
-
   .trash__table thead {
     position: absolute;
     width: 1px;

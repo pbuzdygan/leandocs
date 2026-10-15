@@ -2,8 +2,6 @@
 .settings {
   display: flex;
   gap: var(--space-8);
-  max-width: 960px;
-  padding: var(--space-8) var(--space-6);
 }
 
 .settings__nav {
@@ -16,13 +14,36 @@
 
 .settings__heading {
   margin: 0 0 var(--space-3);
-  font-size: var(--font-size-h3);
-  font-weight: 650;
+  padding-left: var(--space-2);
+  font-size: var(--font-size-h2);
+  font-weight: 700;
 }
 
 .settings__panel {
   flex: 1;
   min-width: 0;
+}
+
+.settings__heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  max-width: 480px;
+  margin-bottom: var(--space-4);
+}
+
+.settings__heading-row .settings__title {
+  margin: 0;
+}
+
+.settings__save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--font-size-meta);
 }
 
 .settings__title {
@@ -121,7 +142,6 @@
   .settings {
     flex-direction: column;
     gap: var(--space-4);
-    padding: var(--space-4);
   }
 
   .settings__nav {

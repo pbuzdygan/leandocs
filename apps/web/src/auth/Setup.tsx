@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navigate, Outlet, useNavigate } from 'react-router';
-import { APP_NAME, validateSetup } from '@leandocs/shared';
+import { APP_NAME, MIN_ACCOUNT_PASSWORD_LENGTH, validateSetup } from '@leandocs/shared';
 import { api, ApiError, errorMessage } from '../api/client';
 import { AppLogo, Wordmark } from '../components/AppLogo';
 import { Button } from '../components/ui/Button';
@@ -117,6 +117,7 @@ export function SetupPage() {
         ) : step === 'account' ? (
           status.data.required ? (
             <>
+              <p className="setup__step">Step 1 of 3</p>
               <h1>Welcome</h1>
               <p>Create your administrator account.</p>
               <p>
@@ -160,7 +161,7 @@ export function SetupPage() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
-                  hint="Use at least 15 characters. Spaces and Unicode are welcome."
+                  hint={`Use at least ${MIN_ACCOUNT_PASSWORD_LENGTH} characters. Spaces and Unicode are welcome.`}
                   disabled={saving}
                 />
                 <TextField
@@ -187,6 +188,7 @@ export function SetupPage() {
           )
         ) : step === 'storage' ? (
           <>
+            <p className="setup__step">Step 2 of 3</p>
             <h1>Documentation storage</h1>
             <p>Your documents stay as Markdown files in this folder.</p>
             <code className="setup__path">{contentDir}</code>
@@ -196,6 +198,7 @@ export function SetupPage() {
           </>
         ) : (
           <>
+            <p className="setup__step">Step 3 of 3</p>
             <h1>Ready</h1>
             <p>Your administrator account has been created.</p>
             <Button variant="primary" onClick={() => navigate('/login', { replace: true })}>

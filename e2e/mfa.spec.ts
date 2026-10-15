@@ -51,7 +51,7 @@ test('enrolls an authenticator, requires MFA, recovers access and reauthenticate
   const codes = (await page.getByLabel('Recovery codes').textContent())!.trim().split('\n');
   expect(codes).toHaveLength(10);
   await page.getByRole('button', { name: 'I have saved my recovery codes' }).click();
-  await expect(page.getByText('Enabled. 10 recovery codes remaining.')).toBeVisible();
+  await expect(page.getByText('Enabled · 10 recovery codes remaining')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('mfa-enabled.png') });
   const logout = async () => {
     await page.getByRole('button', { name: 'User menu' }).click();
@@ -67,7 +67,7 @@ test('enrolls an authenticator, requires MFA, recovers access and reauthenticate
   await page.getByRole('button', { name: 'Verify and sign in' }).click();
   await expect(page.getByText('No documentation yet')).toBeVisible();
   await page.goto('/settings/security');
-  await expect(page.getByText('Enabled. 9 recovery codes remaining.')).toBeVisible();
+  await expect(page.getByText('Enabled · 9 recovery codes remaining')).toBeVisible();
   await logout();
   // Five admitted attempts are shared by password, enrollment and factor verification.
   // Wait for the real production limiter and a new OTP time step; no test-only bypass.
@@ -81,9 +81,9 @@ test('enrolls an authenticator, requires MFA, recovers access and reauthenticate
   await twoFactor.getByLabel('Current password').fill(password);
   await page.getByLabel('Authenticator or recovery code').fill(codes[1]!);
   await page.getByRole('button', { name: 'Disable two-factor authentication' }).click();
-  await expect(page.getByText('Not enabled.')).toBeVisible();
+  await expect(page.getByText('Not enabled')).toBeVisible();
   await page.reload();
-  await expect(page.getByText('Not enabled.')).toBeVisible();
+  await expect(page.getByText('Not enabled')).toBeVisible();
 
   // P16-10: change the password. This browser stays signed in; the new password signs in.
   // (Two more sign-in attempts; the old password being refused is covered by server tests.)
@@ -97,7 +97,7 @@ test('enrolls an authenticator, requires MFA, recovers access and reauthenticate
     passwordForm.getByText('Password changed. Other browsers and devices have been signed out.'),
   ).toBeVisible();
   await page.reload();
-  await expect(page.getByText('Not enabled.')).toBeVisible();
+  await expect(page.getByText('Not enabled')).toBeVisible();
   await logout();
   await login(changed);
   await expect(page.getByText('No documentation yet')).toBeVisible();

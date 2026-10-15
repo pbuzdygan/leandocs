@@ -5,6 +5,7 @@ import { usePins, useRecentDocuments, useTree } from '../api/queries';
 import { useSearchControls } from '../search/SearchContext';
 import { useContentActions } from '../actions/ContentActions';
 import { Button } from '../components/ui/Button';
+import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState, ErrorState, SkeletonLines } from '../components/ui/States';
 import { usePageTitle } from '../utils/page-title';
 import { displayFolder, folderSegments, formatRelativeTime } from '../utils/format';
@@ -47,8 +48,8 @@ export function Home() {
   }
 
   return (
-    <div className="home">
-      <h1 className="home__title">Documentation</h1>
+    <div className="page page--narrow">
+      <PageHeader title="Documentation" />
 
       <section className="home__section" aria-labelledby="quick-actions">
         <h2 id="quick-actions" className="home__heading">

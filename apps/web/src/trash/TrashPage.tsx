@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router';
 import type { TrashItem } from '@leandocs/shared';
 import { api, errorMessage } from '../api/client';
 import { useContentMutation, useTrash } from '../api/queries';
-import { FileIcon, FolderIcon, RestoreIcon, TrashIcon } from '../components/icons';
+import { FileIcon, FolderIcon, MoreIcon, RestoreIcon, TrashIcon } from '../components/icons';
 import { Button } from '../components/ui/Button';
 import { Dialog } from '../components/ui/Dialog';
+import { IconButton } from '../components/ui/IconButton';
+import { PageHeader } from '../components/ui/PageHeader';
+import { DropdownMenuButton } from '../components/ui/Menu';
 import { FormError } from '../components/ui/Field';
 import { EmptyState, ErrorState, SkeletonLines } from '../components/ui/States';
 import { useNotify } from '../components/ui/Toast';
@@ -94,7 +97,7 @@ export function TrashPage() {
     );
   if (!trash.data)
     return (
-      <div className="trash" aria-busy="true">
+      <div className="page" aria-busy="true">
         <SkeletonLines count={5} />
       </div>
     );
@@ -109,17 +112,16 @@ export function TrashPage() {
 
   const pending = confirm?.type === 'item' ? remove : empty;
   return (
-    <div className="trash">
-      <div className="trash__header">
-        <h1 className="trash__title">Trash</h1>
-        <Button variant="danger" onClick={() => setConfirm({ type: 'all', count: items.length })}>
-          Empty trash
-        </Button>
-      </div>
-      <p className="trash__note">
-        Deleted documents and folders stay here until you delete them permanently. Restoring puts an
-        item back where it was, with its attachments.
-      </p>
+    <div className="page">
+      <PageHeader
+        title="Trash"
+        description="Deleted documents and folders stay here until you delete them permanently. Restoring puts an item back where it was, with its attachments."
+        actions={
+          <Button variant="danger" onClick={() => setConfirm({ type: 'all', count: items.length })}>
+            Empty trash
+          </Button>
+        }
+      />
       <table className="trash__table">
         <thead>
           <tr>
@@ -161,15 +163,23 @@ export function TrashPage() {
                   >
                     <RestoreIcon size={14} aria-hidden="true" /> Restore
                   </Button>
-                  <Button
-                    size="small"
-                    variant="danger"
-                    onClick={() => setConfirm({ type: 'item', item })}
-                    // The accessible name starts with the visible text (WCAG 2.5.3).
-                    aria-label={`Delete permanently ${label}`}
-                  >
-                    Delete permanently
-                  </Button>
+                  {/* One danger button per page ("Empty trash"); row deletion sits in the row menu
+                      (owner decision C, guidelines §6, §13). */}
+                  <DropdownMenuButton
+                    entries={[
+                      {
+                        label: 'Delete permanently',
+                        icon: <TrashIcon size={15} />,
+                        danger: true,
+                        onSelect: () => setConfirm({ type: 'item', item }),
+                      },
+                    ]}
+                    trigger={
+                      <IconButton label={`More actions for ${label}`}>
+                        <MoreIcon size={16} />
+                      </IconButton>
+                    }
+                  />
                 </td>
               </tr>
             );

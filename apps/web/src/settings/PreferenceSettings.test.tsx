@@ -109,6 +109,22 @@ describe('Settings › General', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Not saved: Disk full');
     expect(autosave).toBeChecked();
   });
+
+  it('says when a change was saved, and offers a retry when it was not', async () => {
+    let fail = true;
+    api((request) =>
+      request.method === 'PATCH' && fail
+        ? { status: 500, body: { error: { code: 'INTERNAL_ERROR', message: 'Disk full' } } }
+        : undefined,
+    );
+    const { user } = renderApp('/settings/general');
+    const status = await screen.findByText(/Changes are saved automatically/);
+    await user.click(screen.getByRole('checkbox', { name: 'Autosave' }));
+    const retry = await screen.findByRole('button', { name: 'Not saved — retry' });
+    fail = false;
+    await user.click(retry);
+    await waitFor(() => expect(status).toHaveTextContent('Saved'));
+  });
 });
 
 describe('Settings › Editor', () => {

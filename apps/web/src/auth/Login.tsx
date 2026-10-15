@@ -144,30 +144,6 @@ export function LoginPage() {
                   required
                   disabled={saving}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={saving}
-                  onClick={() => {
-                    setRecovery(!recovery);
-                    setCode('');
-                    setError(null);
-                  }}
-                >
-                  {recovery ? 'Use authenticator code' : 'Use recovery code'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={saving}
-                  onClick={() => {
-                    setChallenge(null);
-                    setCode('');
-                    setError(null);
-                  }}
-                >
-                  Start again
-                </Button>
               </>
             ) : (
               <>
@@ -200,6 +176,35 @@ export function LoginPage() {
             >
               {challenge ? 'Verify and sign in' : 'Sign in'}
             </Button>
+            {/* Secondary ways forward stay below the one primary action (guidelines §9). */}
+            {challenge && (
+              <div className="setup__secondary">
+                <button
+                  type="button"
+                  className="link-button"
+                  disabled={saving}
+                  onClick={() => {
+                    setRecovery(!recovery);
+                    setCode('');
+                    setError(null);
+                  }}
+                >
+                  {recovery ? 'Use authenticator code' : 'Use recovery code'}
+                </button>
+                <button
+                  type="button"
+                  className="link-button"
+                  disabled={saving}
+                  onClick={() => {
+                    setChallenge(null);
+                    setCode('');
+                    setError(null);
+                  }}
+                >
+                  Start again
+                </button>
+              </div>
+            )}
           </form>
         )}
       </div>
