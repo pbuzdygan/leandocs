@@ -1,5 +1,45 @@
 # Security reviews
 
+## Third pass
+
+**Date:** 2026-10-15 · **Reviewer:** @claude-code · **Base:** `4811884` (end of P15-02) to `acfa836` · **Scope:** changes since the second pass (change password, attachments added outside the app (KI-7), app settings API, theme-aware Mermaid and task-list labels, Node.js 26, digest-pinned images, dependency updates) and a repository-wide check against the security baseline in `.ai/SECURITY.md`: secrets in the working tree and Git history, CI/CD, container and Compose configuration, GitHub repository settings.
+
+This is an implementation and configuration review with the existing regression tests, not an external penetration test. Authentication, CSRF, headers and rendering controls from earlier reviews were re-checked only where the changes touch them.
+
+### Evidence checklist
+
+| Control                               | Status         | Evidence                                                                                                                                                                                                                                                                  |
+| ------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trust boundaries and protected assets | verified       | New entry points: `POST /auth/password`, `GET`/`PATCH /settings`, reads and deletion of attachment names not created by the app. Assets: owner account and sessions, documentation folder.                                                                                |
+| Authentication and authorization      | verified       | The global route guard covers the new routes; `api/auth.test.ts` and `api/csrf.test.ts` enumerate every registered route. Changing the password needs a session, the CSRF token and the current password, shares the sign-in attempt budget and ends every other session. |
+| Ownership and cross-tenant denial     | not applicable | One owner account; no tenants or shared objects.                                                                                                                                                                                                                          |
+| Input validation and limits           | verified       | Settings schema rejects unknown fields and accepts only listed values (`api/settings.test.ts`); password routes have an 8 KiB body limit and 1,024-character fields; existing attachment names must be one plain segment of at most 255 bytes with an allowed extension.  |
+| Queries and filesystem paths          | verified       | The password update is parameterized and conditional on the old hash. `newDocumentFolder` passes `normalizeRelativePath`, the hidden-path check and `resolveExistingDirectory`. Attachments open with `O_NOFOLLOW`; traversal, hidden and executable names are rejected.  |
+| Browser output                        | verified       | Mermaid stays in `strict` mode with theme values taken from the app's own CSS tokens; task-list labels are set as hast properties after sanitizing and rendered by React. Browser tests: rendering and CSP (`e2e/security-headers.spec.ts`).                              |
+| Secrets                               | verified       | gitleaks over all 67 commits and the working tree: two hits, both the public RFC 6238 test secret in tests. No `.env` or `data/` tracked; no tracked file matches `.gitignore`.                                                                                           |
+| Outbound requests                     | not applicable | The server makes no outbound network requests.                                                                                                                                                                                                                            |
+| Errors and logs                       | verified       | Error handler unchanged: 5xx responses carry no details. New errors return fixed messages.                                                                                                                                                                                |
+| Dependencies and build                | verified       | `pnpm audit --audit-level=low`: no known vulnerabilities. New or updated: `mermaid` 12.2.0 (browser), `tsup` 9 and `@axe-core/playwright` (development only). CI actions pinned by commit; base images pinned by digest with Dependabot updates.                          |
+| Container and deployment privileges   | finding        | Image and Compose are minimal (distroless, non-root, read-only, all capabilities dropped, `no-new-privileges`). Open items 1 and 3 below.                                                                                                                                 |
+| Security tests and scanners           | verified       | Node.js 26.11.1: format, lint, typecheck, 726 unit and API tests, build; 81 browser tests in Chromium in the Playwright image. Firefox and WebKit were not run locally.                                                                                                   |
+| Remaining risk and unavailable checks | recorded       | Open items and not verified below.                                                                                                                                                                                                                                        |
+
+### Open items
+
+These are configuration and policy items, not exploitable defects in the reviewed code; they are tracked for owner decisions.
+
+1. **First-run exposure.** Before the first account exists, anyone who reaches the application can create it (ADR-0010). The Compose files listen on all host addresses over HTTP by default, so a fresh deployment on a reachable host is exposed until setup completes. The setup status also returns the resolved content folder. Options: bind to `127.0.0.1` by default, or deliver the setup token out of band (logs) instead of through the API; either needs an ADR.
+2. **`main` is not protected.** The release workflow publishes `:latest` from `main`, which is expected to change only through pull requests. Branch protection with required CI checks would enforce that.
+3. **No container resource limits.** Compose sets no memory or process limits; the analysis child process bounds parsing, but the server process itself is unbounded.
+4. **Supply chain hardening.** The Playwright CI image is pinned by tag, not digest; pnpm has no minimum release age for new versions; released images carry no SBOM or signature.
+5. **Personal infrastructure names in history.** Earlier fixtures used real host names, hardware and a private address; they were renamed. No credentials were included; history is not rewritten.
+
+### Not verified
+
+- GitHub secret scanning, push protection and Dependabot alert settings (needs an authenticated session).
+- Browser tests in Firefox and WebKit (CI runs them for pull requests and `main`).
+- Upgrade and backup checks were not repeated; they passed in the 0.2.0 release workflow. The performance check was not run.
+
 ## Second pass (P15-02)
 
 **Date:** 2026-10-07 · **Reviewer:** @claude-code · **Task:** P15-02 · **Scope:** everything added after P11-09 (content watcher and change events, import pipeline, deployment image, release workflow, version reporting) and the cost of handling untrusted content on the server's single JavaScript thread. Areas reviewed in P11-09 (authentication, sessions, MFA, CSRF, headers, attachments, rendering) have had no security-relevant changes since; their route guard and headers were re-read.
