@@ -5,9 +5,9 @@ import { documentDto, folder, mockApi, renderApp, sampleTree } from '../test/ren
 const recent = {
   items: [
     {
-      id: 'id-buzhulk',
-      title: 'BUZHULK',
-      path: 'Infrastructure/Servers/BUZHULK.md',
+      id: 'id-atlas',
+      title: 'ATLAS',
+      path: 'Infrastructure/Servers/ATLAS.md',
       modified: new Date().toISOString(),
     },
   ],
@@ -63,10 +63,10 @@ describe('navigation tree', () => {
   it('reveals and highlights the open document', async () => {
     mockApi({
       'GET /tree': { root: sampleTree() },
-      'GET /documents/id-buzhulk': documentDto('id-buzhulk', 'Infrastructure/Servers/BUZHULK.md'),
+      'GET /documents/id-atlas': documentDto('id-atlas', 'Infrastructure/Servers/ATLAS.md'),
     });
-    renderApp('/doc/id-buzhulk');
-    const item = await screen.findByRole('treeitem', { name: /BUZHULK/ });
+    renderApp('/doc/id-atlas');
+    const item = await screen.findByRole('treeitem', { name: /ATLAS/ });
     expect(item).toHaveAttribute('aria-selected', 'true');
   });
 
@@ -82,24 +82,24 @@ describe('document page', () => {
   it('shows breadcrumb, title, description, tags and metadata', async () => {
     mockApi({
       'GET /tree': { root: sampleTree() },
-      'GET /documents/id-buzhulk': documentDto('id-buzhulk', 'Infrastructure/Servers/BUZHULK.md', {
-        content: '# BUZHULK\n\nMain host.\n',
+      'GET /documents/id-atlas': documentDto('id-atlas', 'Infrastructure/Servers/ATLAS.md', {
+        content: '# ATLAS\n\nMain host.\n',
         frontmatter: { description: 'Main Docker and Incus host', tags: ['server', 'docker'] },
       }),
     });
-    const { user } = renderApp('/doc/id-buzhulk');
-    expect(await screen.findByRole('heading', { level: 1, name: 'BUZHULK' })).toBeInTheDocument();
+    const { user } = renderApp('/doc/id-atlas');
+    expect(await screen.findByRole('heading', { level: 1, name: 'ATLAS' })).toBeInTheDocument();
     const crumbs = screen.getByRole('navigation', { name: 'Breadcrumb' });
-    expect(crumbs).toHaveTextContent('Infrastructure/Servers/BUZHULK');
+    expect(crumbs).toHaveTextContent('Infrastructure/Servers/ATLAS');
     expect(screen.getByText('Main Docker and Incus host')).toBeInTheDocument();
     expect(
       within(screen.getByRole('list', { name: 'Tags' })).getAllByRole('listitem'),
     ).toHaveLength(2);
     expect(screen.getByText(/min read/)).toBeInTheDocument();
-    expect(document.title).toBe('BUZHULK — LeanDocs');
+    expect(document.title).toBe('ATLAS — LeanDocs');
 
     await user.click(screen.getByRole('tab', { name: 'Source' }));
-    expect(screen.getByLabelText('Markdown source')).toHaveTextContent('# BUZHULK');
+    expect(screen.getByLabelText('Markdown source')).toHaveTextContent('# ATLAS');
   });
 
   it('shows "Document not found" for unknown ids', async () => {
@@ -136,7 +136,7 @@ describe('document page', () => {
                 body: { error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
               },
     );
-    renderApp('/doc/id-buzhulk');
+    renderApp('/doc/id-atlas');
     expect(await screen.findByText('Unable to load document')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
@@ -146,8 +146,8 @@ describe('home', () => {
   it('lists recently updated documents', async () => {
     mockApi({ 'GET /tree': { root: sampleTree() }, 'GET /documents/recent?limit=10': recent });
     renderApp('/');
-    const link = await screen.findByRole('link', { name: /BUZHULK/ });
-    expect(link).toHaveAttribute('href', '/doc/id-buzhulk');
+    const link = await screen.findByRole('link', { name: /ATLAS/ });
+    expect(link).toHaveAttribute('href', '/doc/id-atlas');
     expect(link).toHaveTextContent('Infrastructure / Servers · Updated just now');
   });
 

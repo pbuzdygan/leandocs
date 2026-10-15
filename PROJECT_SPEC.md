@@ -97,8 +97,8 @@ The canonical source of a document is a file on the filesystem.
 content/
 ├── Infrastructure/
 │   ├── Servers/
-│   │   ├── BUZHULK.md
-│   │   └── BUZPI00.md
+│   │   ├── ATLAS  .md
+│   │   └── ORION  .md
 │   └── Storage/
 │       └── Synology.md
 ├── Network/
@@ -200,7 +200,7 @@ Switching `Visual → Source → Visual` must never cause uncontrolled content l
 ```markdown
 ---
 id: 77ce39fd-03cd-4d78-9e8f-87828449e0aa
-title: BUZHULK
+title: ATLAS
 created: 2026-10-02T00:00:00Z
 updated: 2026-10-02T00:00:00Z
 tags:
@@ -212,15 +212,15 @@ aliases:
 icon: server
 ---
 
-# BUZHULK
+# ATLAS
 
 Main Docker and Incus host.
 
 ## Hardware
 
-- GMKTEC G3
-- Intel N100
-- Intel I226-V
+- Mini PC
+- 4-core x86-64 CPU
+- 2.5 GbE network
 
 ## Services
 
@@ -257,7 +257,7 @@ File names must be human-readable:
 ```text
 Home Assistant.md
 Nginx Proxy Manager.md
-BUZHULK.md
+ATLAS.md
 Docker Backup.md
 ```
 
@@ -304,8 +304,8 @@ System folders (prefixed with `_`) are hidden from the main documentation tree b
 Preferred model — a sibling assets folder per document:
 
 ```text
-BUZHULK.md
-BUZHULK.assets/
+ATLAS.md
+ATLAS.assets/
 ├── network.png
 ├── architecture.svg
 └── compose.yaml
@@ -399,9 +399,9 @@ The app renders Mermaid code fences:
 ````markdown
 ```mermaid
 flowchart LR
-    Internet --> UCG
-    UCG --> Switch
-    Switch --> BUZHULK
+    Internet --> Gateway
+    Gateway --> Switch
+    Switch --> ATLAS
 ```
 ````
 
@@ -425,15 +425,15 @@ For documents with headings the app generates an automatic TOC that:
 Standard Markdown links are supported:
 
 ```markdown
-[BUZHULK](../Infrastructure/Servers/BUZHULK.md)
+[ATLAS](../Infrastructure/Servers/ATLAS.md)
 ```
 
 as well as convenient wiki links:
 
 ```markdown
-[[BUZHULK]]
-[[BUZHULK#Hardware]]
-[[BUZHULK|the Docker host]]
+[[ATLAS]]
+[[ATLAS#Hardware]]
+[[ATLAS|the Docker host]]
 ```
 
 Wiki links are an application feature. Standard Markdown links remain the more interoperable format.
@@ -542,7 +542,7 @@ Ctrl + K → "macvlan"
 Home Assistant
 …macvlan-shim used for host communication…
 
-BUZHULK
+ATLAS
 …Incus VM uses macvlan…
 
 Troubleshooting
@@ -578,7 +578,7 @@ Target syntax:
 ```text
 tag:docker
 path:Infrastructure
-title:BUZHULK
+title:ATLAS
 docker tag:server
 ```
 
@@ -984,9 +984,9 @@ Folder operations (create/rename/move/delete folder), trash listing and change e
 ```json
 {
   "id": "77ce39fd-03cd-4d78-9e8f-87828449e0aa",
-  "title": "BUZHULK",
-  "path": "Infrastructure/Servers/BUZHULK.md",
-  "content": "# BUZHULK...",
+  "title": "ATLAS",
+  "path": "Infrastructure/Servers/ATLAS.md",
+  "content": "# ATLAS...",
   "frontmatter": { "tags": ["server", "docker"] },
   "revision": "sha256:...",
   "created": "...",

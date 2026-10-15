@@ -13,8 +13,8 @@ import {
 
 /** P16-01, P16-03: General, Editor and Appearance settings (UI_SPEC §81–84). */
 
-const ID = 'id-buzhulk';
-const PATH = 'Infrastructure/Servers/BUZHULK.md';
+const ID = 'id-atlas';
+const PATH = 'Infrastructure/Servers/ATLAS.md';
 
 type Handler = (request: MockRequest) => { status?: number; body?: unknown } | undefined;
 
@@ -179,7 +179,7 @@ describe('default location for new documents', () => {
     api();
     setTestSettings({ general: { newDocumentFolder: 'Network' } });
     const { user } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     await user.click(screen.getByRole('button', { name: 'New' }));
     const dialog = await screen.findByRole('dialog', { name: 'New document' });
     expect(within(dialog).getByRole('combobox', { name: 'Location' })).toHaveValue(
@@ -209,7 +209,7 @@ describe('open last document on startup', () => {
   it('remembers the document viewed last', async () => {
     api();
     const { location } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     expect(window.localStorage.getItem('leandocs.lastDocument')).toBe(JSON.stringify(ID));
     expect(location()).toBe(`/doc/${ID}`);
   });

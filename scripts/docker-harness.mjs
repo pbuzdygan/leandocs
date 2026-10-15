@@ -267,7 +267,7 @@ export function seed(content) {
     mkdirSync(path.dirname(path.join(content, relative)), { recursive: true });
     writeFileSync(path.join(content, relative), data);
   };
-  put('Infrastructure/Servers/BUZHULK.md', '# BUZHULK\n\nMain server. See [[Runbook]].\n');
+  put('Infrastructure/Servers/ATLAS.md', '# ATLAS\n\nMain server. See [[Runbook]].\n');
   put(
     'Infrastructure/Runbook.md',
     '---\nid: runbook\ntitle: Runbook\ntags: [ops]\n# keep this comment\ncustom: kept\n---\n\n# Runbook\n\nRestart the zebracorn service. [Diagram](Runbook.assets/diagram.txt)\n',

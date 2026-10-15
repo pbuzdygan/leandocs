@@ -13,7 +13,7 @@ describe('extractLinks (P9-01)', () => {
     const links = extractLinks(
       parseMarkdown(
         [
-          'See [[BUZHULK]], [[BUZHULK#Hardware]] and [[Home Assistant|HA]].',
+          'See [[ATLAS]], [[ATLAS#Hardware]] and [[Home Assistant|HA]].',
           '[UniFi](../Network/UniFi%20Controller.md#vlans) and [ref][r].',
           '[web](https://example.com/a.md) [abs](/x.md) [anchor](#top) ![img](a.assets/x.png)',
           '[asset](Doc.assets/file.pdf)',
@@ -27,8 +27,8 @@ describe('extractLinks (P9-01)', () => {
       ),
     );
     expect(links).toEqual([
-      { kind: 'wiki', target: 'BUZHULK' },
-      { kind: 'wiki', target: 'BUZHULK', heading: 'Hardware' },
+      { kind: 'wiki', target: 'ATLAS' },
+      { kind: 'wiki', target: 'ATLAS', heading: 'Hardware' },
       { kind: 'wiki', target: 'Home Assistant', alias: 'HA' },
       {
         kind: 'markdown',
@@ -43,26 +43,26 @@ describe('extractLinks (P9-01)', () => {
 
 describe('createLinkResolver (P9-02)', () => {
   const docs = [
-    { id: 'a', title: 'BUZHULK', path: 'Infrastructure/Servers/BUZHULK.md', aliases: ['hulk'] },
+    { id: 'a', title: 'ATLAS', path: 'Infrastructure/Servers/ATLAS.md', aliases: ['titan'] },
     { id: 'b', title: 'Home Assistant', path: 'Applications/HA.md' },
     { id: 'c', title: 'Something else', path: 'Applications/Home Assistant.md' },
-    { id: 'd', title: 'Hulk', path: 'Zoo/Hulk.md' },
+    { id: 'd', title: 'Titan', path: 'Zoo/Titan.md' },
   ];
   const resolver = createLinkResolver(docs);
 
   it('resolves wiki links by title, alias, file name and path, title first', () => {
-    expect(resolver.wiki('buzhulk')?.id).toBe('a');
+    expect(resolver.wiki('atlas')?.id).toBe('a');
     expect(resolver.wiki('Home Assistant')?.id).toBe('b'); // title beats another file's name
     expect(resolver.wiki('HA')?.id).toBe('b'); // file name
-    expect(resolver.wiki('hulk')?.id).toBe('d'); // a title beats an alias
-    expect(resolver.wiki('Infrastructure/Servers/BUZHULK')?.id).toBe('a');
+    expect(resolver.wiki('titan')?.id).toBe('d'); // a title beats an alias
+    expect(resolver.wiki('Infrastructure/Servers/ATLAS')?.id).toBe('a');
     expect(resolver.wiki('Missing')).toBeUndefined();
   });
 
   it('resolves relative Markdown links from the source folder', () => {
     expect(
       resolver.resolve(
-        { kind: 'markdown', href: '', path: '../Infrastructure/Servers/BUZHULK.md' },
+        { kind: 'markdown', href: '', path: '../Infrastructure/Servers/ATLAS.md' },
         'Applications/HA.md',
       )?.id,
     ).toBe('a');
@@ -73,12 +73,7 @@ describe('createLinkResolver (P9-02)', () => {
 
   it('lists every key a wiki link could use', () => {
     expect(wikiKeys(docs[0]!).sort()).toEqual(
-      [
-        'buzhulk',
-        'hulk',
-        'infrastructure/servers/buzhulk',
-        'infrastructure/servers/buzhulk.md',
-      ].sort(),
+      ['atlas', 'titan', 'infrastructure/servers/atlas', 'infrastructure/servers/atlas.md'].sort(),
     );
   });
 });

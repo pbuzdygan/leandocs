@@ -27,7 +27,7 @@ test('renders tables, callouts, code, Mermaid, wiki links and the table of conte
         '',
         '| Key | Value |',
         '| --- | ----- |',
-        '| CPU | N100  |',
+        '| CPU | Quad  |',
         '',
         '## Diagram',
         '',
@@ -55,7 +55,7 @@ test('renders tables, callouts, code, Mermaid, wiki links and the table of conte
 
   const body = page.getByRole('tabpanel');
   await expect(page.getByRole('heading', { level: 1, name: 'Render Check' })).toHaveCount(1);
-  await expect(body.getByRole('table')).toContainText('N100');
+  await expect(body.getByRole('table')).toContainText('Quad');
   await expect(body.locator('.callout--danger')).toContainText('Careful.');
   await expect(body.locator('.code-block__lang')).toHaveText('bash');
   await expect(body.locator('figure.mermaid svg')).toBeVisible({ timeout: 15_000 });

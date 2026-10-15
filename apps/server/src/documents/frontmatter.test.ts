@@ -15,11 +15,11 @@ describe('parseFile', () => {
   });
 
   it('parses a front matter mapping and the body', () => {
-    const parsed = parseFile('---\nid: abc\ntitle: BUZHULK\ntags:\n  - server\n---\n\n# BUZHULK\n');
-    expect(parsed.data).toEqual({ id: 'abc', title: 'BUZHULK', tags: ['server'] });
-    expect(parsed.body).toBe('# BUZHULK\n');
+    const parsed = parseFile('---\nid: abc\ntitle: ATLAS\ntags:\n  - server\n---\n\n# ATLAS\n');
+    expect(parsed.data).toEqual({ id: 'abc', title: 'ATLAS', tags: ['server'] });
+    expect(parsed.body).toBe('# ATLAS\n');
     expect(parsed.blankLineAfter).toBe(true);
-    expect(parsed.rawFrontmatter).toBe('id: abc\ntitle: BUZHULK\ntags:\n  - server');
+    expect(parsed.rawFrontmatter).toBe('id: abc\ntitle: ATLAS\ntags:\n  - server');
   });
 
   it('keeps timestamps as strings', () => {
@@ -112,9 +112,9 @@ describe('updateFileFrontmatter', () => {
   });
 
   it('only adds lines to existing front matter', () => {
-    const source = '---\ntitle: BUZHULK\nfoo: bar # keep me\n---\n# BUZHULK\n';
+    const source = '---\ntitle: ATLAS\nfoo: bar # keep me\n---\n# ATLAS\n';
     expect(updateFileFrontmatter(source, { id: 'abc' })).toBe(
-      '---\ntitle: BUZHULK\nfoo: bar # keep me\nid: abc\n---\n# BUZHULK\n',
+      '---\ntitle: ATLAS\nfoo: bar # keep me\nid: abc\n---\n# ATLAS\n',
     );
   });
 

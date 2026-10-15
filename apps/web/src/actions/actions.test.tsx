@@ -18,7 +18,7 @@ describe('content actions', () => {
       }
       return undefined;
     });
-    const { user, location } = renderApp('/doc/id-buzhulk');
+    const { user, location } = renderApp('/doc/id-atlas');
     await screen.findByRole('heading', { level: 1 });
     await user.click(screen.getByRole('button', { name: 'New' }));
     const dialog = await screen.findByRole('dialog', { name: 'New document' });
@@ -41,19 +41,19 @@ describe('content actions', () => {
       if (request.path === '/templates')
         return { body: { items: [{ name: 'Application' }, { name: 'Server' }] } };
       if (request.method === 'POST' && request.path === '/documents')
-        return { status: 201, body: documentDto('id-new', 'BUZHULK.md') };
+        return { status: 201, body: documentDto('id-new', 'ATLAS.md') };
       if (/^\/documents\/id-new/.test(request.path))
         return {
           body: request.path.endsWith('attachments')
             ? { items: [] }
-            : documentDto('id-new', 'BUZHULK.md'),
+            : documentDto('id-new', 'ATLAS.md'),
         };
       return undefined;
     });
     const { user, location } = renderApp('/');
     await user.click(await screen.findByRole('button', { name: 'New' }));
     const dialog = await screen.findByRole('dialog', { name: 'New document' });
-    await user.type(within(dialog).getByLabelText('Name'), 'BUZHULK');
+    await user.type(within(dialog).getByLabelText('Name'), 'ATLAS');
     const select = within(dialog).getByLabelText('Template');
     await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(3));
     expect(
@@ -65,7 +65,7 @@ describe('content actions', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => expect(location()).toBe('/doc/id-new/edit'));
     expect(requests.find((r) => r.method === 'POST')?.body).toEqual({
-      name: 'BUZHULK',
+      name: 'ATLAS',
       folder: '',
       template: 'Server',
     });

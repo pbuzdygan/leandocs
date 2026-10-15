@@ -106,13 +106,13 @@ export function doc(path: string, id: string, title?: string): TreeNode {
   return { type: 'document', id, title: title ?? name.replace(/\.md$/, ''), name, path };
 }
 
-/** A small BUZLAB-like tree used by most tests. */
+/** A small homelab-like tree used by most tests. */
 export function sampleTree(): TreeFolderNode {
   return folder('', [
     folder('Infrastructure', [
       folder('Infrastructure/Servers', [
-        doc('Infrastructure/Servers/BUZHULK.md', 'id-buzhulk'),
-        doc('Infrastructure/Servers/BUZPI00.md', 'id-buzpi00'),
+        doc('Infrastructure/Servers/ATLAS.md', 'id-atlas'),
+        doc('Infrastructure/Servers/ORION.md', 'id-orion'),
       ]),
     ]),
     folder('Network', [doc('Network/VLAN.md', 'id-vlan')]),

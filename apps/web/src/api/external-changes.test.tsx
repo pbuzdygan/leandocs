@@ -20,8 +20,8 @@ class EventSourceMock extends EventTarget {
   }
 }
 
-const ID = 'id-buzhulk';
-const PATH = 'Infrastructure/Servers/BUZHULK.md';
+const ID = 'id-atlas';
+const PATH = 'Infrastructure/Servers/ATLAS.md';
 const change = (kind = 'changed') => ({ documents: [{ kind, id: ID, path: PATH }], folders: [] });
 beforeEach(() => {
   EventSourceMock.instances = [];

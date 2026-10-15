@@ -31,14 +31,14 @@ describe('DocumentRegistry', () => {
 
   it('indexes documents that already have an id without modifying them', async () => {
     const root = await makeTempDir();
-    const source = `---\nid: ${ID_A}\ntitle: BUZHULK\n---\n# BUZHULK\n`;
-    const file = await put(root, 'Infrastructure/BUZHULK.md', source);
+    const source = `---\nid: ${ID_A}\ntitle: ATLAS\n---\n# ATLAS\n`;
+    const file = await put(root, 'Infrastructure/ATLAS.md', source);
     const registry = await loadRegistry(root);
     expect(registry.get(ID_A)).toMatchObject({
       id: ID_A,
       idSource: 'frontmatter',
-      path: 'Infrastructure/BUZHULK.md',
-      title: 'BUZHULK',
+      path: 'Infrastructure/ATLAS.md',
+      title: 'ATLAS',
     });
     expect(await readFile(file, 'utf8')).toBe(source);
   });
@@ -117,13 +117,13 @@ describe('DocumentRegistry', () => {
 
   it('reports duplicate ids; the first path keeps the id, the copy gets a provisional id', async () => {
     const root = await makeTempDir();
-    const source = `---\nid: ${ID_A}\ntitle: BUZHULK\n---\n`;
-    await put(root, 'A/BUZHULK.md', source);
-    const copy = await put(root, 'B/BUZHULK copy.md', source);
+    const source = `---\nid: ${ID_A}\ntitle: ATLAS\n---\n`;
+    await put(root, 'A/ATLAS.md', source);
+    const copy = await put(root, 'B/ATLAS copy.md', source);
     const registry = await loadRegistry(root);
-    expect(registry.get(ID_A)?.path).toBe('A/BUZHULK.md');
-    expect(registry.get(provisionalId('B/BUZHULK copy.md'))?.idSource).toBe('provisional');
-    expect(registry.issues()).toMatchObject([{ code: 'DUPLICATE_ID', path: 'B/BUZHULK copy.md' }]);
+    expect(registry.get(ID_A)?.path).toBe('A/ATLAS.md');
+    expect(registry.get(provisionalId('B/ATLAS copy.md'))?.idSource).toBe('provisional');
+    expect(registry.issues()).toMatchObject([{ code: 'DUPLICATE_ID', path: 'B/ATLAS copy.md' }]);
     expect(await readFile(copy, 'utf8')).toBe(source);
   });
 

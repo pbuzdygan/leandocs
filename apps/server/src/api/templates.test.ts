@@ -65,14 +65,14 @@ describe('templates', () => {
   it('creates documents from a template with placeholders and template front matter', async () => {
     const dataDir = await makeTempDir();
     const app = await start(dataDir);
-    const res = await create(app, { name: 'BUZHULK', template: 'Server' });
+    const res = await create(app, { name: 'ATLAS', template: 'Server' });
     expect(res.statusCode).toBe(201);
     const doc = res.json<DocumentDto>();
-    expect(doc.content.startsWith('# BUZHULK\n\n## Overview\n')).toBe(true);
-    expect(doc.frontmatter).toMatchObject({ id: doc.id, title: 'BUZHULK', tags: ['server'] });
-    const file = await readFile(path.join(dataDir, 'content', 'BUZHULK.md'), 'utf8');
+    expect(doc.content.startsWith('# ATLAS\n\n## Overview\n')).toBe(true);
+    expect(doc.frontmatter).toMatchObject({ id: doc.id, title: 'ATLAS', tags: ['server'] });
+    const file = await readFile(path.join(dataDir, 'content', 'ATLAS.md'), 'utf8');
     expect(file).toMatch(
-      /^---\nid: [0-9a-f-]{36}\ntitle: BUZHULK\ncreated: .+\nupdated: .+\ntags:\n {2}- server\n---\n\n# BUZHULK\n/,
+      /^---\nid: [0-9a-f-]{36}\ntitle: ATLAS\ncreated: .+\nupdated: .+\ntags:\n {2}- server\n---\n\n# ATLAS\n/,
     );
 
     const incident = (

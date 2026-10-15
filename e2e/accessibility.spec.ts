@@ -19,7 +19,7 @@ const RICH = [
   '',
   '| Key | Value |',
   '| --- | ----- |',
-  '| CPU | N100  |',
+  '| CPU | Quad  |',
   '',
   '- [x] Done item',
   '- [ ] Open item',

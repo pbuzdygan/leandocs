@@ -26,9 +26,9 @@ function searchResponse(q: string): SearchResponse {
     query: q,
     results: [
       {
-        id: 'id-buzhulk',
-        title: 'BUZHULK',
-        path: 'Infrastructure/Servers/BUZHULK.md',
+        id: 'id-atlas',
+        title: 'ATLAS',
+        path: 'Infrastructure/Servers/ATLAS.md',
         match: 'content',
         tags: [],
         snippet: [
@@ -79,7 +79,7 @@ describe('command palette', () => {
     expect(await screen.findByRole('option', { name: /VLAN/ })).toBeInTheDocument();
 
     await user.type(input, 'macvlan');
-    const option = await screen.findByRole('option', { name: /BUZHULK/ });
+    const option = await screen.findByRole('option', { name: /ATLAS/ });
     expect(within(option).getByText('Infrastructure / Servers')).toBeInTheDocument();
     const mark = option.querySelector('mark');
     expect(mark?.textContent).toBe('macvlan');
@@ -91,7 +91,7 @@ describe('command palette', () => {
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('option', { name: /^VLAN/ })).toHaveAttribute('aria-selected', 'true');
     await user.keyboard('{ArrowDown}{Enter}');
-    await waitFor(() => expect(location()).toBe('/doc/id-buzhulk'));
+    await waitFor(() => expect(location()).toBe('/doc/id-atlas'));
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 
@@ -114,13 +114,11 @@ describe('command palette', () => {
     await screen.findByText('Recently updated');
     await user.keyboard('{Control>}p{/Control}');
     const input = await screen.findByRole('combobox', { name: 'Open document' });
-    await user.type(input, 'bzpi');
+    await user.type(input, 'orin');
     const options = await screen.findAllByRole('option');
-    expect(options.map((option) => option.textContent)).toEqual([
-      'BUZPI00Infrastructure / Servers',
-    ]);
+    expect(options.map((option) => option.textContent)).toEqual(['ORIONInfrastructure / Servers']);
     await user.keyboard('{Enter}');
-    await waitFor(() => expect(location()).toBe('/doc/id-buzpi00'));
+    await waitFor(() => expect(location()).toBe('/doc/id-orion'));
     expect(requests.some((r) => r.path.startsWith('/search'))).toBe(false);
   });
 
@@ -198,8 +196,8 @@ describe('quickOpen', () => {
   const items = allDocuments(sampleTree());
 
   it('prefers title prefixes, then subsequences, then path matches', () => {
-    expect(quickOpen(items, 'buz').map((item) => item.title)).toEqual(['BUZHULK', 'BUZPI00']);
-    expect(quickOpen(items, 'bhk').map((item) => item.title)).toEqual(['BUZHULK']);
+    expect(quickOpen(items, 'at').map((item) => item.title)).toEqual(['ATLAS', 'ORION']);
+    expect(quickOpen(items, 'als').map((item) => item.title)).toEqual(['ATLAS']);
     expect(quickOpen(items, 'network').map((item) => item.title)).toEqual(['VLAN']);
     expect(quickOpen(items, 'zzz')).toEqual([]);
   });

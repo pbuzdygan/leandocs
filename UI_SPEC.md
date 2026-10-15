@@ -211,8 +211,8 @@ DOCUMENTATION
 
 ▾ Infrastructure
     ▾ Servers
-        BUZHULK
-        BUZPI00
+        ATLAS
+        ORION
     ▸ Storage
 ▾ Network
     UniFi
@@ -240,7 +240,7 @@ Height **30 px**. Contains: chevron, icon, label, optional actions.
 
 ```text
 ▾ 📁 Infrastructure
-    📄 BUZHULK
+    📄 ATLAS
 ```
 
 ## 21. Tree indentation
@@ -294,9 +294,9 @@ Top 32–40 px; left/right 40–64 px; on small desktops 24–32 px.
 ## 27. Document header
 
 ```text
-Infrastructure / Servers / BUZHULK          (breadcrumb)
+Infrastructure / Servers / ATLAS          (breadcrumb)
 
-BUZHULK                                   View   Source   Edit   …
+ATLAS                                   View   Source   Edit   …
 Main Docker and Incus host
 server  docker  incus
 Updated 4 minutes ago
@@ -420,7 +420,7 @@ Automatic TOC (Overview, Hardware, Network, …) from H1–H4 (1.3: H1 included;
 
 ```text
 Properties
-Path      Infrastructure/Servers/BUZHULK.md
+Path      Infrastructure/Servers/ATLAS.md
 Created   27 Sep 2026
 Updated   2 Oct 2026
 Tags      server  docker  incus
@@ -436,7 +436,7 @@ Button `›`. When closed, the centre expands. State is remembered.
 
 ## 49. Breadcrumb
 
-Above the title, subtle, 12–13 px, clickable segments (`Infrastructure / Servers / BUZHULK`). Must not dominate.
+Above the title, subtle, 12–13 px, clickable segments (`Infrastructure / Servers / ATLAS`). Must not dominate.
 
 ## 50. Tags
 
@@ -504,7 +504,7 @@ Opened with `Ctrl/Cmd + K`.
 ┌────────────────────────────────────────────┐
 │ 🔍 Search documentation...                 │
 ├────────────────────────────────────────────┤
-│ BUZHULK                                    │
+│ ATLAS                                      │
 │ Infrastructure / Servers                   │
 │ …macvlan interface configuration…          │
 │                                            │
@@ -558,7 +558,7 @@ A plain list: Blank, Server, Application, Procedure, Network Device, Incident. N
 A simple folder picker:
 
 ```text
-Move "BUZHULK"
+Move "ATLAS"
 
 Documentation
 ▾ Infrastructure
@@ -574,7 +574,7 @@ Documentation
 
 ```text
 Move document to trash?
-BUZHULK will be moved to Trash and can be restored.
+ATLAS will be moved to Trash and can be restored.
 
                 Cancel   Move to Trash
 ```
@@ -812,7 +812,7 @@ Pinned
 A list, not cards:
 
 ```text
-BUZHULK
+ATLAS
 Infrastructure / Servers · Updated 12 min ago
 
 Home Assistant
@@ -879,7 +879,7 @@ Topbar · Document. Navigation as a drawer; context as a separate panel/drawer.
 ## 102. Mobile topbar
 
 ```text
-☰   BUZHULK                    ⋮
+☰   ATLAS                    ⋮
 ```
 
 A second row may hold `View | Edit`. Search via an icon.
@@ -1014,7 +1014,7 @@ Document URLs are stable and based on the document **UUID**, not the path, so re
 
 ## 128. Browser title
 
-`BUZHULK — LeanDocs`; on Home just `LeanDocs` (always via `APP_NAME`).
+`ATLAS — LeanDocs`; on Home just `LeanDocs` (always via `APP_NAME`).
 
 ## 129. Document context menu (tree)
 
@@ -1056,7 +1056,7 @@ Copies the application link: `https://docs.example/doc/<uuid>`.
 
 ## 132. Copy path
 
-Copies `Infrastructure/Servers/BUZHULK.md`.
+Copies `Infrastructure/Servers/ATLAS.md`.
 
 ## 133. Download Markdown
 
@@ -1078,7 +1078,7 @@ Then _Import preview_.
 
 ```text
 Source           Destination          Status
-BUZHULK.md       Infrastructure/...   Ready
+ATLAS.md       Infrastructure/...   Ready
 old-note.html    Imported/...         Converted
 image.png        assets/...           Ready
 ```
@@ -1281,22 +1281,22 @@ Later, maintain screenshot tests for key views: Document view, Visual editor, So
 ┌────────────────────────────────────────────────────────────────────────────┐
 │ [logo] LeanDocs  ← →      Search documentation...  Ctrl K     + New   ⚙   │
 ├──────────────────┬───────────────────────────────────────┬─────────────────┤
-│ Documentation  + │ Infrastructure / Servers / BUZHULK    │ Contents        │
+│ Documentation  + │ Infrastructure / Servers / ATLAS      │ Contents        │
 │                  │                                       │                 │
-│ ▾ Infrastructure │ BUZHULK              View Source Edit │ Overview        │
+│ ▾ Infrastructure │ ATLAS                View Source Edit │ Overview        │
 │   ▾ Servers      │                                       │ Hardware        │
-│     BUZHULK      │ Main Docker and Incus host            │ Network         │
-│     BUZPI00      │                                       │ Docker          │
+│     ATLAS        │ Main Docker and Incus host            │ Network         │
+│     ORION        │                                       │ Docker          │
 │   ▸ Storage      │ server  docker  incus                 │ Incus           │
 │                  │                                       │ Backup          │
 │ ▾ Network        │ Overview                              │                 │
 │   UniFi          │                                       │                 │
-│   VLAN           │ Main production host for BUZLAB...    │                 │
+│   VLAN           │ Main production host for my lab...    │                 │
 │   DNS            │                                       │                 │
 │                  │ Hardware                              │                 │
 │ ▾ Applications   │ ┌─────────────┬────────────────────┐  │                 │
-│   Home Assistant │ │ CPU         │ Intel N100         │  │                 │
-│   Vaultwarden    │ │ Network     │ Intel I226-V       │  │                 │
+│   Home Assistant │ │ CPU         │ 4-core CPU         │  │                 │
+│   Vaultwarden    │ │ Network     │ 2.5 GbE NIC        │  │                 │
 │                  │ └─────────────┴────────────────────┘  │                 │
 │ ▸ Procedures     │                                       │                 │
 │                  │ Docker                                │                 │

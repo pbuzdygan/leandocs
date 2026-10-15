@@ -58,13 +58,13 @@ function count(db: Database.Database, table: string): number {
 const SERVER = [
   '---',
   `id: ${ID_A}`,
-  'title: BUZHULK',
+  'title: ATLAS',
   'description: Main Incus host',
   'tags: [server, Docker, "#lab", docker]',
-  'aliases: [hulk, main-host]',
+  'aliases: [titan, main-host]',
   'created: 2026-01-01T10:00:00Z',
   '---',
-  '# BUZHULK',
+  '# ATLAS',
   '',
   '## Networking',
   '',
@@ -75,15 +75,15 @@ const SERVER = [
 describe('document index (SQLite)', () => {
   it('stores documents, tags, aliases and full-text rows', async () => {
     const { content, db, open } = await setup();
-    await put(content, 'Infrastructure/BUZHULK.md', SERVER);
+    await put(content, 'Infrastructure/ATLAS.md', SERVER);
     await open();
 
     expect(db.prepare('SELECT * FROM documents').get()).toMatchObject({
       id: ID_A,
       id_source: 'frontmatter',
-      path: 'Infrastructure/BUZHULK.md',
-      filename: 'BUZHULK.md',
-      title: 'BUZHULK',
+      path: 'Infrastructure/ATLAS.md',
+      filename: 'ATLAS.md',
+      title: 'ATLAS',
       description: 'Main Incus host',
       created_at: '2026-01-01T10:00:00Z',
       content_hash: expect.stringMatching(/^sha256:[0-9a-f]{64}$/),
@@ -94,14 +94,14 @@ describe('document index (SQLite)', () => {
       'server',
     ]);
     expect(db.prepare('SELECT alias FROM document_aliases ORDER BY alias').pluck().all()).toEqual([
-      'hulk',
       'main-host',
+      'titan',
     ]);
-    expect(search(db, 'macvlan')).toEqual(['Infrastructure/BUZHULK.md']);
-    expect(search(db, 'headings:networking')).toEqual(['Infrastructure/BUZHULK.md']);
-    expect(search(db, 'aliases:hulk')).toEqual(['Infrastructure/BUZHULK.md']);
-    expect(search(db, 'tags:docker')).toEqual(['Infrastructure/BUZHULK.md']);
-    expect(search(db, 'path:infrastructure')).toEqual(['Infrastructure/BUZHULK.md']);
+    expect(search(db, 'macvlan')).toEqual(['Infrastructure/ATLAS.md']);
+    expect(search(db, 'headings:networking')).toEqual(['Infrastructure/ATLAS.md']);
+    expect(search(db, 'aliases:titan')).toEqual(['Infrastructure/ATLAS.md']);
+    expect(search(db, 'tags:docker')).toEqual(['Infrastructure/ATLAS.md']);
+    expect(search(db, 'path:infrastructure')).toEqual(['Infrastructure/ATLAS.md']);
     // Markup is not indexed as words.
     expect(search(db, 'body:bold')).toEqual([]);
   });
