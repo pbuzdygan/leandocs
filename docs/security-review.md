@@ -31,7 +31,7 @@ These are configuration and policy items, not exploitable defects in the reviewe
 1. **First-run exposure.** Resolved by [ADR-0026](adr/0026-setup-token-for-the-operator.md): the setup token is shown only in the server log and `system/setup-token`, and the setup status no longer returns the content folder. Default binding to all host addresses is kept for reverse proxies.
 2. **`main` is not protected.** The release workflow publishes `:latest` from `main`, which is expected to change only through pull requests. Branch protection with required CI checks would enforce that.
 3. **No container resource limits.** Resolved: both Compose files set a 2 GiB memory limit (`LEANDOCS_MEMORY`) and 256 processes; the published 0.2.0 image starts healthy with them.
-4. **Supply chain hardening.** Partly resolved: the Playwright CI image is pinned by digest and pnpm accepts only versions published at least one day ago (`minimumReleaseAge`). Released images still carry no SBOM or signature.
+4. **Supply chain hardening.** Partly resolved: the Playwright CI image is pinned by digest and pnpm accepts only versions published at least one day ago (`minimumReleaseAge`). Released images still carry no SBOM or signature; deferred by the owner ([D-71](decisions.md#minor-decisions)).
 5. **Personal infrastructure names in history.** Earlier fixtures used real host names, hardware and a private address; they were renamed. No credentials were included; history is not rewritten.
 
 ### Not verified
