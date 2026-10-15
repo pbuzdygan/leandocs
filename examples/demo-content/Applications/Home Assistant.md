@@ -7,7 +7,7 @@ tags:
 
 # Home Assistant
 
-Runs as a VM on [[BUZHULK]] (Incus, macvlan networking).
+Runs as a VM on [[ATLAS]] (Incus, macvlan networking).
 
 ## Troubleshooting
 

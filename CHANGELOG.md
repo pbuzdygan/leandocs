@@ -2,7 +2,7 @@
 
 What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in [`CONTRIBUTING.md`](CONTRIBUTING.md#changelog).
 
-## [Unreleased]
+## [0.2.1] — Unreleased
 
 ### New features
 
@@ -35,7 +35,7 @@ The first stable release of LeanDocs. Earlier `dev` previews led up to it; their
 - **Code blocks** show their language, are coloured for easier reading and have a **Copy** button.
 - **Callouts** (`:::note`, `:::info`, `:::tip`, `:::warning`, `:::danger`) appear as clear coloured notes.
 - **Diagrams:** Mermaid flowcharts and other diagrams written as text are drawn as pictures. A diagram with a mistake shows an error and its source instead of breaking the page.
-- **Links between documents:** write `[[BUZHULK]]` or `[[BUZHULK#Hardware]]` to link to a document or one of its sections, also through its aliases. Links to documents that do not exist are greyed out with a dashed underline.
+- **Links between documents:** write `[[ATLAS]]` or `[[ATLAS#Hardware]]` to link to a document or one of its sections, also through its aliases. Links to documents that do not exist are greyed out with a dashed underline.
 - **Side panel** with three tabs: **Contents** lists the sections, highlights where you are and jumps to a section with one click. **Links** shows which documents refer to this one and where it links to. **Info** shows the location and dates and lets you change the title, description, tags and aliases.
 - **Source** shows the original Markdown with subtle colouring.
 - **Full-width documents** by default. A button next to the document's `…` menu switches to a narrower reading width, and LeanDocs remembers your choice.
@@ -65,8 +65,8 @@ The first stable release of LeanDocs. Earlier `dev` previews led up to it; their
 
 **Finding**
 
-- **Search everything** with Ctrl+K (⌘K) or the search field at the top. Results show where the words appear, highlighted. Titles come first, then aliases, tags, headings and text. Narrow a search with `tag:docker`, `path:Infrastructure` or `title:BUZHULK`, and use quotes for an exact phrase. Accents are ignored: "zrodlo" finds "Źródło".
-- **Open any document by name** with Ctrl+P (⌘P). A few letters are enough: `bzh` finds "BUZHULK".
+- **Search everything** with Ctrl+K (⌘K) or the search field at the top. Results show where the words appear, highlighted. Titles come first, then aliases, tags, headings and text. Narrow a search with `tag:docker`, `path:Infrastructure` or `title:ATLAS`, and use quotes for an exact phrase. Accents are ignored: "zrodlo" finds "Źródło".
+- **Open any document by name** with Ctrl+P (⌘P). A few letters are enough: `atl` finds "ATLAS".
 - **Back and Forward** buttons in the top bar move between the pages you opened, together with the browser's own Back and Forward.
 - **Broken links overview.** Settings › Broken links lists every link that points to a document that does not exist.
 

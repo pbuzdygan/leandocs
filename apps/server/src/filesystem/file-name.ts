@@ -59,12 +59,12 @@ export function isDocumentFileName(name: string): boolean {
   return name.toLowerCase().endsWith(DOCUMENT_EXTENSION) && name.length > DOCUMENT_EXTENSION.length;
 }
 
-/** `BUZHULK.md` → `BUZHULK` */
+/** `ATLAS.md` → `ATLAS` */
 export function documentStem(fileName: string): string {
   return isDocumentFileName(fileName) ? fileName.slice(0, -DOCUMENT_EXTENSION.length) : fileName;
 }
 
-/** `Docs/BUZHULK.md` → `Docs/BUZHULK.assets` (attachments folder of a document, PROJECT_SPEC §13). */
+/** `Docs/ATLAS.md` → `Docs/ATLAS.assets` (attachments folder of a document, PROJECT_SPEC §13). */
 export function assetsDirFor(documentPath: string): string {
   const withoutExt = documentPath.toLowerCase().endsWith(DOCUMENT_EXTENSION)
     ? documentPath.slice(0, -DOCUMENT_EXTENSION.length)

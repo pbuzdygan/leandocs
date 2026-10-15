@@ -7,56 +7,64 @@
 
 **Documentation without the bloat.**
 
-LeanDocs is a lightweight, self-hosted documentation manager for technical people: homelabs, servers, networks, applications, runbooks.
-
-- **Your files stay yours.** Every document is a plain Markdown file in a plain folder. Delete the app and your documentation is still there.
-- **WYSIWYG when you want it, Markdown when you need it.** View → Edit → Visual / Source, all on the same `.md` file.
-- **Fast search.** SQLite FTS5 index, rebuildable from the files at any time.
-- **One container.** No Postgres, no Redis, no telemetry.
-
-> **Status:** 0.2.0 is the first stable release; development previews (`devX.Y.Z`) continue on the `dev` branch. See [`CHANGELOG.md`](CHANGELOG.md) for what is new.
+LeanDocs is a lightweight, self-hosted documentation manager for technical people: homelabs, servers, networks, applications and runbooks. Every document is a plain Markdown file in a plain folder, so your documentation outlives the app.
 
 ## Features
 
-- Folders and documents with a trash, drag and drop, pins, tags and templates.
-- Rendered Markdown with tables, code highlighting, callouts, Mermaid diagrams and a table of contents.
-- `[[Wiki links]]` and relative links with backlinks and a broken-link report. Links are updated when documents move.
-- Attachments: upload, paste or drop screenshots and files; stored next to the document.
-- Full-text search with filters (`tag:`, `path:`, `title:`) and quick open.
-- Changes made in other editors, `git pull` or scripts appear within about a second; editing conflicts are detected.
-- Import of Markdown folders, Obsidian vaults and HTML pages.
-- One administrator account with an optional authenticator app, or sign-in through an authentication gateway.
+- **Your files stay yours.** Folders and `.md` files on disk are the documentation; delete the app and everything is still there.
+- **Visual or Markdown editing** of the same file, with tables, code highlighting, callouts, Mermaid diagrams and a table of contents.
+- **Links that keep working.** `[[Wiki links]]` and relative links, backlinks, a broken-link report, and automatic updates when documents move.
+- **Fast full-text search** with `tag:`, `path:` and `title:` filters and quick open.
+- **Works alongside other tools.** Changes from other editors, `git pull` or scripts appear within about a second; editing conflicts are detected.
+- **Attachments, templates, tags and pins**, plus import of Markdown folders, Obsidian vaults and HTML pages.
+- **One container, no extra services.** No database server, no Redis, no telemetry; one administrator account with an optional authenticator app, or sign-in through your authentication gateway.
+
+## Preview
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/document-dark.png">
+  <img alt="A LeanDocs document with the folder tree, rendered Markdown and table of contents" src="docs/images/document-light.png">
+</picture>
+
+## Quick start
+
+Requires Docker with the Compose plugin. The image runs as UID/GID 1000 by default; the `.env` below makes it use your user so you own the files in `./data`.
+
+```bash
+mkdir leandocs && cd leandocs
+curl -fsSLO https://raw.githubusercontent.com/pbuzdygan/leandocs/main/compose.yaml
+mkdir -p data
+printf 'LEANDOCS_UID=%s\nLEANDOCS_GID=%s\n' "$(id -u)" "$(id -g)" > .env
+docker compose up -d     # then open http://localhost:8080
+```
+
+> **Create the administrator account right away.** The first person who opens a new installation creates it. To keep a trial reachable only from this machine, add `LEANDOCS_BIND=127.0.0.1` to `.env` before starting.
+>
+> **Your documentation lives in `./data`** (`data/content` for documents, `data/system` for accounts and settings). Back up the whole folder.
+
+For HTTPS behind a reverse proxy, pinned versions, updates and backups, follow the [deployment guide](docs/deployment.md).
 
 ## Documentation
 
-| Document                                                       | Purpose                                                     |
-| -------------------------------------------------------------- | ----------------------------------------------------------- |
-| [`docs/deployment.md`](docs/deployment.md)                     | Install, HTTPS reverse proxies, updates, backup and restore |
-| [`docs/configuration.md`](docs/configuration.md)               | Every setting, storage layout, HTTPS and sign-in modes      |
-| [`docs/import.md`](docs/import.md)                             | Bringing existing Markdown, Obsidian or HTML notes in       |
-| [`docs/markdown.md`](docs/markdown.md)                         | Supported Markdown syntax                                   |
-| [`docs/attachments.md`](docs/attachments.md)                   | Pictures and files in documents                             |
-| [`CHANGELOG.md`](CHANGELOG.md)                                 | What changed in each version                                |
-| [`SECURITY.md`](SECURITY.md)                                   | Reporting vulnerabilities, security reviews                 |
-| [`PROJECT_SPEC.md`](PROJECT_SPEC.md)                           | Product and architecture specification (what LeanDocs does) |
-| [`UI_SPEC.md`](UI_SPEC.md)                                     | UI specification (how it looks and behaves)                 |
-| [`AGENTS.md`](AGENTS.md), [`CONTRIBUTING.md`](CONTRIBUTING.md) | Rules and workflow for AI coding agents and contributors    |
-| [`docs/development.md`](docs/development.md)                   | Local development, tests and releases                       |
-| [`docs/architecture.md`](docs/architecture.md)                 | How the code is organised                                   |
-| [`docs/adr/`](docs/adr/)                                       | Architecture decision records                               |
-| [`docs/decisions.md`](docs/decisions.md)                       | Smaller decisions, open questions and known issues          |
+**Using LeanDocs**
 
-## Try it
+- [Deployment](docs/deployment.md) — install, HTTPS reverse proxies, updates, backup and restore.
+- [Configuration](docs/configuration.md) — every setting, storage layout and sign-in modes.
+- [Importing](docs/import.md) — bring in Markdown folders, Obsidian vaults or HTML pages.
+- [Markdown](docs/markdown.md) — supported syntax.
+- [Attachments](docs/attachments.md) — pictures and files in documents.
+- [Changelog](CHANGELOG.md) — what changed in each version.
 
-```bash
-mkdir -p data/content && cp -r examples/demo-content/. data/content/   # optional demo docs
-docker compose -f compose_local_build.yaml up --build -d               # http://localhost:8080
-```
+**Developing LeanDocs**
 
-`compose_local_build.yaml` builds the image from this repository. `compose.yaml` runs the published image (`ghcr.io/pbuzdygan/leandocs`); for a server installation follow [`docs/deployment.md`](docs/deployment.md).
+- [Contributing](CONTRIBUTING.md) — workflow, commits and changelog rules; AI agents also follow [`AGENTS.md`](AGENTS.md).
+- [Development](docs/development.md) — local setup, tests and releases.
+- [Architecture](docs/architecture.md) — how the code is organised.
+- [Product](PROJECT_SPEC.md) and [UI](UI_SPEC.md) specifications.
+- [Architecture decisions](docs/adr/) and [smaller decisions and known issues](docs/decisions.md).
 
-For development with hot reload (Node.js 26): `npm install --global corepack@0.36.0 && corepack enable && pnpm install && pnpm dev` (http://localhost:5173). Details are in [`docs/development.md`](docs/development.md).
+## Project links
 
-## License
-
-LeanDocs is open source under the [MIT License](LICENSE). Bundled third-party libraries keep their own licenses.
+- [MIT License](LICENSE) — bundled third-party libraries keep their own licenses.
+- [Security policy](SECURITY.md) — report vulnerabilities privately; security review findings.
+- [Issues](https://github.com/pbuzdygan/leandocs/issues) — bug reports and questions.

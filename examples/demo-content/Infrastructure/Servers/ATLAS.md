@@ -1,5 +1,5 @@
 ---
-title: BUZHULK
+title: ATLAS
 description: Main Docker and Incus host
 tags:
   - server
@@ -7,7 +7,7 @@ tags:
   - incus
 ---
 
-# BUZHULK
+# ATLAS
 
 ## Overview
 
@@ -15,21 +15,21 @@ Main production host for the homelab. Runs Docker for most services and Incus fo
 
 ## Hardware
 
-| Component | Value        |
-| --------- | ------------ |
-| Model     | GMKTEC G3    |
-| CPU       | Intel N100   |
-| RAM       | 32 GB        |
-| Network   | Intel I226-V |
+| Component | Value         |
+| --------- | ------------- |
+| Model     | Mini PC       |
+| CPU       | 4-core x86-64 |
+| RAM       | 16 GB         |
+| Network   | 2.5 GbE       |
 
 ## Network
 
 ```mermaid
 flowchart LR
-    Internet --> UCG
-    UCG --> Switch
-    Switch --> BUZHULK
-    BUZHULK --> HAOS[Home Assistant VM]
+    Internet --> Gateway
+    Gateway --> Switch
+    Switch --> ATLAS
+    ATLAS --> HAOS[Home Assistant VM]
 ```
 
 :::warning

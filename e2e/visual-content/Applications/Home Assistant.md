@@ -5,4 +5,4 @@ tags: [docker]
 
 # Home Assistant
 
-Runs as a Docker container on BUZHULK.
+Runs as a Docker container on ATLAS.

@@ -6,7 +6,7 @@ Complete administrator setup privately before public exposure. Ordinary Nginx Pr
 
 ## Reporting a vulnerability
 
-Please report vulnerabilities privately to the maintainer rather than in a public issue. A dedicated contact address will be published before the 1.0 release.
+Please report vulnerabilities privately, not in a public issue: use [GitHub's private vulnerability reporting](https://github.com/pbuzdygan/leandocs/security/advisories/new) (repository › Security › Report a vulnerability). Include the affected version, steps to reproduce and the impact you observed.
 
 ## Security principles
 

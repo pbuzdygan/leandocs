@@ -1,5 +1,5 @@
 # UniFi
 
-Cloud Gateway Ultra (UCG) with a USW Lite 8 PoE switch.
+A UniFi gateway with an 8-port PoE switch.
 
 > Firmware updates are applied manually after reading the release notes.

@@ -1,8 +1,8 @@
 ---
-id: visual-buzpi00
+id: visual-orion
 tags: [server]
 ---
 
-# BUZPI00
+# ORION
 
 Raspberry Pi for DNS and monitoring.

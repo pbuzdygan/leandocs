@@ -8,8 +8,8 @@ How LeanDocs is built today. The binding requirements are in [`PROJECT_SPEC.md`]
 DATA_DIR/
 ├── content/                 ← the documentation (source of truth)
 │   ├── Infrastructure/
-│   │   ├── BUZHULK.md
-│   │   └── BUZHULK.assets/  ← attachments of BUZHULK.md (not a navigation folder)
+│   │   ├── ATLAS.md
+│   │   └── ATLAS.assets/  ← attachments of ATLAS.md (not a navigation folder)
 │   ├── _templates/          ← system folder (hidden from the tree)
 │   └── _trash/              ← system folder (hidden from the tree)
 └── system/                  ← durable app state and rebuildable SQLite index; back up together
@@ -87,8 +87,8 @@ Scan issues (`FRONTMATTER_INVALID`, `INVALID_ID`, `DUPLICATE_ID`, `ID_ASSIGNMENT
 content/_trash/
 └── 20261002T153000Z-1a2b3c4d/          ← trashId (UTC timestamp + random)
     ├── .leandocs-trash.json            ← { version, kind, name, originalPath, deletedAt, documentId?, title?, assetsName? }
-    ├── BUZHULK.md                      ← the document, unchanged
-    └── BUZHULK.assets/                 ← its attachments (if any)
+    ├── ATLAS.md                      ← the document, unchanged
+    └── ATLAS.assets/                 ← its attachments (if any)
 ```
 
 - Folders with content are trashed the same way (`kind: "folder"`). Empty folders are removed directly.
