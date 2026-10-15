@@ -10,7 +10,6 @@ export default tseslint.config(
       '**/dist/**',
       '**/coverage/**',
       'data/**',
-      'docs/archive/**',
       '.e2e-data/**',
       '.e2e-proxy-data/**',
       '.e2e-none-data/**',

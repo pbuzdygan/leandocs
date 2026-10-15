@@ -3,7 +3,7 @@
 version: 2
 updates:
   # Base images in docker/Dockerfile, pinned by digest: new digests for the same tag
-  # (security fixes in Debian and Node.js 24) and new Node.js 24 versions.
+  # (security fixes in Debian and Node.js 26) and new Node.js 26 versions.
   - package-ecosystem: docker
     directory: /docker
     target-branch: dev
@@ -13,7 +13,7 @@ updates:
       base-images:
         patterns: ['*']
     ignore:
-      # Stay on Node.js 24 LTS and Debian 12; a major change is a deliberate task.
+      # Stay on Node.js 26 LTS and Debian 13; a major change is a deliberate task.
       - dependency-name: node
         update-types: ['version-update:semver-major']
     commit-message:

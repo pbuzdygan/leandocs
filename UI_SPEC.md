@@ -2,19 +2,19 @@
 
 > **LeanDocs** — _Documentation without the bloat._
 
-|                                |                                                                                                                                  |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| **Status**                     | Approved UI direction                                                                                                            |
-| **Document version**           | 1.8                                                                                                                              |
-| **Chosen direction**           | A — Technical Minimal                                                                                                            |
-| **Related documents**          | [`PROJECT_SPEC.md`](PROJECT_SPEC.md), [`AGENTS.md`](AGENTS.md), [`docs/implementation-status.md`](docs/implementation-status.md) |
-| **Target application release** | 1.0                                                                                                                              |
+|                                |                                                                                                    |
+| ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| **Status**                     | Approved UI direction                                                                              |
+| **Document version**           | 1.8                                                                                                |
+| **Chosen direction**           | A — Technical Minimal                                                                              |
+| **Related documents**          | [`PROJECT_SPEC.md`](PROJECT_SPEC.md), [`AGENTS.md`](AGENTS.md), [`.ai/PROJECT.md`](.ai/PROJECT.md) |
+| **Target application release** | 1.0                                                                                                |
 
 ### Revision history
 
 | Version | Date       | Change                                                                                                                                                                                                                                              |
 | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-10-01 | Approved UI direction (Polish draft, archived in `docs/archive/pl/`).                                                                                                                                                                               |
+| 1.0     | 2026-10-01 | Approved UI direction (Polish draft, removed 2026-10-15; available in Git history).                                                                                                                                                                 |
 | 1.8     | 2026-10-04 | Owner-authorized optional local MFA: Settings › Security enrollment/confirmation/recovery/disablement (§81) and two-stage login (§89).                                                                                                              |
 | 1.7     | 2026-10-02 | Phase 10: Info tab details (§46, read-only while editing), tags editor chips and tag filter from header tags (§116), Pinned section above the tree (§93).                                                                                           |
 | 1.6     | 2026-10-02 | Icons: final decision for Tabler Icons (§13); the Lucide and Hugeicons trials are removed.                                                                                                                                                          |
@@ -1242,7 +1242,7 @@ Never the other way round.
 
 ## 161. Implementation rules for AI
 
-Before any frontend work read: `AGENTS.md`, `PROJECT_SPEC.md`, `UI_SPEC.md`, `docs/implementation-status.md`. Never change the UI direction without an explicit decision by the owner.
+Before any frontend work read: `AGENTS.md`, `.ai/PROJECT.md`, `PROJECT_SPEC.md`, `UI_SPEC.md`. `.ai/UI_DESIGN_GUIDELINES.md` applies only where this specification and `BRAND_SPEC.md` are silent. Never change the UI direction without an explicit decision by the owner.
 
 ## 162. Implementation order
 
@@ -1261,7 +1261,7 @@ Before any frontend work read: `AGENTS.md`, `PROJECT_SPEC.md`, `UI_SPEC.md`, `do
 13. Dark mode
 14. Polish
 
-(These steps are distributed across the PROJECT_SPEC phases — see `docs/implementation-status.md`.)
+(These steps were distributed across the PROJECT_SPEC phases, §100.)
 
 ## 163. Design tokens first
 

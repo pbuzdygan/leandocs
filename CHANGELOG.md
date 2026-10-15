@@ -1,6 +1,6 @@
 # Changelog
 
-What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in `AGENTS.md` §8.
+What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in [`CONTRIBUTING.md`](CONTRIBUTING.md#changelog).
 
 ## [Unreleased]
 
@@ -16,7 +16,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 - Nothing yet.
 
-## [0.1.0]
+## [0.2.0] — 2026-10-15
 
 The first stable release of LeanDocs. Earlier `dev` previews led up to it; their changes are included here.
 
@@ -101,8 +101,9 @@ The first stable release of LeanDocs. Earlier `dev` previews led up to it; their
 
 ### Improvements
 
+- **Long-term support.** The Docker image is built on newer, long-term supported foundations, so it keeps receiving security updates until 2029. Updating works as usual, and your documents and settings stay as they are.
 - **Fast with large libraries.** Tested with 10,000 documents: starting again only reads files that changed, saving stays quick, changes made outside the app are picked up without rescanning everything, and renaming a document that many others link to stays fast. Searching is instant even when one long document contains the search word thousands of times.
-- **The app opens quickly.** The parts needed for documents and diagrams load only when you open one, and the Docker image is small (about 250 MB) and contains only what LeanDocs needs.
+- **The app opens quickly.** The parts needed for documents and diagrams load only when you open one, and the Docker image is small (about 300 MB) and contains only what LeanDocs needs.
 - **Large or unusual documents stay safe and fast.** Very long documents and documents with many nested quotes or lists open, save and import quickly. A document too complex to display safely is shown as plain text with an explanation; it can still be searched and edited as Markdown source.
 - **Your files are protected.** A save can never leave a half-written document behind. LeanDocs changes only what you edited, keeping your formatting, comments and extra header fields. Moving, renaming or restoring never replaces an existing document with the same name. Documents with a broken header or a duplicated ID are shown and never modified, and file names that would not work on Windows or could reach outside the documentation folder are cleaned up or rejected.
 - **Safe to view anything.** Scripts and other unsafe content inside documents are never run, so HTML pasted from the internet is safe to view. Browser protections block injected scripts and embedding LeanDocs in other websites, and changes can only come from LeanDocs itself, even with sign-in turned off.

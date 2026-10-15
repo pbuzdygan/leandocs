@@ -11,7 +11,7 @@
 #   PUBLIC_ORIGIN=https://docs.example.com
 #
 # Optional `.env` values for this file (see .env.example):
-#   LEANDOCS_TAG=1.0.0          image version to run (default: latest)
+#   LEANDOCS_TAG=0.2.0          image version to run (default: latest)
 #   LEANDOCS_PORT=8090          host port, if 8080 is taken
 #   LEANDOCS_BIND=127.0.0.1     host address to listen on (default: all addresses)
 #   LEANDOCS_UID=1001           run as your user so files in ./data stay yours (`id -u`)

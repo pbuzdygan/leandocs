@@ -25,8 +25,10 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .nvmrc
+      # Node.js 25+ no longer bundles corepack; install the pinned release, which then provides
+      # the pnpm version from package.json › packageManager.
       - name: Enable corepack (pnpm)
-        run: corepack enable
+        run: npm install --global corepack@0.36.0 && corepack enable
         env:
           COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
       - run: pnpm install --frozen-lockfile
@@ -50,8 +52,11 @@ jobs:
     strategy:
       # Report every engine, not just the first one that fails (P15-09).
       fail-fast: false
+      # Pushes to dev run Chromium only, for quick feedback. Pull requests and main run all three
+      # engines, so every stable release (main is updated only through pull requests) is checked in
+      # Firefox and WebKit (Safari, including iPhone and iPad) as well (D-69).
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: ${{ fromJSON((github.event_name == 'pull_request' || github.ref == 'refs/heads/main') && '["chromium","firefox","webkit"]' || '["chromium"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -60,8 +65,10 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .nvmrc
+      # Node.js 25+ no longer bundles corepack; install the pinned release, which then provides
+      # the pnpm version from package.json › packageManager.
       - name: Enable corepack (pnpm)
-        run: corepack enable
+        run: npm install --global corepack@0.36.0 && corepack enable
         env:
           COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
       - run: pnpm install --frozen-lockfile

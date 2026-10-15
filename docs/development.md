@@ -2,10 +2,11 @@
 
 ## Prerequisites
 
-- **Node.js 24 LTS, minimum 24.7.0 (built-in Argon2id)** (see `.nvmrc`)
-- **pnpm** through corepack. The version is pinned in `package.json` → `packageManager`.
+- **Node.js 26 LTS** (see `.nvmrc`; with nvm: `nvm install` in the repository folder)
+- **pnpm** through corepack. The version is pinned in `package.json` → `packageManager`. Node.js 25 and later no longer include corepack, so install the pinned release once per Node.js installation:
 
 ```bash
+npm install --global corepack@0.36.0
 corepack enable          # needs write access to Node's bin dir; otherwise:
 # corepack enable --install-directory ~/.local/bin   (and make sure it is on PATH)
 pnpm install
@@ -27,7 +28,7 @@ docker compose -f compose_local_build.yaml up --build -d   # http://localhost:80
 
 Optional `.env` next to the compose file: `LEANDOCS_PORT=8090` if 8080 is taken, and `LEANDOCS_UID`/`LEANDOCS_GID` (output of `id -u` / `id -g`) so the files in `./data` stay owned by you. After pulling new code, run the same command again. Stop with `docker compose -f compose_local_build.yaml down`. `compose.yaml` is the production file: it runs the published image instead of building one. A plain `docker compose up` therefore pulls from GHCR. Both files use the same project and service names, so switching between them replaces the container but keeps `./data`. Your documents in `./data/content` are plain files and stay where they are.
 
-**2. Development server** (hot reload while coding; needs Node 24 + pnpm):
+**2. Development server** (hot reload while coding; needs Node 26 + pnpm):
 
 ```bash
 DATA_DIR=./data pnpm dev    # http://localhost:5173 (API on PORT, default 8080)
@@ -96,7 +97,7 @@ Proxy mode needs no local account and sets no application session cookie. Each r
 the peer and exact authorized identity again. Local credential endpoints are disabled; existing
 accounts/sessions remain stored for a later return to local mode. The UI displays the gateway
 user, skips local setup, and shows gateway instructions when access is missing. Sign-out and MFA
-belong to your external gateway. General CSRF protection and security headers apply; production deployment and release validation remain in Phases 14–15.
+belong to your external gateway. General CSRF protection and security headers apply.
 See [ADR-0013](adr/0013-trusted-proxy-authentication.md).
 
 ## Deliberately disable login for a private installation
@@ -200,6 +201,15 @@ Keep file reads and save assertions inside the test, before teardown. These test
 also wait for editor readiness and attachment deletion responses; a modal can hide
 background elements from accessibility locators before a mutation has finished.
 
+Browser-test helpers and pitfalls:
+
+- Most other browser tests use fixed document names without teardown, so do not repeat the whole suite against the same server; each run starts from empty data folders.
+- Tests that need trashed items use `createTrashedDocument` from `e2e/document-fixture.ts`, not the `createDocument` fixture.
+- Tests that change settings call `restoreSettingsAfterEach()` (`e2e/settings.ts`) and choose the editor with `setDefaultEditor`, not local storage.
+- Playwright's `getByLabel` matches substrings: use `exact: true` for "Tags" and "Aliases" (chip lists are labelled "Current tags"). Toast texts exist twice in the DOM; match them with `exact: true` as well.
+- `POST /documents` stores `content` as the body; front matter inside it is not parsed. Use `template` or files on disk to create documents with front matter.
+- Await authenticated UI readiness before sending keyboard shortcuts.
+
 Fresh installations open `/setup` to create the administrator, confirm the actual content folder
 and finish setup. Use a username with 1–64 ASCII letters/digits/dots/underscores/hyphens (starting
 with a letter or digit) and a password with at least 15 characters, up to 1024 UTF-8 bytes.
@@ -234,7 +244,7 @@ The setup token changes on server restart; reload an open setup form after resta
   pnpm test:e2e
   ```
 
-  **Other browsers (P15-09).** `E2E_BROWSER=firefox` or `E2E_BROWSER=webkit` (Safari's engine) runs the whole suite in that engine; install it first (`pnpm exec playwright install --with-deps firefox webkit`). Run one engine at a time: the tests share fixed document names and each run starts from empty data folders. CI runs all three engines in parallel jobs inside the same official Playwright image (no browser download or `apt` install in CI); when `@playwright/test` is updated, update the image tag in `.github/workflows/ci.yml` and in the command below. Engine differences the tests account for: Firefox ignores `clipboardData` given to a synthetic paste event (set it with `Object.defineProperty`), throws from `form.submit()` when the CSP blocks it, and rejects images with a bad checksum; WebKit does not pass files from hidden folders when a directory is chosen.
+  **Other browsers (P15-09).** `E2E_BROWSER=firefox` or `E2E_BROWSER=webkit` (Safari's engine) runs the whole suite in that engine; install it first (`pnpm exec playwright install --with-deps firefox webkit`). Run one engine at a time: the tests share fixed document names and each run starts from empty data folders. CI runs Chromium for pushes to `dev` and all three engines for pull requests and `main` (D-69), in parallel jobs inside the same official Playwright image (no browser download or `apt` install in CI); when `@playwright/test` is updated, update the image tag in `.github/workflows/ci.yml` and in the command below. Engine differences the tests account for: Firefox ignores `clipboardData` given to a synthetic paste event (set it with `Object.defineProperty`), throws from `form.submit()` when the CSP blocks it, and rejects images with a bad checksum; WebKit does not pass files from hidden folders when a directory is chosen.
 
   If Chromium cannot start on your machine (missing system libraries, no sudo), run the tests in the official image instead. The version must match `@playwright/test`:
 
@@ -265,20 +275,20 @@ The image runs as UID/GID 1000 and stores everything under the `/data` volume. I
 
 ## Versions
 
-Published images report the **release tag** as their version (D-53): the release workflow passes it as `LEANDOCS_VERSION` (Docker build argument and environment variable of `pnpm build`), so nothing has to be edited before a release. Other builds (development, tests, local images) report the root `package.json` `version`. Either way it reaches the code as `APP_VERSION` from `@leandocs/shared`; the server reports it in `GET /api/v1/health` and its first log line, and the web app shows it with the server's version in Settings › About. The `package.json` versions may lag behind releases; when you do change them, set the same `version` in the root, `apps/server`, `apps/web` and `packages/shared` files (a test enforces this).
+Published images report the **release tag** as their version (D-53): the release workflow passes it as `LEANDOCS_VERSION` (Docker build argument and environment variable of `pnpm build`), so nothing has to be edited before a release. Every other build (development, tests, local images) reports the fixed marker `0.0.0-dev` from the `package.json` files (D-68), so it is never mistaken for a release and never needs updating. Either way it reaches the code as `APP_VERSION` from `@leandocs/shared`; the server reports it in `GET /api/v1/health` and its first log line, and the web app shows it with the server's version in Settings › About. Keep the same `version` in the root, `apps/server`, `apps/web` and `packages/shared` files (a test enforces this).
 
 ## Dependencies
 
 - **Version ranges.** Most dependencies use caret ranges and the lockfile pins exact versions. Security-sensitive parsers and storage libraries are pinned exactly (`@milkdown/kit`, `remark-directive`, `@fastify/multipart`, `better-sqlite3`, `chokidar`, `file-type`, `hast-util-*`, `mdast-util-*` in the server, `otpauth`, `qrcode`, `@tabler/icons-react`); change them deliberately and re-run their round-trip and security tests. Major upgrades (for example TypeScript 7) are separate tasks.
 - **Local patches.** `patches/` holds fixes to dependencies, applied by pnpm on install (`patchedDependencies` in `pnpm-workspace.yaml`). `micromark-util-edit-map@1.0.0`: linear-time edits; without it, documents with many quotes or list items parse in quadratic time (100 KiB of quotes took ~7 s) and large documents exhaust memory. Guarded by `packages/shared/src/markdown/performance.test.ts`. When the package is updated, check whether upstream fixed it and drop or re-create the patch (`pnpm patch`).
-- **Base images.** `docker/Dockerfile` pins `node:24-bookworm-slim` (build) and `gcr.io/distroless/nodejs24-debian12:nonroot` (runtime) by digest, so the same commit always builds from the same images. Dependabot (`.github/dependabot.yml`) opens a weekly pull request against `dev` with new digests (security fixes in Debian and Node.js 24), grouped with GitHub Actions SHA updates in a second weekly pull request. CI builds and starts the image for every pull request. By hand: `docker buildx imagetools inspect <image:tag>` prints the `Digest` of the multi-platform index; use that one, not a per-platform digest. A new Node.js major or Debian release is a deliberate task, not an automatic update.
+- **Base images.** `docker/Dockerfile` pins `node:26-trixie-slim` (build) and `gcr.io/distroless/nodejs26-debian13:nonroot` (runtime) by digest, so the same commit always builds from the same images. Dependabot (`.github/dependabot.yml`) opens a weekly pull request against `dev` with new digests (security fixes in Debian and Node.js 26), grouped with GitHub Actions SHA updates in a second weekly pull request. CI builds and starts the image for every pull request. By hand: `docker buildx imagetools inspect <image:tag>` prints the `Digest` of the multi-platform index; use that one, not a per-platform digest. A new Node.js major or Debian release is a deliberate task, not an automatic update; both images move together so they keep the same glibc (ADR-0024 amendment).
 - **Updating.** `pnpm update -r` stays within the ranges; then run the full verification, including the browser tests.
-- **Audit.** CI and the release workflow run `pnpm audit --audit-level=moderate`, so moderate, high and critical advisories fail the build. Low advisories are reviewed in the dependency audit (P15-01) and recorded in `docs/implementation-status.md` (_Known issues_) when accepted.
+- **Audit.** CI and the release workflow run `pnpm audit --audit-level=moderate`, so moderate, high and critical advisories fail the build. Low advisories are reviewed and, when accepted, recorded with the reason in [decisions.md](decisions.md#known-issues).
 - **Licences.** Runtime dependencies are permissive (MIT, ISC, BSD, Apache-2.0, 0BSD, BlueOak, Unlicense; DOMPurify under Apache-2.0 of its dual licence; fonts under OFL-1.1). `elkjs`, which Mermaid uses, is EPL-2.0 and is shipped unmodified. Check `pnpm licenses list --prod` when adding a runtime dependency; no GPL/AGPL/SSPL-style licences.
 
 ## Releasing
 
-Images are published to GHCR only by the _Release_ workflow (`.github/workflows/release.yml`), when the owner publishes a GitHub release (D-51). Pushes and pull requests never publish.
+Images are published to GHCR only by the _Release_ workflow (`.github/workflows/release.yml`), when the owner publishes a GitHub release (D-51). Pushes and pull requests never publish. Only the owner creates releases; contributors and agents never create release tags.
 
 | Release tag | Commit must be on | Image tags               | Reported version |
 | ----------- | ----------------- | ------------------------ | ---------------- |
@@ -295,7 +305,7 @@ The first push creates the `leandocs` package on GHCR as private; make it public
 
 ## Layout
 
-See `AGENTS.md` §6 and PROJECT_SPEC §56–58.
+`apps/server` (Fastify API), `apps/web` (React + Vite), `packages/shared` (constants, API types, Markdown parser), `e2e/` (Playwright), `docker/`, `scripts/` (release, upgrade, backup and performance checks). Module structure: PROJECT_SPEC §56–58 and [architecture.md](architecture.md).
 
 ## Attachment uploads
 

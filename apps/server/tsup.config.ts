@@ -8,7 +8,7 @@ export default defineConfig({
   entry: { main: 'src/main.ts', 'analysis-process': 'src/markdown/analysis-process.ts' },
   format: ['esm'],
   platform: 'node',
-  target: 'node24',
+  target: 'node26',
   outDir: 'dist',
   clean: true,
   sourcemap: true,

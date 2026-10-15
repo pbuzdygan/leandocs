@@ -29,3 +29,7 @@ Phase 0 needs a concrete, boring toolchain that any agent can run without guessi
 
 - `pnpm dev` runs both apps. The Vite dev server proxies `/api` to the Fastify server.
 - When the shared Markdown parser lands (Phase 4), it must stay runtime-agnostic (browser + Node).
+
+## Amendment (2026-10-15)
+
+The runtime is **Node.js 26 LTS** (`.nvmrc`, `engines` `>=26.0.0`, tsup target `node26`, `@types/node` `^26`). Node.js 25+ no longer bundles corepack: install the pinned release with `npm install --global corepack@0.36.0`, then `corepack enable` as before. See the ADR-0024 amendment for the Docker images.

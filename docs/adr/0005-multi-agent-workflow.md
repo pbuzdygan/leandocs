@@ -1,6 +1,6 @@
 # ADR-0005: Multi-agent workflow and status tracking
 
-- **Status:** Accepted
+- **Status:** Superseded (2026-10-15) by the shared agent workflow in `AGENTS.md` and `.ai/`
 - **Date:** 2026-10-02
 - **Author:** @claude-code
 - **Related:** PROJECT_SPEC §96, §105–107, AGENTS.md
@@ -25,3 +25,7 @@ Several AI agents (Codex, Claude Code, …) will work on the project in turns, o
 
 - Every session starts by reading the status file and ends by updating it.
 - The status file can conflict when agents run in parallel. Agents keep their edits small and line-local to reduce this.
+
+## Superseded (2026-10-15)
+
+The owner adopted a shared, project-independent agent workflow: `AGENTS.md` holds the common rules, `.ai/PROJECT.md` the LeanDocs profile, `.ai/plans/` optional plans and the local, ignored `.ai/STATE.md` an optional handoff note. Task IDs, claims, the work log and `Agent:` commit trailers are no longer used; Git history carries that evidence. Minor decisions, open owner questions and known issues moved to `docs/decisions.md`. The task board `docs/implementation-status.md` was removed; its last version is in Git history.

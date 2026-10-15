@@ -2,22 +2,23 @@
 
 > **LeanDocs** — _Documentation without the bloat._
 
-|                                |                                                                                                                                                  |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Status**                     | Approved product & architecture specification                                                                                                    |
-| **Document version**           | 0.4                                                                                                                                              |
-| **Target application release** | 1.0                                                                                                                                              |
-| **Project type**               | Self-hosted documentation manager / technical knowledge base                                                                                     |
-| **Primary use case**           | Documentation of IT infrastructure, homelabs, applications, procedures and configuration                                                         |
-| **Deployment model**           | Docker, single self-hosted instance                                                                                                              |
-| **Core principle**             | **The filesystem is the source of truth**                                                                                                        |
-| **Related documents**          | [`UI_SPEC.md`](UI_SPEC.md), [`AGENTS.md`](AGENTS.md), [`docs/implementation-status.md`](docs/implementation-status.md), [`docs/adr/`](docs/adr/) |
+|                                |                                                                                                                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Status**                     | Approved product & architecture specification                                                                                                                |
+| **Document version**           | 0.5                                                                                                                                                          |
+| **Target application release** | 1.0                                                                                                                                                          |
+| **Project type**               | Self-hosted documentation manager / technical knowledge base                                                                                                 |
+| **Primary use case**           | Documentation of IT infrastructure, homelabs, applications, procedures and configuration                                                                     |
+| **Deployment model**           | Docker, single self-hosted instance                                                                                                                          |
+| **Core principle**             | **The filesystem is the source of truth**                                                                                                                    |
+| **Related documents**          | [`UI_SPEC.md`](UI_SPEC.md), [`AGENTS.md`](AGENTS.md), [`.ai/PROJECT.md`](.ai/PROJECT.md), [`docs/adr/`](docs/adr/), [`docs/decisions.md`](docs/decisions.md) |
 
 ### Revision history
 
 | Version | Date       | Change                                                                                                                                                                                                                                                                                                                                                                       |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.1     | 2026-10-01 | Initial specification (Polish draft, archived in `docs/archive/pl/`).                                                                                                                                                                                                                                                                                                        |
+| 0.5     | 2026-10-15 | Shared agent workflow (`AGENTS.md` + `.ai/`) replaces the task board `docs/implementation-status.md`; decisions and known issues move to `docs/decisions.md`; Polish drafts removed (Git history). §95–97, §100, §105–108 updated.                                                                                                                                           |
+| 0.1     | 2026-10-01 | Initial specification (Polish draft, removed 2026-10-15; available in Git history).                                                                                                                                                                                                                                                                                          |
 | 0.2     | 2026-10-02 | Translated to English (English is the only project language). Product name set to **LeanDocs**. Data directory layout unified to `/data/content` + `/data/system`. UI direction approved in `UI_SPEC.md`, so design tokens are applied from Phase 3 onward and Phase 16 becomes a conformance/polish phase. Logo and banner are still pending (`BRAND_SPEC.md` will follow). |
 | 0.4     | 2026-10-04 | Phase 11 security review: fail-closed recovery of durable authentication; distinguish rebuilding derived tables from resetting accounts (ADR-0019).                                                                                                                                                                                                                          |
 | 0.3     | 2026-10-04 | Owner requested Argon2id with legacy scrypt upgrade; optional local TOTP MFA added to Phase 11 after sessions, CSRF and throttling, before security review.                                                                                                                                                                                                                  |
@@ -1217,8 +1218,9 @@ The repository contains:
 
 ```text
 README.md
-AGENTS.md                      (instructions for all AI coding agents)
-CLAUDE.md                      (pointer to AGENTS.md)
+AGENTS.md                      (shared instructions for all AI coding agents)
+CLAUDE.md                      (imports AGENTS.md)
+.ai/                           (project profile, security baseline, UI and README guidelines, plans)
 PROJECT_SPEC.md
 UI_SPEC.md
 BRAND_SPEC.md
@@ -1228,8 +1230,8 @@ SECURITY.md
 LICENSE                        (pending owner decision)
 
 docs/
-├── implementation-status.md   (single source of truth for progress)
-├── adr/
+├── adr/                       (architecture decision records)
+├── decisions.md               (minor decisions, open owner questions, known issues)
 ├── architecture.md            (how the code is organised)
 ├── development.md             (local setup, tests, releases)
 ├── markdown.md                (user guide: supported Markdown)
@@ -1238,17 +1240,16 @@ docs/
 ├── configuration.md           (every setting, storage layout)
 ├── deployment.md              (install, HTTPS, update, backup, restore)
 ├── migrations.md              (database migration policy)
-├── security-review.md, accessibility.md, performance.md   (release-hardening results)
-└── archive/                   (superseded drafts; not requirements)
+└── security-review.md, accessibility.md, performance.md   (release-hardening results)
 ```
 
-## 96. `docs/implementation-status.md`
+## 96. Agent workflow and project records
 
-This file is especially important when several AI assistants work on the project. It contains: current phase, task board with claim markers, known issues, technical decisions, open questions, next tasks and a work log. Agents update it when they claim a task, when they finish a task and at the end of every session. The exact protocol is defined in [`AGENTS.md`](AGENTS.md).
+AI agents follow the shared rules in [`AGENTS.md`](AGENTS.md) and the LeanDocs profile in [`.ai/PROJECT.md`](.ai/PROJECT.md). There is no task board: Git history, code, tests and plans in `.ai/plans/` (only when work must survive a session) hold the evidence. A short handoff note for unfinished work may live in the local, ignored `.ai/STATE.md`. Minor decisions, open owner questions and accepted known issues are kept in [`docs/decisions.md`](docs/decisions.md). The former task board `docs/implementation-status.md` is retired; its last version is in Git history.
 
 ## 97. Architecture Decision Records
 
-Significant decisions are recorded in `docs/adr/NNNN-title.md` (template: `docs/adr/0000-template.md`). ADRs are not required for minor decisions.
+Significant decisions are recorded in `docs/adr/NNNN-title.md` (template: `docs/adr/0000-template.md`). ADRs are not required for minor decisions; those go in `docs/decisions.md`.
 
 ## 98. Development philosophy
 
@@ -1266,7 +1267,7 @@ The absence of these features is a deliberate product decision, not a gap.
 
 ## 100. Implementation roadmap
 
-The project is built in phases. Each phase has scope, deliverables, acceptance criteria and a gate. AI agents must not implement several large phases at once. Task-level breakdown and status live in [`docs/implementation-status.md`](docs/implementation-status.md).
+The project is built in phases. Each phase has scope, deliverables, acceptance criteria and a gate. AI agents must not implement several large phases at once. Phases 0–16 are complete; release state is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ### PHASE 0 — Repository bootstrap
 
@@ -1435,9 +1436,9 @@ If the answers do not justify the complexity, do not add it.
 
 ## 105. Rules for AI coding assistants
 
-Mandatory for Codex, Claude Code and any other agent working on the project. The operational workflow (claiming tasks, status updates, handoff) is in [`AGENTS.md`](AGENTS.md).
+Mandatory for Codex, Claude Code and any other agent working on the project. The operational workflow (verification, handoff, external actions) is in [`AGENTS.md`](AGENTS.md) and [`.ai/PROJECT.md`](.ai/PROJECT.md).
 
-- **RULE 1** — Before starting, read `AGENTS.md`, `PROJECT_SPEC.md`, `docs/implementation-status.md` (and `UI_SPEC.md` for any frontend work).
+- **RULE 1** — Before starting, read `AGENTS.md`, `.ai/PROJECT.md` and the relevant parts of `PROJECT_SPEC.md` (and `UI_SPEC.md` for any frontend work).
 - **RULE 2** — Do not change the fundamental architecture without an explicit decision. In particular never switch: filesystem → database content storage; Markdown → proprietary format; single container → distributed services; SQLite → external database.
 - **RULE 3** — Do not implement features listed in §99 unless the owner explicitly changes the scope.
 - **RULE 4** — Do not introduce Redis, PostgreSQL, message queues or extra services because they are a popular pattern.
@@ -1447,7 +1448,7 @@ Mandatory for Codex, Claude Code and any other agent working on the project. The
 - **RULE 8** — Never assume the app is the only process modifying documents.
 - **RULE 9** — Potentially destructive operations require validation, error handling and tests.
 - **RULE 10** — Do not reformat existing files without need. Minimise unnecessary diffs (including in users' `.md` files).
-- **RULE 11** — Keep `docs/implementation-status.md` up to date (claim → progress → done, plus a work-log entry).
+- **RULE 11** — Keep documentation truthful: update the affected docs, `docs/decisions.md` and `CHANGELOG.md` with the change; never report unfinished work as done.
 - **RULE 12** — Record significant architectural decisions as ADRs.
 - **RULE 13** — Do not start the next large phase just because time/context remains. Bring the current phase to Definition of Done first.
 - **RULE 14** — Check current library documentation before using or changing a dependency. Do not guess APIs.
@@ -1466,30 +1467,12 @@ Mandatory for Codex, Claude Code and any other agent working on the project. The
 6. Run tests.
 7. Fix regressions.
 8. Run lint / typecheck / build.
-9. Update documentation and `docs/implementation-status.md`.
+9. Update documentation (and `CHANGELOG.md` for user-visible changes).
 10. Report the result.
 
 ## 107. Agent report format
 
-```text
-Implemented
-- ...
-
-Changed files
-- ...
-
-Tests
-- ...
-
-Known limitations
-- ...
-
-Specification status
-- ...
-
-Recommended next task
-- ...
-```
+Report concisely, as `AGENTS.md` requires: what was implemented, the principal changed files, the checks actually run and their results, known limitations, and any specification changes or follow-up worth doing.
 
 Never report a feature as complete if it does not work.
 
@@ -1497,15 +1480,15 @@ Never report a feature as complete if it does not work.
 
 ## 108. Product decision sequence
 
-| #   | Step                                   | Status                                                          |
-| --- | -------------------------------------- | --------------------------------------------------------------- |
-| 1   | Product / architecture spec            | ✅ Done (this document)                                         |
-| 2   | UI concepts                            | ✅ Done                                                         |
-| 3   | UI selection                           | ✅ Done — A: Technical Minimal                                  |
-| 4   | UI specification                       | ✅ Done — `UI_SPEC.md`                                          |
-| 5   | Product name                           | ✅ Done — **LeanDocs** / _Documentation without the bloat._     |
-| 6   | Branding (logo, icon, banner, colours) | ✅ Done — `BRAND_SPEC.md` (mark "Folded Stack", Inter wordmark) |
-| 7   | Implementation                         | ▶ In progress — see `docs/implementation-status.md`             |
+| #   | Step                                   | Status                                                           |
+| --- | -------------------------------------- | ---------------------------------------------------------------- |
+| 1   | Product / architecture spec            | ✅ Done (this document)                                          |
+| 2   | UI concepts                            | ✅ Done                                                          |
+| 3   | UI selection                           | ✅ Done — A: Technical Minimal                                   |
+| 4   | UI specification                       | ✅ Done — `UI_SPEC.md`                                           |
+| 5   | Product name                           | ✅ Done — **LeanDocs** / _Documentation without the bloat._      |
+| 6   | Branding (logo, icon, banner, colours) | ✅ Done — `BRAND_SPEC.md` (mark "Folded Stack", Inter wordmark)  |
+| 7   | Implementation                         | ✅ Phases 0–16 done; first stable release 0.2.0 — `CHANGELOG.md` |
 
 The name and logo must not affect the architecture.
 
