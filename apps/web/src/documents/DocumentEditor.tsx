@@ -1,0 +1,228 @@
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import {
+  DEFAULT_SETTINGS,
+  type AppSettings,
+  type DocumentDto,
+  type EditorMode,
+} from '@leandocs/shared';
+import { useNavigate } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { api, errorMessage } from '../api/client';
+import { useSettings, useTree } from '../api/queries';
+import { Button } from '../components/ui/Button';
+import { useNotify } from '../components/ui/Toast';
+import { ConflictDialog } from '../editor/ConflictDialog';
+import { DraftNotice } from '../editor/DraftNotice';
+import { localDraftStore, type Draft } from '../editor/drafts';
+import { SaveStatus } from '../editor/SaveStatus';
+import { SourceEditor } from '../editor/SourceEditor';
+import { useEditorSession } from '../editor/useEditorSession';
+import { resolveAttachmentUrl } from '../markdown/links';
+import { FileDropSurface } from '../attachments/FileDropSurface';
+import { attachmentKey } from '../attachments/AttachmentPanel';
+import { DocumentLayout } from './DocumentLayout';
+import { collectTargets, docUrl, MoreMenu, useRendered, useToggleShortcut } from './document-utils';
+
+const VisualEditor = lazy(() =>
+  import('../editor/visual/VisualEditor').then((module) => ({ default: module.VisualEditor })),
+);
+
+/** The editor starts from the settings (mode, autosave), so it waits for them; usually cached. */
+export function EditDocument(props: { document: DocumentDto; missing?: boolean }) {
+  const settings = useSettings();
+  if (settings.isPending)
+    return (
+      <article className="doc" aria-busy="true">
+        <p role="status">Loading editor…</p>
+      </article>
+    );
+  // Editing must not depend on the settings: fall back to the defaults when they fail to load.
+  return <DocumentEditor {...props} settings={settings.data ?? DEFAULT_SETTINGS} />;
+}
+
+function DocumentEditor({
+  document,
+  missing = false,
+  settings,
+}: {
+  document: DocumentDto;
+  missing?: boolean;
+  settings: AppSettings;
+}) {
+  const navigate = useNavigate();
+  const notify = useNotify();
+  const { session, state } = useEditorSession(document, localDraftStore, missing, {
+    enabled: settings.general.autosave,
+    delay: settings.editor.autosaveDelay,
+  });
+  const queryClient = useQueryClient();
+  const tree = useTree();
+  const [uploadCount, setUploadCount] = useState(0);
+  const upload = useCallback(
+    async (files: File[]) => {
+      setUploadCount((count) => count + 1);
+      const links: string[] = [];
+      try {
+        for (const file of files) {
+          try {
+            const item = await api.uploadAttachment(document.id, file);
+            const label = item.name.replace(/[\\[\]]/g, '\\$&');
+            links.push(`${item.image ? '!' : ''}[${label}](${item.markdownUrl})`);
+          } catch (error) {
+            notify.error(`Upload failed: ${errorMessage(error)}`);
+          }
+        }
+        await queryClient.invalidateQueries({ queryKey: attachmentKey(document.id) });
+        return links.join('\n\n');
+      } finally {
+        setUploadCount((count) => count - 1);
+      }
+    },
+    [document.id, notify, queryClient],
+  );
+  const linkTargets = useMemo(() => collectTargets(tree.data), [tree.data]);
+  const resolveUrl = (url: string) =>
+    resolveAttachmentUrl(url, {
+      documentPath: document.path,
+      documents: [
+        { id: document.id, title: document.title, path: document.path },
+        ...collectTargets(tree.data),
+      ],
+    });
+  // Starts in the default editor; switching applies to this editing session only.
+  const [preferredMode, setEditorMode] = useState<EditorMode>(settings.editor.defaultMode);
+  // The visual editor parses the whole document: not for documents read as plain text.
+  const editorMode = document.analysisLimited ? 'source' : preferredMode;
+  const rendered = useRendered(document);
+  // The conflict dialog opens by itself on a new conflict; "Cancel" dismisses it for that revision.
+  const [conflictRequested, setConflictRequested] = useState(false);
+  const [dismissedConflict, setDismissedConflict] = useState<string | null>(null);
+  const conflictOpen =
+    state.status === 'conflict' &&
+    (conflictRequested || dismissedConflict !== (state.conflictRevision ?? ''));
+  const [draft, setDraft] = useState<Draft | undefined>(() => {
+    const stored = localDraftStore.get(document.id);
+    return stored && stored.content !== document.content ? stored : undefined;
+  });
+
+  /** "Done" / Esc / Ctrl+E: save first, then return to the view; stay if the save fails. */
+  const done = useCallback(async () => {
+    if (uploadCount) {
+      notify.info('Wait for attachments to finish uploading.');
+      return;
+    }
+    await session.saveNow();
+    const { status, error } = session.getState();
+    if (status === 'conflict') setConflictRequested(true);
+    else if (status === 'error') notify.error(`Not saved: ${error ?? 'unknown error'}`);
+    else void navigate(docUrl(document.id));
+  }, [session, navigate, notify, document.id, uploadCount]);
+  const doneSync = useCallback(() => void done(), [done]);
+  useToggleShortcut(doneSync);
+
+  const actions = (
+    <div className="doc-edit-actions">
+      <div className="doc-edit-actions__group">
+        <div className="doc__tabs" role="tablist" aria-label="Editor mode">
+          {(['visual', 'source'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              role="tab"
+              aria-selected={editorMode === mode}
+              disabled={uploadCount > 0 || (mode === 'visual' && Boolean(document.analysisLimited))}
+              className="doc__tab"
+              onClick={() => setEditorMode(mode)}
+            >
+              {mode === 'visual' ? 'Visual' : 'Source'}
+            </button>
+          ))}
+        </div>
+        <SaveStatus
+          state={state}
+          onRetry={() => void session.saveNow()}
+          onResolveConflict={() => setConflictRequested(true)}
+        />
+      </div>
+      <div className="doc-edit-actions__group">
+        <Button
+          size="small"
+          onClick={() => void session.saveNow()}
+          disabled={state.status === 'saving'}
+        >
+          Save
+        </Button>
+        <Button size="small" variant="primary" onClick={doneSync}>
+          Done
+        </Button>
+        <MoreMenu document={document} />
+      </div>
+    </div>
+  );
+
+  return (
+    <DocumentLayout document={document} headings={rendered.headings} editBar={actions}>
+      {draft && (
+        <DraftNotice
+          draft={draft}
+          onRestore={() => {
+            session.restoreDraft(draft);
+            setDraft(undefined);
+          }}
+          onDiscard={() => {
+            session.discardDraft();
+            setDraft(undefined);
+          }}
+        />
+      )}
+      <FileDropSurface>
+        {editorMode === 'visual' ? (
+          <Suspense fallback={<p role="status">Loading editor…</p>}>
+            <VisualEditor
+              key={state.externalVersion}
+              initialValue={state.content}
+              onChange={(value) => session.setContent(value)}
+              onSave={() => void session.saveNow()}
+              onExit={doneSync}
+              onSource={() => !uploadCount && setEditorMode('source')}
+              onUpload={upload}
+              resolveUrl={resolveUrl}
+              linkTargets={linkTargets}
+              documentId={document.id}
+            />
+          </Suspense>
+        ) : (
+          <SourceEditor
+            key={state.externalVersion}
+            initialValue={state.content}
+            onChange={(value) => session.setContent(value)}
+            onSave={() => void session.saveNow()}
+            onExit={doneSync}
+            lineNumbers={settings.editor.lineNumbers}
+            wordWrap={settings.editor.wordWrap}
+            tabSize={settings.editor.tabSize}
+            onUpload={upload}
+            linkTargets={linkTargets}
+            documentId={document.id}
+          />
+        )}
+      </FileDropSurface>
+      {uploadCount > 0 && (
+        <p className="upload-status" role="status">
+          Uploading attachments… You can keep writing.
+        </p>
+      )}
+      {conflictOpen && (
+        <ConflictDialog
+          document={document}
+          session={session}
+          state={state}
+          onClose={() => {
+            setConflictRequested(false);
+            setDismissedConflict(state.conflictRevision ?? '');
+          }}
+        />
+      )}
+    </DocumentLayout>
+  );
+}
