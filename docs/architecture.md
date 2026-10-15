@@ -311,7 +311,8 @@ without hashing; minimum password policy belongs to setup. Argon2id hashing take
 operation and uses the worker pool. Legacy scrypt hashes remain verifiable and upgrade on successful login. See ADR-0011 for format and resource considerations.
 
 First-run setup (P11-02) exposes `GET /auth/setup` and `POST /auth/setup` under `/api/v1`.
-`auth/setup.ts` checks the singleton account, issues a process-local setup token, validates
+`auth/setup.ts` checks the singleton account, issues a process-local setup token that only the
+operator sees (server log and `system/setup-token`, ADR-0026), validates
 credentials and bounds creation to one in-flight hash. It inserts without replacing an existing
 account, including when another server instance wins the race. Responses are never cached.
 The token must be supplied in a custom header; cross-site Fetch Metadata requests and non-JSON

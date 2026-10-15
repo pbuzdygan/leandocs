@@ -47,7 +47,7 @@ async function run({ from, to, keep }) {
     const old = await new Instance(from, dataDir).start();
     running.push(old);
     log(`Old release ${from} reports ${old.version}`);
-    let { client, authenticator } = await setUpAccount(old.base);
+    let { client, authenticator } = await setUpAccount(old);
     log('Account created, authenticator app enabled, signed in with password and code');
 
     let items = flatten(await client.ok('GET', '/tree'));

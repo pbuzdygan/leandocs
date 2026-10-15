@@ -791,7 +791,7 @@ Password
 
 ## 90. First run
 
-1. `Welcome — Create your administrator account.` (Username, Password, Confirm password, _Create account_)
+1. `Welcome — Create your administrator account.` (Setup token from the server log, Username, Password, Confirm password, _Create account_; ADR-0026)
 2. `Documentation storage — /data/content`
 3. `Ready`
 

@@ -38,7 +38,7 @@ printf 'LEANDOCS_UID=%s\nLEANDOCS_GID=%s\n' "$(id -u)" "$(id -g)" > .env
 docker compose up -d     # then open http://localhost:8080
 ```
 
-> **Create the administrator account right away.** The first person who opens a new installation creates it. To keep a trial reachable only from this machine, add `LEANDOCS_BIND=127.0.0.1` to `.env` before starting.
+> **Create the administrator account** with the setup token from the log: `docker compose logs leandocs | grep 'setup token'` (also saved in `data/system/setup-token`). Only someone with access to the server can create the account.
 >
 > **Your documentation lives in `./data`** (`data/content` for documents, `data/system` for accounts and settings). Back up the whole folder.
 

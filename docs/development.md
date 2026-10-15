@@ -124,7 +124,7 @@ Every API mutation (POST/PUT/PATCH/DELETE, including uploads and index rebuilds)
 also requires the session cookie, and proxy mode requires the verified gateway identity.
 For login use the anonymous token, then fetch a new token after login. Tokens from another local
 session are rejected. Proxy and none tokens change after restart. Setup uses its separate
-`X-LeanDocs-Setup-Token` from GET `/api/v1/auth/setup`; local credential mutations remain
+`X-LeanDocs-Setup-Token`, printed in the server log and saved in `system/setup-token` (ADR-0026); local credential mutations remain
 unavailable in proxy/none mode.
 
 The browser client obtains a fresh session token before each content mutation, including multipart
@@ -217,7 +217,8 @@ Setup does not overwrite an existing account. Ready opens `/login`; sign in to a
 Use the user menu to sign out. Sessions last eight hours and survive server restarts; logout
 revokes the current session. New passwords use Argon2id; scrypt accounts upgrade on successful login.
 No additional database migration is required for the hash change.
-The setup token changes on server restart; reload an open setup form after restarting.
+The setup token changes on server restart; enter the newest one from the log. Tests read it from
+`system/setup-token` in their data folder (`apps/server/src/test/setup-token.ts`, `e2e/setup-token.ts`).
 
 - **Unit tests** sit next to the code: `foo.ts` → `foo.test.ts`.
 - **Server/API tests** normally use `buildApp(config)` + `app.inject()`. SSE integration tests use temporary loopback ports to verify real streaming responses and shutdown.

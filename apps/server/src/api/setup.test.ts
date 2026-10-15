@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
+import { readSetupToken } from '../test/setup-token.js';
 import { verifyPassword } from '../auth/password.js';
 
 const apps: FastifyInstance[] = [];
@@ -27,7 +28,7 @@ async function start(existingDir?: string) {
   apps.push(app);
   const response = await app.inject('/api/v1/auth/setup');
   const status = response.json<SetupStatus>();
-  const headers = { 'x-leandocs-setup-token': status.required ? status.setupToken : '' };
+  const headers = { 'x-leandocs-setup-token': status.required ? readSetupToken(dataDir) : '' };
   return { app, dataDir, response, status, headers };
 }
 
@@ -39,7 +40,8 @@ describe('first-run setup', () => {
     const markdown = '# My original documentation\n';
     await writeFile(file, markdown);
     const { app, status, response, headers } = await start(dataDir);
-    expect(status).toMatchObject({ required: true, contentDir: path.dirname(file) });
+    // Public status: no setup token and no storage path before the account exists (ADR-0026).
+    expect(status).toEqual({ required: true });
     expect(response.headers['cache-control']).toBe('no-store');
     const created = await app.inject({
       method: 'POST',
@@ -76,6 +78,33 @@ describe('first-run setup', () => {
     });
     expect(replacement.statusCode).toBe(409);
     expect(replacement.json().error.code).toBe('SETUP_COMPLETE');
+    // The used token is gone and no new one is issued once the account exists.
+    expect(() => readSetupToken(dataDir)).toThrow(/ENOENT/);
+  });
+
+  it('issues a new token at every start until setup and rejects the old one', async () => {
+    const first = await start();
+    const oldToken = readSetupToken(first.dataDir);
+    await first.app.close();
+    apps.splice(apps.indexOf(first.app), 1);
+    const second = await start(first.dataDir);
+    const newToken = readSetupToken(first.dataDir);
+    expect(newToken).not.toBe(oldToken);
+    const stale = await second.app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/setup',
+      headers: { 'x-leandocs-setup-token': oldToken },
+      payload: input,
+    });
+    expect(stale.statusCode).toBe(403);
+    expect(stale.json().error.code).toBe('INVALID_SETUP_TOKEN');
+    const created = await second.app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/setup',
+      headers: { 'x-leandocs-setup-token': newToken },
+      payload: input,
+    });
+    expect(created.statusCode).toBe(201);
   });
 
   it('rejects invalid credentials and request schemas without creating an account', async () => {

@@ -16,6 +16,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
+import { readSetupToken } from '../test/setup-token.js';
 import { AUTH_INITIALIZED_FILE, AuthInitialization } from '../auth/initialized.js';
 import { IndexStore } from '../documents/index-store.js';
 import { totp } from '../auth/mfa.js';
@@ -42,13 +43,12 @@ async function fixture(enroll = false) {
   await writeFile(content, '# Original documentation\n');
   const app = await buildApp(config(dir));
   apps.push(app);
-  const setup = (await app.inject('/api/v1/auth/setup')).json();
   expect(
     (
       await app.inject({
         method: 'POST',
         url: '/api/v1/auth/setup',
-        headers: { 'x-leandocs-setup-token': setup.setupToken },
+        headers: { 'x-leandocs-setup-token': readSetupToken(dir) },
         payload: { username: 'owner', password, confirmPassword: password },
       })
     ).statusCode,

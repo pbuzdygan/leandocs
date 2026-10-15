@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
+import { readSetupToken } from '../test/setup-token.js';
 
 /** P16-10 (OQ-5): changing the password of the signed-in account. */
 
@@ -26,7 +27,7 @@ async function start(dataDir = '') {
     await app.inject({
       method: 'POST',
       url: '/api/v1/auth/setup',
-      headers: { 'x-leandocs-setup-token': setup.setupToken },
+      headers: { 'x-leandocs-setup-token': readSetupToken(dataDir) },
       payload: { username: 'admin', password: OLD, confirmPassword: OLD },
     });
   const login = async (password: string) => {

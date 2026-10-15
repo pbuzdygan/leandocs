@@ -283,7 +283,8 @@ export function seed(content) {
  * Creates the administrator on a fresh installation, enables the authenticator app and signs in
  * with password and code, as an owner would on first run.
  */
-export async function setUpAccount(base) {
+export async function setUpAccount(instance) {
+  const { base } = instance;
   const setup = new Client(base);
   const status = await setup.ok('GET', '/auth/setup');
   check(status.required, 'A fresh data folder must ask for account setup');
@@ -291,7 +292,7 @@ export async function setUpAccount(base) {
     'POST',
     '/auth/setup',
     { username: USERNAME, password: PASSWORD, confirmPassword: PASSWORD },
-    { 'x-leandocs-setup-token': status.setupToken },
+    { 'x-leandocs-setup-token': setupToken(instance, status) },
   );
   let client = await signIn(base);
   const enrollment = await client.ok('POST', '/auth/mfa/enroll', { password: PASSWORD });
@@ -303,6 +304,19 @@ export async function setUpAccount(base) {
   check(enabled.recoveryCodes.length > 0, 'Enabling MFA returned no recovery codes');
   client = await signIn(base, authenticator);
   return { client, authenticator };
+}
+
+/**
+ * The setup token as the owner gets it. Releases up to 0.2.x returned it in the setup status; later
+ * ones show it only in the log and in `system/setup-token` (ADR-0026), which must agree.
+ */
+function setupToken(instance, status) {
+  if (status.setupToken) return status.setupToken;
+  check(!('contentDir' in status), 'Setup status must not reveal the storage path');
+  const token = readFileSync(path.join(instance.dataDir, 'system', 'setup-token'), 'utf8').trim();
+  check(/^[0-9a-f]{64}$/.test(token), 'The setup token file must hold one token');
+  check(instance.logs().includes(token), 'The setup token must be shown in the server log');
+  return token;
 }
 
 /** Prints the logs of instances still running after a failure, then removes them. */

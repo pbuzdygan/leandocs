@@ -12,6 +12,12 @@ import './setup.css';
 
 const setupKey = ['auth', 'setup'] as const;
 
+/** The token as printed in the server log (ADR-0026); copied text may carry spaces. */
+function normalizeToken(value: string): string | null {
+  const token = value.trim().toLowerCase();
+  return /^[0-9a-f]{64}$/.test(token) ? token : null;
+}
+
 function useSetupStatus() {
   return useQuery({ queryKey: setupKey, queryFn: api.setupStatus, staleTime: Infinity });
 }
@@ -46,6 +52,8 @@ export function SetupPage() {
   const client = useQueryClient();
   const navigate = useNavigate();
   const [step, setStep] = useState<'account' | 'storage' | 'ready'>('account');
+  const [token, setToken] = useState('');
+  const [contentDir, setContentDir] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -56,23 +64,24 @@ export function SetupPage() {
     event.preventDefault();
     if (saving || !status.data?.required) return;
     const input = { username, password, confirmPassword: confirmation };
-    const validation = validateSetup(input);
+    const setupToken = normalizeToken(token);
+    const validation = setupToken
+      ? validateSetup(input)
+      : 'Enter the 64-character setup token from the server log.';
     setError(validation);
-    if (validation) return;
+    if (validation || !setupToken) return;
     setSaving(true);
     try {
-      const completed = await api.createAdministrator(input, status.data.setupToken);
+      const completed = await api.createAdministrator(input, setupToken);
+      setToken('');
       setPassword('');
       setConfirmation('');
-      client.setQueryData(setupKey, completed);
+      setContentDir(completed.contentDir);
+      client.setQueryData(setupKey, { required: false });
       setStep('storage');
     } catch (failure) {
       setError(errorMessage(failure));
-      if (
-        failure instanceof ApiError &&
-        ['SETUP_COMPLETE', 'INVALID_SETUP_TOKEN'].includes(failure.code)
-      )
-        void status.refetch();
+      if (failure instanceof ApiError && failure.code === 'SETUP_COMPLETE') void status.refetch();
     } finally {
       setSaving(false);
     }
@@ -114,11 +123,31 @@ export function SetupPage() {
             <>
               <h1>Welcome</h1>
               <p>Create your administrator account.</p>
+              <p>
+                To prove you run this server, enter the setup token from its log, for example{' '}
+                <code>docker compose logs leandocs</code>.
+              </p>
               <form
                 onSubmit={(event) => void submit(event)}
                 className="setup__form"
                 aria-busy={saving}
               >
+                <TextField
+                  label="Setup token"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={token}
+                  onChange={(event) => setToken(event.target.value)}
+                  required
+                  maxLength={200}
+                  hint={
+                    <>
+                      Also saved in <code>system/setup-token</code> in the data folder. A restart
+                      creates a new one.
+                    </>
+                  }
+                  disabled={saving}
+                />
                 <TextField
                   label="Username"
                   autoComplete="username"
@@ -164,7 +193,7 @@ export function SetupPage() {
           <>
             <h1>Documentation storage</h1>
             <p>Your documents stay as Markdown files in this folder.</p>
-            <code className="setup__path">{status.data.contentDir}</code>
+            <code className="setup__path">{contentDir}</code>
             <Button variant="primary" onClick={() => setStep('ready')}>
               Continue
             </Button>

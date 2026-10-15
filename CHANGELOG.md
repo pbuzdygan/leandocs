@@ -12,6 +12,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 - **LeanDocs is now open source** under the MIT License: you may use, change and share it freely, as long as the copyright notice stays with it.
 - Diagrams are drawn with an updated version of the diagram component that includes its latest security fixes.
+- **Safer first start.** Creating the administrator account now needs a setup token that LeanDocs writes to its log and to `data/system/setup-token`, so someone who finds a new installation on the network can no longer take it over. The setup page tells you where to find the token.
 - **Docker: LeanDocs now has a memory limit** (2 GB by default), so an unusually heavy request cannot slow down or stop everything else on your server. Very large libraries or attachments can raise it with `LEANDOCS_MEMORY` in `.env`.
 
 ### Bug fixes

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readSetupToken } from './setup-token';
 
 /**
  * Creates the account on the visual-test server and signs in once (P16-06). Signing in for every
@@ -8,13 +9,10 @@ const VISUAL_AUTH_STATE = 'test-results/visual-auth-state.json';
 const USER = { username: 'visual', password: 'a long visual test passphrase' };
 
 test('sign in to the visual-test server', async ({ request }) => {
-  const setup = (await (await request.get('/api/v1/auth/setup')).json()) as {
-    required: boolean;
-    setupToken?: string;
-  };
+  const setup = (await (await request.get('/api/v1/auth/setup')).json()) as { required: boolean };
   if (setup.required) {
     const created = await request.post('/api/v1/auth/setup', {
-      headers: { 'X-LeanDocs-Setup-Token': setup.setupToken! },
+      headers: { 'X-LeanDocs-Setup-Token': readSetupToken('.e2e-visual-data') },
       data: { ...USER, confirmPassword: USER.password },
     });
     expect(created.ok(), await created.text()).toBe(true);

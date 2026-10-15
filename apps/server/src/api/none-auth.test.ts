@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
+import { readSetupToken } from '../test/setup-token.js';
 
 const apps: FastifyInstance[] = [];
 afterEach(async () => {
@@ -95,11 +96,11 @@ describe('deliberate unauthenticated mode', () => {
 
   it('skips setup and disables credential endpoints before parsing', async () => {
     const { app } = await start();
-    expect((await app.inject('/api/v1/auth/setup')).json()).toMatchObject({
+    // Only these two fields: no setup token and no storage path (ADR-0026).
+    expect((await app.inject('/api/v1/auth/setup')).json()).toEqual({
       required: false,
       authMode: 'none',
     });
-    expect((await app.inject('/api/v1/auth/setup')).json().setupToken).toBeUndefined();
     for (const endpoint of ['setup', 'login', 'logout']) {
       const response = await app.inject({
         method: 'POST',
@@ -116,14 +117,13 @@ describe('deliberate unauthenticated mode', () => {
   it('requires explicit opt-in; switching modes preserves local credentials', async () => {
     const first = await start({ AUTH_MODE: 'local' });
     expect((await first.app.inject('/api/v1/tree')).statusCode).toBe(401);
-    const setup = (await first.app.inject('/api/v1/auth/setup')).json();
     const password = 'a preserved administrator passphrase';
     expect(
       (
         await first.app.inject({
           method: 'POST',
           url: '/api/v1/auth/setup',
-          headers: { 'x-leandocs-setup-token': setup.setupToken },
+          headers: { 'x-leandocs-setup-token': readSetupToken(first.dataDir) },
           payload: { username: 'admin', password, confirmPassword: password },
         })
       ).statusCode,

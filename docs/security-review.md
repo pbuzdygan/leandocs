@@ -28,7 +28,7 @@ This is an implementation and configuration review with the existing regression 
 
 These are configuration and policy items, not exploitable defects in the reviewed code; they are tracked for owner decisions.
 
-1. **First-run exposure.** Before the first account exists, anyone who reaches the application can create it (ADR-0010). The Compose files listen on all host addresses over HTTP by default, so a fresh deployment on a reachable host is exposed until setup completes. The setup status also returns the resolved content folder. Options: bind to `127.0.0.1` by default, or deliver the setup token out of band (logs) instead of through the API; either needs an ADR.
+1. **First-run exposure.** Resolved by [ADR-0026](adr/0026-setup-token-for-the-operator.md): the setup token is shown only in the server log and `system/setup-token`, and the setup status no longer returns the content folder. Default binding to all host addresses is kept for reverse proxies.
 2. **`main` is not protected.** The release workflow publishes `:latest` from `main`, which is expected to change only through pull requests. Branch protection with required CI checks would enforce that.
 3. **No container resource limits.** Resolved: both Compose files set a 2 GiB memory limit (`LEANDOCS_MEMORY`) and 256 processes; the published 0.2.0 image starts healthy with them.
 4. **Supply chain hardening.** Partly resolved: the Playwright CI image is pinned by digest and pnpm accepts only versions published at least one day ago (`minimumReleaseAge`). Released images still carry no SBOM or signature.
@@ -110,7 +110,7 @@ The recorded verification totals and commands are in the P11-09 work-log entry o
 
 ### Trust and deployment constraints
 
-- Complete first-run owner setup on a private connection before publishing the application. Initial setup intentionally has no existing owner credentials.
+- Complete first-run owner setup on a private connection before publishing the application. Initial setup intentionally has no existing owner credentials. Since ADR-0026 (2026-10-15), creating the account requires the setup token from the server log.
 - Ordinary Nginx Proxy Manager provides HTTPS/routing. Keep local application authentication, enable secure cookies and preserve application headers. Proxy identity authentication is a separate explicit mode, not required for NPM.
 - Back up content and consistent system state together: database, initialization marker and matching MFA key. Recovery has no unauthenticated reset or silent MFA bypass. A crash after persisting the marker but before account insertion requires offline recovery.
 - Filesystem/host operators are trusted. Static unsafe links and replaced document-file links are rejected; protection does not claim atomic containment against an adversarial host concurrently swapping every directory, or deleting every initialization artifact. Existing legacy installations with all prior evidence already erased cannot be distinguished from fresh ones.
