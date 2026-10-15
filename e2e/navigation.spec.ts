@@ -34,7 +34,7 @@ test('E2E-02: documents and folders created and moved in the UI persist on disk'
   await page.getByRole('button', { name: 'More actions' }).click();
   await page.getByRole('menuitem', { name: 'Move', exact: true }).click();
   const move = page.getByRole('dialog', { name: 'Move "UniFi"' });
-  await move.getByRole('option', { name: 'Network' }).click();
+  await move.getByRole('treeitem', { name: 'Network' }).click();
   await move.getByRole('button', { name: 'Move' }).click();
   await expect(page.getByText('Moved to Network', { exact: true })).toBeVisible();
 

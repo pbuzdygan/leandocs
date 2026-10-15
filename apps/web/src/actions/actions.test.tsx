@@ -174,7 +174,7 @@ describe('content actions', () => {
     await user.pointer({ keys: '[MouseRight]', target: item });
     await user.click(await screen.findByRole('menuitem', { name: 'Move' }));
     const dialog = await screen.findByRole('dialog', { name: 'Move "Infrastructure"' });
-    const options = within(dialog).getAllByRole('option');
+    const options = within(dialog).getAllByRole('treeitem');
     expect(options.map((option) => option.textContent)).toEqual([
       'Documentationcurrent',
       'Infrastructure',
@@ -189,5 +189,38 @@ describe('content actions', () => {
       path: 'Infrastructure',
       targetFolder: 'Network',
     });
+  });
+
+  it('chooses the target folder with the keyboard (one Tab stop, arrows, Enter)', async () => {
+    const requests = mockApi((request) => {
+      if (request.path === '/tree') return { body: { root: sampleTree() } };
+      if (request.path === '/documents/recent?limit=10') return { body: recent };
+      if (request.path === '/folders/move')
+        return { body: { path: 'Network/Infrastructure', name: 'Infrastructure' } };
+      return undefined;
+    });
+    const { user } = renderApp('/');
+    const item = await screen.findByRole('treeitem', { name: /Infrastructure/ });
+    await user.pointer({ keys: '[MouseRight]', target: item });
+    await user.click(await screen.findByRole('menuitem', { name: 'Move' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Move "Infrastructure"' });
+    const picker = within(dialog).getByRole('tree', { name: 'Target folder' });
+    const rows = within(picker).getAllByRole('treeitem');
+    // The current folder starts focused and is the only Tab stop in the picker.
+    await waitFor(() => expect(rows[0]).toHaveFocus());
+    expect(rows.filter((row) => row.tabIndex === 0)).toHaveLength(1);
+    await user.keyboard('{ArrowDown}{ArrowDown}');
+    expect(rows[2]).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(rows[2]).toHaveAttribute('aria-selected', 'true');
+    // Enter chose the folder; it did not submit the dialog.
+    expect(requests.some((r) => r.path === '/folders/move')).toBe(false);
+    await user.click(within(dialog).getByRole('button', { name: 'Move' }));
+    await waitFor(() =>
+      expect(requests.find((r) => r.path === '/folders/move')?.body).toEqual({
+        path: 'Infrastructure',
+        targetFolder: 'Network',
+      }),
+    );
   });
 });

@@ -6,9 +6,11 @@ import { api, errorMessage, ApiError } from '../api/client';
 import { AppLogo, Wordmark } from '../components/AppLogo';
 import { Button } from '../components/ui/Button';
 import { TextField, FormError } from '../components/ui/Field';
-import { ErrorState, SkeletonLines } from '../components/ui/States';
+import { ErrorState } from '../components/ui/States';
 import { DropdownMenuButton } from '../components/ui/Menu';
 import { usePageTitle } from '../utils/page-title';
+import { AppLoading } from '../app/AppLoading';
+import { useNotify } from '../components/ui/Toast';
 import './setup.css';
 
 export const sessionKey = ['auth', 'session'] as const;
@@ -37,12 +39,7 @@ export function AuthGate() {
     window.addEventListener('leandocs:unauthorized', expired);
     return () => window.removeEventListener('leandocs:unauthorized', expired);
   }, [client]);
-  if (session.isPending)
-    return (
-      <main className="setup">
-        <SkeletonLines />
-      </main>
-    );
+  if (session.isPending) return <AppLoading />;
   if (session.isError)
     return (
       <main className="setup">
@@ -214,18 +211,18 @@ export function UserMenu() {
   const session = useSession();
   const client = useQueryClient();
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
+  const notify = useNotify();
   const [saving, setSaving] = useState(false);
   async function logout() {
     if (!session.data || saving) return;
     setSaving(true);
-    setError(null);
     try {
       await api.logout(session.data.csrfToken);
       client.clear();
       navigate('/login', { replace: true });
     } catch (failure) {
-      setError(errorMessage(failure));
+      // A toast, not an inline error: the topbar has no room for a message (guidelines §16).
+      notify.error(`Could not sign out: ${errorMessage(failure)}`);
     } finally {
       setSaving(false);
     }
@@ -236,23 +233,20 @@ export function UserMenu() {
       <span title="Authentication is managed by your gateway.">{session.data.user.username}</span>
     );
   return (
-    <div>
-      <DropdownMenuButton
-        trigger={
-          <Button
-            size="small"
-            variant="ghost"
-            className="user-menu"
-            // The visible name is part of the label (WCAG 2.5.3) so voice control can target it.
-            aria-label={`User menu (${session.data.user.username})`}
-            disabled={saving}
-          >
-            <span className="user-menu__name">{session.data.user.username}</span>
-          </Button>
-        }
-        entries={[{ label: 'Sign out', onSelect: () => void logout() }]}
-      />
-      <FormError message={error} />
-    </div>
+    <DropdownMenuButton
+      trigger={
+        <Button
+          size="small"
+          variant="ghost"
+          className="user-menu"
+          // The visible name is part of the label (WCAG 2.5.3) so voice control can target it.
+          aria-label={`User menu (${session.data.user.username})`}
+          disabled={saving}
+        >
+          <span className="user-menu__name">{session.data.user.username}</span>
+        </Button>
+      }
+      entries={[{ label: 'Sign out', onSelect: () => void logout() }]}
+    />
   );
 }

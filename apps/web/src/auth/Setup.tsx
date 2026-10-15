@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { FormError, TextField } from '../components/ui/Field';
 import { ErrorState, SkeletonLines } from '../components/ui/States';
 import { usePageTitle } from '../utils/page-title';
+import { AppLoading } from '../app/AppLoading';
 import './setup.css';
 
 const setupKey = ['auth', 'setup'] as const;
@@ -25,12 +26,7 @@ function useSetupStatus() {
 /** The app shell mounts only after local setup or gateway configuration has been checked. */
 export function SetupGate() {
   const status = useSetupStatus();
-  if (status.isPending)
-    return (
-      <main className="setup" aria-label="Checking setup">
-        <SkeletonLines />
-      </main>
-    );
+  if (status.isPending) return <AppLoading />;
   if (status.isError)
     return (
       <main className="setup">

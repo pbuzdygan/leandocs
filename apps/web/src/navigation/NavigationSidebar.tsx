@@ -50,6 +50,8 @@ export function NavigationSidebar() {
   useEffect(() => {
     if (!mobile || !drawerOpen) return;
     const nav = navRef.current;
+    // Something inside already took focus (a folder shown from the breadcrumb).
+    if (nav?.contains(document.activeElement)) return;
     const target =
       nav?.querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]') ??
       nav?.querySelector<HTMLElement>('button, a[href]');

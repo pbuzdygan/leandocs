@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { MEDIA } from '../utils/media';
 import { readPreference, writePreference } from '../utils/storage';
 import { ancestorFolders } from './tree-utils';
 
@@ -17,6 +18,14 @@ interface NavigationState {
   /** Tablets and desktops: the sidebar is hidden (UI_SPEC §160), remembered per browser. */
   sidebarHidden: boolean;
   setSidebarHidden: (hidden: boolean) => void;
+  /**
+   * Shows a folder in the navigation from elsewhere (breadcrumb): expands it and its ancestors,
+   * opens the phone drawer or the hidden sidebar, and moves focus to its tree row.
+   */
+  showFolder: (path: string) => void;
+  /** The folder whose tree row should take focus; the tree clears it once focused. */
+  focusRequest: string | null;
+  clearFocusRequest: () => void;
 }
 
 const NavigationContext = createContext<NavigationState | null>(null);
@@ -29,6 +38,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidebarHidden, setHidden] = useState(() => readPreference('sidebar.hidden', false));
+  const [focusRequest, setFocusRequest] = useState<string | null>(null);
+  const clearFocusRequest = useCallback(() => setFocusRequest(null), []);
   const setSidebarHidden = useCallback((hidden: boolean) => {
     setHidden(hidden);
     writePreference('sidebar.hidden', hidden);
@@ -57,8 +68,28 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       setDrawerOpen,
       sidebarHidden,
       setSidebarHidden,
+      showFolder: (path) => {
+        update((next) => {
+          for (const folder of ancestorFolders(path)) next.add(folder);
+          if (path !== '') next.add(path);
+        });
+        // Phones show the navigation as a drawer; wider screens may have hidden the sidebar.
+        if (window.matchMedia?.(MEDIA.mobile).matches) setDrawerOpen(true);
+        else if (sidebarHidden) setSidebarHidden(false);
+        setFocusRequest(path);
+      },
+      focusRequest,
+      clearFocusRequest,
     }),
-    [expanded, update, drawerOpen, sidebarHidden, setSidebarHidden],
+    [
+      expanded,
+      update,
+      drawerOpen,
+      sidebarHidden,
+      setSidebarHidden,
+      focusRequest,
+      clearFocusRequest,
+    ],
   );
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }

@@ -177,7 +177,7 @@ function DocumentLayout({
   editBar?: ReactNode;
   children: ReactNode;
 }) {
-  const { reveal } = useNavigationState();
+  const { showFolder } = useNavigationState();
   const search = useSearchControls();
   // Owner feedback 2026-10-02: use the available width by default; reading width is optional.
   const [wide, setWide] = useState(() => readPreference('layout.wide', true));
@@ -239,7 +239,7 @@ function DocumentLayout({
                 <button
                   type="button"
                   className="doc__crumb"
-                  onClick={() => reveal(segments.slice(0, index + 1).join('/'), true)}
+                  onClick={() => showFolder(segments.slice(0, index + 1).join('/'))}
                 >
                   {segment}
                 </button>
