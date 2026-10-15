@@ -7,7 +7,7 @@ declare const __LEANDOCS_VERSION__: string | undefined;
 
 /**
  * The LeanDocs version. Release images use their release tag (`LEANDOCS_VERSION`, D-53); other
- * builds fall back to the root `package.json`. The server and the web app each bake it in at build
+ * builds fall back to the root `package.json`, which holds the fixed marker `0.0.0-dev` (D-68). The server and the web app each bake it in at build
  * time, so a stale browser bundle shows a different frontend
  * version than the server reports (UI_SPEC §88). Release tags: `X.Y.Z` (main), `devX.Y.Z` (dev).
  */

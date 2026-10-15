@@ -25,12 +25,14 @@ The shared agent workflow is in place, the database migration guard is complete,
 - [x] Local: nvm Node 26 has corepack 0.36.0 installed; `.nvmrc` matches, so the nvm warning is gone.
 - [x] Verified on Node 26: format, lint, typecheck, 726 unit/API tests, build; Docker build (296 MB, was 256 MB: base image only); `pnpm test:upgrade` from `dev0.1.4`; `pnpm test:backup`.
 - [x] Browser tests (Chromium) with the server on Node 26: 81 passed, including visual baselines.
-- [ ] Owner commits and pushes; CI green on `dev` (all three browser engines).
+- [x] Owner committed and pushed (`aef38fa`).
+- [ ] CI green on `dev` for `aef38fa` and the next commit.
 
 ## Stage 3 — Release 0.2.0 (owner publishes)
 
-- [ ] Owner decides what happens to the `[0.1.0]` CHANGELOG section, which was never released on `main`: keep it as the feature history, or fold it into `[0.2.0]` as the first stable release.
-- [ ] Optional: set `version` to `0.2.0` in the four `package.json` files so development builds report it (release images take the version from the tag anyway).
+- [x] `[0.1.0]` was never released on `main`: folded into `[0.2.0] — Unreleased` as the first stable release (owner decision).
+- [x] Version: releases use only the tag (D-53); non-release builds now report the fixed `0.0.0-dev` (D-68), so no file is edited per release.
+- [x] CI browser tests: Chromium on `dev` pushes, all three engines on pull requests and `main` (D-69).
 - [ ] Release checks (PROJECT_SPEC §102) on the final `dev` commit: CI green, fresh install from the image, `pnpm test:upgrade` from the newest `devX.Y.Z`, `pnpm test:backup`.
 - [ ] `CHANGELOG.md`: date the `[0.2.0]` heading on release day.
 - [ ] Merge `dev` → `main` through a pull request.

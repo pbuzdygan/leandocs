@@ -1488,7 +1488,7 @@ Never report a feature as complete if it does not work.
 | 4   | UI specification                       | ✅ Done — `UI_SPEC.md`                                                   |
 | 5   | Product name                           | ✅ Done — **LeanDocs** / _Documentation without the bloat._              |
 | 6   | Branding (logo, icon, banner, colours) | ✅ Done — `BRAND_SPEC.md` (mark "Folded Stack", Inter wordmark)          |
-| 7   | Implementation                         | ▶ Phases 0–16 done; first stable release 0.1.0 prepared — `CHANGELOG.md` |
+| 7   | Implementation                         | ▶ Phases 0–16 done; first stable release 0.2.0 prepared — `CHANGELOG.md` |
 
 The name and logo must not affect the architecture.
 
