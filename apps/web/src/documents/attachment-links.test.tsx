@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { documentDto, mockApi, renderApp, sampleTree } from '../test/render';
 
@@ -33,6 +33,35 @@ describe('attachments missing on disk', () => {
       path: '/documents/id-atlas/attachments/manual.pdf',
     });
     expect(location()).toBe('/doc/id-atlas');
+  });
+
+  it('an existing file the server sends as a download is saved, and the app stays', async () => {
+    mockApi((request) => {
+      if (request.path === '/tree') return { body: { root: sampleTree() } };
+      if (request.path === '/documents/id-atlas')
+        return { body: documentDto('id-atlas', 'Infrastructure/Servers/ATLAS.md', { content }) };
+      if (request.path === '/documents/id-atlas/attachments') return { body: { items: [] } };
+      if (
+        request.method === 'HEAD' &&
+        request.path === '/documents/id-atlas/attachments/manual.pdf'
+      )
+        return { headers: { 'Content-Disposition': 'attachment; filename="manual.pdf"' } };
+      return undefined;
+    });
+    const saved: HTMLAnchorElement[] = [];
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      saved.push(this);
+    });
+    const { user, location } = renderApp('/doc/id-atlas');
+    await user.click(await screen.findByRole('link', { name: 'the manual' }));
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]).toHaveAttribute('href', '/api/v1/documents/id-atlas/attachments/manual.pdf');
+    expect(saved[0]).toHaveAttribute('download', 'manual.pdf');
+    expect(saved[0]).not.toBeInTheDocument();
+    expect(location()).toBe('/doc/id-atlas');
+    click.mockRestore();
   });
 
   it('an image that cannot load says it is missing', async () => {
