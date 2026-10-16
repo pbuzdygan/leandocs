@@ -953,6 +953,11 @@ After `Ctrl+V` the screenshot appears immediately in the visual editor with an `
 
 The Info panel allows editing Title, Description, Tags and Aliases (Icon later), saved with **Save properties**. Path is not a plain text input — changing it requires a Move operation (`Move…` next to the path). While the document is open in the editor the panel is read-only.
 
+When the title differs from the file name, **Reset to file name** below Title puts the file name back
+into the field (applied with Save properties). After a saved title change a toast offers **Undo**,
+which restores only the previous title. The title never renames the file. The Rename dialog shows
+**Title** first (focused) and **File name** second.
+
 ## 116. Tags editor
 
 ```text

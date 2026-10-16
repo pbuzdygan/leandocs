@@ -63,6 +63,56 @@ describe('Info tab (P10-04)', () => {
     expect(await screen.findByText('Properties saved.')).toBeInTheDocument();
   });
 
+  it('resets the title to the file name, applied with Save', async () => {
+    api();
+    const { user } = renderApp('/doc/id-vlan');
+    await user.click(await screen.findByRole('tab', { name: 'Info' }));
+    const form = await screen.findByRole('form', { name: 'Properties' });
+    const title = within(form).getByLabelText('Title');
+    // Title equals the file name (VLAN.md): nothing to reset.
+    expect(within(form).queryByRole('button', { name: 'Reset to file name' })).toBeNull();
+    await user.clear(title);
+    await user.type(title, 'Virtual LANs');
+    await user.click(within(form).getByRole('button', { name: 'Reset to file name' }));
+    expect(title).toHaveValue('VLAN');
+    expect(within(form).queryByRole('button', { name: 'Reset to file name' })).toBeNull();
+    expect(within(form).getByRole('button', { name: 'Save properties' })).toBeDisabled();
+  });
+
+  it('offers Undo after a title change and restores only the title', async () => {
+    let revision = 0;
+    const requests = api((request) => {
+      revision += 1;
+      const title = (request.body as { title: string }).title;
+      return {
+        ...doc,
+        title,
+        revision: `sha256:r${revision}`,
+        frontmatter: { ...doc.frontmatter, title },
+      };
+    });
+    const { user } = renderApp('/doc/id-vlan');
+    await user.click(await screen.findByRole('tab', { name: 'Info' }));
+    const form = await screen.findByRole('form', { name: 'Properties' });
+    const title = within(form).getByLabelText('Title');
+    await user.clear(title);
+    await user.type(title, 'Virtual LANs');
+    await user.click(within(form).getByRole('button', { name: 'Save properties' }));
+    expect(
+      (await screen.findAllByText('Title changed from "VLAN".', { exact: true })).length,
+    ).toBeGreaterThan(0);
+    await user.click(screen.getAllByRole('button', { name: 'Undo' })[0]!);
+    await waitFor(() =>
+      expect(requests.filter((r) => r.method === 'POST').at(-1)?.body).toEqual({
+        expectedRevision: 'sha256:r1',
+        title: 'VLAN',
+      }),
+    );
+    expect(
+      (await screen.findAllByText('Title restored to "VLAN".', { exact: true })).length,
+    ).toBeGreaterThan(0);
+  });
+
   it('is read-only while editing', async () => {
     api();
     const { user } = renderApp('/doc/id-vlan/edit');

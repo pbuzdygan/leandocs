@@ -145,7 +145,10 @@ describe('content actions', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Rename document' });
     const name = within(dialog).getByLabelText('File name');
     expect(name).toHaveValue('README');
-    expect(within(dialog).getByLabelText('Title')).toHaveValue('Read me');
+    // The title comes first and has the focus; the file name follows.
+    const fields = within(dialog).getAllByRole('textbox');
+    expect(fields.map((field) => field.getAttribute('value'))).toEqual(['Read me', 'README']);
+    expect(within(dialog).getByLabelText('Title')).toHaveFocus();
     await user.clear(name);
     await user.type(name, 'Overview');
     await user.click(within(dialog).getByRole('button', { name: 'Rename' }));

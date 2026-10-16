@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 import { FormError, TextField } from '../components/ui/Field';
 import { TagInput } from '../components/ui/TagInput';
 import { useNotify } from '../components/ui/Toast';
-import { formatDate } from '../utils/format';
+import { formatDate, stripExtension } from '../utils/format';
 
 function list(value: unknown): string[] {
   return Array.isArray(value)
@@ -59,15 +59,48 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
     setDraft(draftOf(document));
   }
   const original = draftOf(document);
+  // The title and the file name may differ (PROJECT_SPEC §9, D-18); the file name is what a new
+  // document's title started as, so it is the way back after an unwanted title change.
+  const fileTitle = stripExtension(document.path.split('/').pop() ?? '');
   const dirty =
     draft.title.trim() !== original.title ||
     draft.description.trim() !== original.description ||
     !same(draft.tags, original.tags) ||
     !same(draft.aliases, original.aliases);
 
+  const refresh = async (updated: DocumentDto) => {
+    queryClient.setQueryData(queryKeys.document(document.id), updated);
+    await Promise.all(
+      [queryKeys.tree, queryKeys.tags, queryKeys.searches, queryKeys.links, queryKeys.recent].map(
+        (queryKey) => queryClient.invalidateQueries({ queryKey }),
+      ),
+    );
+  };
+
+  /** Undo of a title change: only the title goes back; the newer revision guards against edits. */
+  const restoreTitle = (title: string, expectedRevision: string) => {
+    api
+      .updateProperties(document.id, { expectedRevision, title })
+      .then(async (restored) => {
+        await refresh(restored);
+        notify.info(`Title restored to "${title}".`);
+      })
+      .catch((reason: unknown) =>
+        notify.error(
+          `The title was not restored (${errorMessage(reason)}). Change it in Info › Title.`,
+        ),
+      );
+  };
+
   const save = async () => {
     setSaving(true);
     setError(undefined);
+    const titleChanged = draft.title.trim() !== original.title;
+    const onlyTitle =
+      titleChanged &&
+      draft.description.trim() === original.description &&
+      same(draft.tags, original.tags) &&
+      same(draft.aliases, original.aliases);
     try {
       const updated = await api.updateProperties(document.id, {
         expectedRevision: document.revision,
@@ -78,13 +111,13 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
         ...(!same(draft.tags, original.tags) ? { tags: draft.tags } : {}),
         ...(!same(draft.aliases, original.aliases) ? { aliases: draft.aliases } : {}),
       });
-      queryClient.setQueryData(queryKeys.document(document.id), updated);
-      await Promise.all(
-        [queryKeys.tree, queryKeys.tags, queryKeys.searches, queryKeys.links, queryKeys.recent].map(
-          (queryKey) => queryClient.invalidateQueries({ queryKey }),
-        ),
-      );
-      notify.info('Properties saved.');
+      await refresh(updated);
+      if (titleChanged)
+        notify.info(
+          `${onlyTitle ? 'Title' : 'Properties saved; title'} changed from "${original.title}".`,
+          { label: 'Undo', onClick: () => restoreTitle(original.title, updated.revision) },
+        );
+      else notify.info('Properties saved.');
     } catch (reason) {
       setError(errorMessage(reason));
     } finally {
@@ -165,6 +198,15 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
             value={draft.title}
             onChange={(event) => setDraft({ ...draft, title: event.target.value })}
           />
+          {draft.title.trim() !== fileTitle && (
+            <button
+              type="button"
+              className="info-panel__move info-panel__reset"
+              onClick={() => setDraft({ ...draft, title: fileTitle })}
+            >
+              Reset to file name
+            </button>
+          )}
           <TextField
             label="Description"
             value={draft.description}
