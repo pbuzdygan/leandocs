@@ -7,6 +7,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 ### New features
 
 - **The side panel next to a document can be resized** by dragging its edge or with the arrow keys, like the navigation, and keeps its width.
+- **More ways to add from the New button.** **New** still creates a document with one click; the arrow next to it offers **New folder** and **Import Markdown**, in the folder of the open document.
 - **Keyboard shortcuts in Settings › Help › Shortcuts.** One page lists every shortcut, grouped by where it works (navigation, search, both editors, Markdown you can type), with the keys of your device (Ctrl or ⌘).
 - **Empty folders say so.** An open folder without documents shows "This folder is empty" with links to create a document or folder in it.
 

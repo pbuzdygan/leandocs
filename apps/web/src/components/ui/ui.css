@@ -65,6 +65,28 @@
   filter: brightness(0.92);
 }
 
+/* Split button: the main action and an arrow that opens related actions, joined into one shape. */
+.btn-split {
+  display: inline-flex;
+}
+
+.btn-split > .btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.btn-split > .btn-split__toggle {
+  min-width: 28px;
+  padding: 0 var(--space-1);
+  border-left-color: color-mix(in srgb, var(--bg-surface) 35%, var(--accent));
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.btn-split > .btn-split__toggle[data-state='open'] {
+  background: var(--accent-hover);
+}
+
 .btn--ghost {
   background: transparent;
   border-color: transparent;

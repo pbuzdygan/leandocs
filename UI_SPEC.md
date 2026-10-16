@@ -188,7 +188,9 @@ Height **52 px**, always visible.
 
 - **Left:** logo/icon placeholder (`APP_LOGO`), product name (`APP_NAME` = LeanDocs), optional breadcrumb.
 - **Centre:** global search.
-- **Right:** New Document, optional utility actions, Settings, user menu.
+- **Right:** New Document, optional utility actions, Settings, user menu. **New** is a split button: the
+  main part creates a document at once; its arrow opens _New document_, _New folder_ and
+  _Import Markdown_, all in the folder of the open document.
 
 ## 16. Global search field
 

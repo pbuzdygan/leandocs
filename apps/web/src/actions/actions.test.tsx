@@ -34,6 +34,38 @@ describe('content actions', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('offers a new folder and import from the arrow of the New button', async () => {
+    mockApi((request) => {
+      if (request.path === '/tree') return { body: { root: sampleTree() } };
+      if (/^\/documents\/id-[^/]+\/attachments$/.test(request.path)) return { body: { items: [] } };
+      if (/^\/documents\/id-[^/]+$/.test(request.path))
+        return { body: documentDto('id-atlas', 'Infrastructure/Servers/Atlas.md') };
+      return undefined;
+    });
+    const { user } = renderApp('/doc/id-atlas');
+    await screen.findByRole('heading', { level: 1 });
+    const toggle = screen.getByRole('button', { name: 'More ways to add' });
+    await user.click(toggle);
+    const menu = await screen.findByRole('menu');
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent),
+    ).toEqual(['New document', 'New folder', 'Import Markdown']);
+    await user.click(within(menu).getByRole('menuitem', { name: 'New folder' }));
+    const folderDialog = await screen.findByRole('dialog', { name: 'New folder' });
+    expect(within(folderDialog).getByLabelText('Location')).toHaveValue('Infrastructure/Servers');
+    await user.click(within(folderDialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    await user.click(toggle);
+    await user.click(await screen.findByRole('menuitem', { name: 'Import Markdown' }));
+    const importDialog = await screen.findByRole('dialog', { name: 'Import documentation' });
+    expect(within(importDialog).getByLabelText('Import into')).toHaveValue(
+      'Infrastructure/Servers',
+    );
+  });
+
   it('creates a document from a template (P10-02)', async () => {
     const requests = mockApi((request) => {
       if (request.path === '/tree') return { body: { root: sampleTree() } };
