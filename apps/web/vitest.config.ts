@@ -7,5 +7,7 @@ export default defineProject({
     name: 'web',
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Above the 5 s `findBy…` limit in setup.ts, so a slow wait reports what it waited for.
+    testTimeout: 15_000,
   },
 });

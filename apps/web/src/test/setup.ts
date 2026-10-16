@@ -1,7 +1,13 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 import { resetTestSettings } from './settings';
+
+// `findBy…`/`waitFor` wait up to 5 s instead of 1 s. The first test in a file that opens a document
+// waits for the lazily loaded document page (editors, Markdown pipeline), which Vite transforms on
+// demand: about 1.1 s locally, and longer on a busy CI runner (KI-12). Failing checks still fail,
+// only later.
+configure({ asyncUtilTimeout: 5000 });
 
 // jsdom lacks a few browser APIs that Radix primitives use.
 class ResizeObserverStub {
