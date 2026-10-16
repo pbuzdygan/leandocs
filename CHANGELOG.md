@@ -31,6 +31,7 @@ What changes for you in each LeanDocs version. The format follows [Keep a Change
 
 ### Bug fixes
 
+- **Phones and tablets no longer zoom in when you tap a text field.** Search, the editors, settings and every other field now use text large enough that the browser stays at its normal size; pinch-to-zoom still works.
 - **A link to a deleted attachment no longer replaces LeanDocs with an error.** Clicking it now keeps you in the app and says the file is no longer attached; a missing image shows **Image not found**, and opening the link in a new tab shows a short **File not found** page with a way back.
 - **Ctrl+E (⌘E) in the visual editor no longer changes your text.** With text selected it turned the selection into inline code and saved it while switching back to reading; it now only switches. Inline code stays on the toolbar and with `` `text` ``.
 - Hovering over a section in Settings now highlights it; before, the highlight had the same colour as the page.

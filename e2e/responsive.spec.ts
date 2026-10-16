@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { expectAccessible } from './axe';
 import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
 import { expect, test } from './document-fixture';
@@ -179,6 +180,59 @@ test.describe('touch screens', () => {
     const row = page.getByRole('treeitem', { name: 'Layout Touch Row', exact: true });
     const more = row.getByRole('button', { name: 'Actions for Layout Touch Row' });
     await expect(more).toHaveCSS('opacity', '1');
+  });
+});
+
+test.describe('phones: text fields', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 700 } });
+  restoreSettingsAfterEach();
+
+  /** Visible text fields whose text is smaller than 16 px (Safari zooms into those on focus). */
+  const smallFields = (page: Page) =>
+    page.evaluate(() =>
+      [
+        ...document.querySelectorAll<HTMLElement>(
+          'input, textarea, select, [contenteditable]:not([contenteditable="false"])',
+        ),
+      ]
+        .filter((field) => {
+          const type = field instanceof HTMLInputElement ? field.type : 'text';
+          return (
+            !['checkbox', 'radio', 'range', 'color', 'file', 'hidden'].includes(type) &&
+            field.getClientRects().length > 0
+          );
+        })
+        .map((field) => ({
+          field: field.getAttribute('aria-label') ?? field.className ?? field.tagName,
+          size: parseFloat(getComputedStyle(field).fontSize),
+        }))
+        .filter(({ size }) => size < 16),
+    );
+
+  test('use at least 16 px text so focusing them does not zoom the page', async ({
+    page,
+    createDocument,
+  }) => {
+    const id = await createDocument('Layout Phone Fields', 'Text.\n');
+    expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Search', exact: true }).first().click();
+    await expect(page.getByRole('combobox', { name: 'Search documentation' })).toBeVisible();
+    expect(await smallFields(page)).toEqual([]);
+
+    await setDefaultEditor(page, 'visual');
+    await page.goto(`/doc/${id}/edit`);
+    await expect(page.locator('.ProseMirror')).toContainText('Text.');
+    expect(await smallFields(page)).toEqual([]);
+
+    await page.getByRole('tab', { name: 'Source' }).click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    expect(await smallFields(page)).toEqual([]);
+
+    await page.goto('/settings/general');
+    await expect(page.locator('input, select').first()).toBeVisible();
+    expect(await smallFields(page)).toEqual([]);
   });
 });
 

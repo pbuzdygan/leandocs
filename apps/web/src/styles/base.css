@@ -36,6 +36,29 @@ textarea {
   color: inherit;
 }
 
+/* Safari on iPhone and iPad zooms into a focused field whose text is smaller than 16 px and does not
+   zoom back out. On touch screens every text field therefore uses at least 16 px; desktop keeps
+   the UI_SPEC sizes. `!important` because components size their own fields. The viewport is not
+   locked (`maximum-scale`), so pinch zoom keeps working (WCAG 1.4.4). */
+@media (pointer: coarse) {
+  input:not(
+    [type='checkbox'],
+    [type='radio'],
+    [type='range'],
+    [type='color'],
+    [type='file'],
+    [type='button'],
+    [type='submit'],
+    [type='reset'],
+    [type='image']
+  ),
+  textarea,
+  select,
+  [contenteditable]:not([contenteditable='false']) {
+    font-size: max(16px, 1em) !important;
+  }
+}
+
 a {
   color: var(--accent);
   text-decoration: none;
