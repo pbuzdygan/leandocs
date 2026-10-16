@@ -181,3 +181,32 @@ test.describe('touch screens', () => {
     await expect(more).toHaveCSS('opacity', '1');
   });
 });
+
+test('the context panel can be resized by dragging and with the arrow keys (UI_SPEC §108)', async ({
+  page,
+  createDocument,
+}) => {
+  const id = await createDocument('Layout Context Resize', BODY);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`/doc/${id}`);
+  const panel = page.getByRole('complementary', { name: 'Document context' });
+  const separator = page.getByRole('separator', { name: 'Resize side panel' });
+  await expect(separator).toHaveAttribute('aria-valuenow', '260');
+  // The handle is on the panel's left edge: dragging left widens it.
+  const box = (await separator.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 - 60, box.y + 200, { steps: 5 });
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute('aria-valuenow', '320');
+  expect(Math.round((await panel.boundingBox())!.width)).toBe(320);
+  await page.reload();
+  await expect(separator).toHaveAttribute('aria-valuenow', '320');
+
+  await separator.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(separator).toHaveAttribute('aria-valuenow', '304');
+  // Leave the default for later tests (local storage of this test's browser context only).
+  await separator.dblclick();
+  await expect(separator).toHaveAttribute('aria-valuenow', '260');
+});

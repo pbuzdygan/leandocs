@@ -196,6 +196,8 @@ package or per coherent item, scope `web` (Conventional Commits).
   Retry, and Home does not depend on the tree beyond the empty-library check.
 - WP5.3: only the off-grid gaps that are not prescribed were changed (topbar history, search
   modes); 1–2 px values in tags, inline code, chips and stacked list meta stay as UI_SPEC shows.
+- WP1.2: hover uses `--bg-subtle`; the now unused `--bg-hover` token stays in `tokens.css`
+  because UI_SPEC's token list defines it.
 - WP6.3: snapshots were updated per work package after review, so no commit on `dev` carries a red
   visual suite, instead of once at the end.
 

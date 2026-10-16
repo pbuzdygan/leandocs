@@ -106,7 +106,7 @@ describe('Settings › General', () => {
     const { user } = renderApp('/settings/general');
     const autosave = await screen.findByRole('checkbox', { name: 'Autosave' });
     await user.click(autosave);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Not saved: Disk full');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Not saved (Disk full)');
     expect(autosave).toBeChecked();
   });
 

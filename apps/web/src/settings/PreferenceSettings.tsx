@@ -55,7 +55,13 @@ function SettingsForm({
         </h2>
         <SettingsSaveStatus status={update.status} onRetry={update.retry} />
       </div>
-      <FormError message={update.error ? `Not saved: ${errorMessage(update.error)}` : null} />
+      <FormError
+        message={
+          update.error
+            ? `Not saved (${errorMessage(update.error)}). Check the connection and press Retry.`
+            : null
+        }
+      />
       <div className="settings__form">{children(shown, save)}</div>
     </section>
   );

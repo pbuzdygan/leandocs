@@ -71,7 +71,9 @@ function DocumentEditor({
             const label = item.name.replace(/[\\[\]]/g, '\\$&');
             links.push(`${item.image ? '!' : ''}[${label}](${item.markdownUrl})`);
           } catch (error) {
-            notify.error(`Could not upload ${file.name}: ${errorMessage(error)}`);
+            notify.error(
+              `Could not upload ${file.name} (${errorMessage(error)}). Check the file type and size, then upload it again.`,
+            );
           }
         }
         await queryClient.invalidateQueries({ queryKey: attachmentKey(document.id) });
