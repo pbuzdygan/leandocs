@@ -18,9 +18,23 @@ export function attachmentRefKey(documentId: string, name: string): string {
 }
 
 /**
+ * Saves a file through a temporary `download` link. Navigating to it would rely on the browser
+ * honouring `Content-Disposition: attachment`, and WebKit shows text files in place of the app.
+ */
+function saveFile(href: string, name: string) {
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+}
+
+/**
  * Attachment links lead to the API, outside the app. A file deleted or renamed on disk would end
  * there on an error, so a plain click checks first (HEAD) and stays in the app when the file is
- * gone. Modified clicks (new tab) open directly; the server answers those with a short page.
+ * gone. Files the server sends as downloads are saved, so the app stays open; images open. Modified
+ * clicks (new tab) open directly; the server answers those with a short page when the file is gone.
  */
 function AttachmentAnchor({
   href,
@@ -36,8 +50,11 @@ function AttachmentAnchor({
     event.preventDefault();
     fetch(href, { method: 'HEAD', credentials: 'same-origin' })
       .then((response) => {
-        if (response.ok) window.location.assign(href);
-        else if (response.status === 404)
+        if (response.ok) {
+          const disposition = response.headers.get('Content-Disposition') ?? '';
+          if (/^attachment\b/i.test(disposition)) saveFile(href, name);
+          else window.location.assign(href);
+        } else if (response.status === 404)
           notify.error(
             `"${name}" is no longer attached to this document. It may have been deleted or renamed; Attachments below the document lists the files attached now.`,
           );

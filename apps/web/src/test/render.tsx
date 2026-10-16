@@ -18,7 +18,9 @@ export interface MockRequest {
   headers: Headers;
 }
 
-type Handler = (request: MockRequest) => { status?: number; body?: unknown } | undefined;
+type Handler = (
+  request: MockRequest,
+) => { status?: number; body?: unknown; headers?: Record<string, string> } | undefined;
 
 /**
  * Stubs fetch for /api/v1. `routes` maps "METHOD /path" (query string included, exact match)
@@ -65,7 +67,8 @@ export function mockApi(routes: Record<string, unknown> | Handler) {
       return Response.json({ error: { code: 'NOT_FOUND', message: 'Not found' } }, { status: 404 });
     }
     if (result.status === 204) return new Response(null, { status: 204 });
-    return Response.json(result.body ?? {}, { status: result.status ?? 200 });
+    const headers = 'headers' in result ? result.headers : undefined;
+    return Response.json(result.body ?? {}, { status: result.status ?? 200, headers });
   });
   vi.stubGlobal('fetch', fetchMock);
   return requests;
