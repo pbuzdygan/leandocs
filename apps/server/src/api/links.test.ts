@@ -21,16 +21,16 @@ afterEach(async () => {
 });
 
 const FILES: Record<string, string> = {
-  'Infrastructure/Servers/BUZHULK.md':
-    '---\nid: buz\ntitle: BUZHULK\naliases: [hulk]\n---\n# BUZHULK\n\n## Hardware\n',
+  'Infrastructure/Servers/ATLAS.md':
+    '---\nid: atl\ntitle: ATLAS\naliases: [titan]\n---\n# ATLAS\n\n## Hardware\n',
   'Applications/Home Assistant.md': [
     '---',
     'id: ha',
     'title: Home Assistant',
     '---',
-    'Runs on [[BUZHULK]], see [[hulk#Hardware|the hardware]].',
+    'Runs on [[ATLAS]], see [[titan#Hardware|the hardware]].',
     '',
-    'Also [the server](../Infrastructure/Servers/BUZHULK.md) and [[Missing Doc]].',
+    'Also [the server](../Infrastructure/Servers/ATLAS.md) and [[Missing Doc]].',
     '',
     '[Old VLAN](../Network/Old-VLAN.md) · [web](https://example.com) · [[Home Assistant]]',
     '',
@@ -65,8 +65,8 @@ describe('links API (P9-01…P9-04)', () => {
     expect(items).toEqual([
       {
         kind: 'wiki',
-        raw: 'BUZHULK',
-        target: { id: 'buz', title: 'BUZHULK', path: 'Infrastructure/Servers/BUZHULK.md' },
+        raw: 'ATLAS',
+        target: { id: 'atl', title: 'ATLAS', path: 'Infrastructure/Servers/ATLAS.md' },
         count: 3, // title, alias with heading, relative Markdown link
       },
       { kind: 'wiki', raw: 'Missing Doc', target: null, count: 1 },
@@ -82,7 +82,7 @@ describe('links API (P9-01…P9-04)', () => {
 
   it('lists backlinks with counts, excluding self-links', async () => {
     const { app } = await start();
-    expect((await get<BacklinksResponse>(app, '/documents/buz/backlinks')).items).toEqual([
+    expect((await get<BacklinksResponse>(app, '/documents/atl/backlinks')).items).toEqual([
       { id: 'ha', title: 'Home Assistant', path: 'Applications/Home Assistant.md', count: 3 },
     ]);
     expect((await get<BacklinksResponse>(app, '/documents/ha/backlinks')).items).toEqual([
@@ -116,7 +116,7 @@ describe('links API (P9-01…P9-04)', () => {
     const { app } = await start();
     const { root } = await get<TreeResponse>(app, '/tree');
     const infrastructure = root.children.find((node) => node.name === 'Infrastructure');
-    expect(JSON.stringify(infrastructure)).toContain('"aliases":["hulk"]');
+    expect(JSON.stringify(infrastructure)).toContain('"aliases":["titan"]');
   });
 });
 

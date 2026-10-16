@@ -17,8 +17,8 @@ afterEach(async () => {
 
 const SERVER = [
   '---',
-  'id: buz',
-  'title: BUZHULK',
+  'id: atl',
+  'title: ATLAS',
   '# keep this comment',
   'owner: ops',
   'tags: [server, docker]',
@@ -51,46 +51,46 @@ async function start(files: Record<string, string>) {
 
 describe('POST /documents/:id/properties', () => {
   it('changes only the given fields and keeps everything else', async () => {
-    const { read, update } = await start({ 'BUZHULK.md': SERVER });
-    const res = await update('buz', {
+    const { read, update } = await start({ 'ATLAS.md': SERVER });
+    const res = await update('atl', {
       description: 'Main Incus host',
       tags: ['server', '#incus', 'Server', ' '],
-      aliases: ['hulk'],
+      aliases: ['titan'],
     });
     expect(res.statusCode, res.body).toBe(200);
-    const file = await read('BUZHULK.md');
+    const file = await read('ATLAS.md');
     expect(file).toContain('# keep this comment\nowner: ops\n');
     expect(file).toContain('tags:\n  - server\n  - incus\n');
     expect(file).toContain('description: Main Incus host');
-    expect(file).toContain('aliases:\n  - hulk');
+    expect(file).toContain('aliases:\n  - titan');
     expect(file).not.toContain('updated: 2026-01-01T00:00:00Z');
     expect(file).toContain('created: 2026-01-01T00:00:00Z');
     expect(file.endsWith('---\nBody stays.\n')).toBe(true);
-    expect(res.json<DocumentDto>().frontmatter).toMatchObject({ aliases: ['hulk'] });
+    expect(res.json<DocumentDto>().frontmatter).toMatchObject({ aliases: ['titan'] });
   });
 
   it('removes empty description, tags and aliases', async () => {
-    const { read, update } = await start({ 'BUZHULK.md': SERVER });
-    await update('buz', { description: 'x', aliases: ['a'] });
-    const res = await update('buz', { description: '  ', tags: [], aliases: [] });
+    const { read, update } = await start({ 'ATLAS.md': SERVER });
+    await update('atl', { description: 'x', aliases: ['a'] });
+    const res = await update('atl', { description: '  ', tags: [], aliases: [] });
     expect(res.statusCode).toBe(200);
-    const file = await read('BUZHULK.md');
+    const file = await read('ATLAS.md');
     expect(file).not.toMatch(/^(description|tags|aliases):/m);
     expect(file).toContain('owner: ops');
   });
 
   it('rejects stale revisions, empty titles and invalid headers', async () => {
     const { app: api, update } = await start({
-      'BUZHULK.md': SERVER,
+      'ATLAS.md': SERVER,
       'Broken.md': '---\nid: broken\ntitle: [\n---\nx\n',
     });
     const stale = await api.inject({
       method: 'POST',
-      url: '/api/v1/documents/buz/properties',
+      url: '/api/v1/documents/atl/properties',
       payload: { expectedRevision: 'sha256:old', tags: ['x'] },
     });
     expect(stale.statusCode).toBe(409);
-    expect((await update('buz', { title: '  ' })).statusCode).toBe(400);
+    expect((await update('atl', { title: '  ' })).statusCode).toBe(400);
     const docs = (await api.inject({ method: 'GET', url: '/api/v1/tree' })).json<{
       root: { children: { id: string; name: string }[] };
     }>();
@@ -100,11 +100,11 @@ describe('POST /documents/:id/properties', () => {
 
   it('a new title updates wiki links that used the old one', async () => {
     const { read, update } = await start({
-      'Servers/hulk-01.md': SERVER,
-      'Notes.md': '---\nid: notes\ntitle: Notes\n---\nSee [[BUZHULK#Hardware]].\n',
+      'Servers/titan-01.md': SERVER,
+      'Notes.md': '---\nid: notes\ntitle: Notes\n---\nSee [[ATLAS#Hardware]].\n',
     });
-    expect((await update('buz', { title: 'BUZHULK v2' })).statusCode).toBe(200);
-    expect(await read('Notes.md')).toContain('See [[BUZHULK v2#Hardware]].');
+    expect((await update('atl', { title: 'ATLAS v2' })).statusCode).toBe(200);
+    expect(await read('Notes.md')).toContain('See [[ATLAS v2#Hardware]].');
   });
 
   it('documents without front matter get one', async () => {

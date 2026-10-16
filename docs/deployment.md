@@ -56,7 +56,13 @@ To use existing Markdown files, copy them into `data/content/` before or after t
 
 ## 2. Create the administrator account
 
-Open LeanDocs in the browser and create the administrator account. The first person who opens a new installation creates the account, so do this right after starting it, or before you make it reachable from the internet. Then add an authenticator app in Settings › Security.
+Open LeanDocs in the browser and create the administrator account. The form asks for a **setup token**, so only someone with access to the server can create the account. Copy it from the log:
+
+```bash
+docker compose logs leandocs | grep 'setup token'
+```
+
+The token is also saved in `data/system/setup-token` (useful when `LOG_LEVEL` hides warnings). Every restart creates a new token until the account exists; use the newest one. After the account is created, the token stops working and the file is removed. Then add an authenticator app in Settings › Security.
 
 Until HTTPS is set up, test from the server itself at `http://localhost:8080` with `SESSION_COOKIE_SECURE=false`. With `true`, sign-in only works over HTTPS.
 
@@ -217,7 +223,7 @@ cd data/system && rm -f app.db app.db-wal app.db-shm auth.initialized mfa.key &&
 docker compose start
 ```
 
-Open LeanDocs right away and create the account again (step 2), before anyone else can.
+Create the account again with the new setup token from the log (step 2).
 
 ## Troubleshooting
 
@@ -234,5 +240,6 @@ Open LeanDocs right away and create the account again (step 2), before anyone el
 | Large imports fail with 413                                                                               | The proxy's upload limit, e.g. Nginx `client_max_body_size`. LeanDocs itself accepts up to 10,000 files and 256 MiB of documents and attachments per import.                                                                                             |
 | LeanDocs does not answer for a while after the first start                                                | It reads every document before it answers: about 40 seconds for 10,000 documents (measured on a 3-core server), longer on slower disks. `docker compose logs leandocs` shows when it is listening. Later starts read only changed files (a few seconds). |
 | `docker compose ps` shows "unhealthy"                                                                     | `docker compose logs leandocs` shows why.                                                                                                                                                                                                                |
+| The container restarts during large downloads, imports or the first start of a very large library         | It reached its memory limit (`docker inspect leandocs --format '{{.State.OOMKilled}}'` shows `true`). Raise `LEANDOCS_MEMORY` in `.env`, e.g. `LEANDOCS_MEMORY=4g`, then `docker compose up -d`.                                                         |
 
 The image contains no shell: `docker exec … sh` does not work. Use `docker compose logs`, look at `./data` on the host, or run `docker compose exec leandocs /nodejs/bin/node -e "…"`.

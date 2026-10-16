@@ -39,7 +39,7 @@ Code blocks show the language and a **Copy** button. Supported languages include
 ````markdown
 ```mermaid
 flowchart LR
-    Internet --> UCG --> Switch --> BUZHULK
+    Internet --> Gateway --> Switch --> ATLAS
 ```
 ````
 
@@ -49,8 +49,8 @@ Diagrams render in strict security mode. An invalid diagram shows "Diagram rende
 
 | Syntax                                        | Meaning                                                               |
 | --------------------------------------------- | --------------------------------------------------------------------- |
-| `[[BUZHULK]]`                                 | Link by title (or file name, or path without `.md`; case-insensitive) |
-| `[[BUZHULK#Hardware]]`                        | Link to a heading in that document                                    |
+| `[[ATLAS]]`                                   | Link by title (or file name, or path without `.md`; case-insensitive) |
+| `[[ATLAS#Hardware]]`                          | Link to a heading in that document                                    |
 | `[[Home Assistant\|HA]]`                      | Custom link text                                                      |
 | `[Backup](../Procedures/Backup%20Restore.md)` | Standard relative Markdown link: the most portable option             |
 

@@ -1,6 +1,7 @@
 import { buildApp as originalBuildApp } from '../app.js';
 import type { AppConfig } from '../config/config.js';
 import type { SetupStatus, SessionResponse } from '@leandocs/shared';
+import { readSetupToken } from './setup-token.js';
 
 /** Content API tests use real setup/login/session cookies, without weakening production auth. */
 export async function buildApp(config: AppConfig, watchContent = false) {
@@ -16,7 +17,7 @@ export async function buildApp(config: AppConfig, watchContent = false) {
       await app.inject({
         method: 'POST',
         url: '/api/v1/auth/setup',
-        headers: { 'x-leandocs-setup-token': status.setupToken },
+        headers: { 'x-leandocs-setup-token': readSetupToken(config.dataDir) },
         payload: {
           username: 'test-admin',
           password: 'test administrator passphrase',

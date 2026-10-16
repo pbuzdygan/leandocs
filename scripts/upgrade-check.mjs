@@ -47,12 +47,12 @@ async function run({ from, to, keep }) {
     const old = await new Instance(from, dataDir).start();
     running.push(old);
     log(`Old release ${from} reports ${old.version}`);
-    let { client, authenticator } = await setUpAccount(old.base);
+    let { client, authenticator } = await setUpAccount(old);
     log('Account created, authenticator app enabled, signed in with password and code');
 
     let items = flatten(await client.ok('GET', '/tree'));
-    const buzhulk = idByPath(items, 'Infrastructure/Servers/BUZHULK.md');
-    check(!buzhulk.startsWith('p-'), 'The old release did not add an id to a file without one');
+    const atlas = idByPath(items, 'Infrastructure/Servers/ATLAS.md');
+    check(!atlas.startsWith('p-'), 'The old release did not add an id to a file without one');
     const created = await client.ok('POST', '/documents', {
       name: 'Created before upgrade',
       folder: 'Notes',
@@ -64,7 +64,7 @@ async function run({ from, to, keep }) {
       expectedRevision: runbook.revision,
     });
     await client.ok('PUT', '/pins/runbook');
-    await client.ok('PUT', `/pins/${buzhulk}`);
+    await client.ok('PUT', `/pins/${atlas}`);
     await client.ok('DELETE', '/documents/trash-me');
     const sessionCookies = new Map(client.cookies);
 

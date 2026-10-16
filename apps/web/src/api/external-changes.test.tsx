@@ -20,8 +20,8 @@ class EventSourceMock extends EventTarget {
   }
 }
 
-const ID = 'id-buzhulk';
-const PATH = 'Infrastructure/Servers/BUZHULK.md';
+const ID = 'id-atlas';
+const PATH = 'Infrastructure/Servers/ATLAS.md';
 const change = (kind = 'changed') => ({ documents: [{ kind, id: ID, path: PATH }], folders: [] });
 beforeEach(() => {
   EventSourceMock.instances = [];
@@ -87,7 +87,7 @@ describe('frontend external changes', () => {
     backend.update();
     act(() => source().emit('ready', { resync: true }));
     await screen.findByRole('heading', { name: 'After view' });
-    await user.click(screen.getByRole('tab', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
     await screen.findByTestId('source-editor');
     expect(EventSourceMock.instances).toHaveLength(1);
   });

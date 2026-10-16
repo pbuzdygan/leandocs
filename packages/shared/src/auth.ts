@@ -17,14 +17,20 @@ export interface SessionResponse {
   csrfToken: string;
 }
 
-export type SetupStatus =
-  | {
-      required: true;
-      contentDir: string;
-      setupToken: string;
-      authMode?: 'local' | 'proxy' | 'none';
-    }
-  | { required: false; contentDir: string; authMode?: 'local' | 'proxy' | 'none' };
+/**
+ * Public, so it says only whether setup is needed (ADR-0026): the setup token is shown in the
+ * server log, and the content folder only after the account is created.
+ */
+export interface SetupStatus {
+  required: boolean;
+  authMode?: 'local' | 'proxy' | 'none';
+}
+
+/** Response of a successful setup. */
+export interface SetupResult {
+  required: false;
+  contentDir: string;
+}
 
 /** Shared account policy; passwords are never trimmed or normalized. */
 export function validateSetup(input: SetupRequest): string | null {

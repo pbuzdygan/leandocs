@@ -1,4 +1,5 @@
 import {
+  API_BASE_PATH,
   createLinkResolver,
   encodePathSegment,
   parseMarkdownHref,
@@ -38,6 +39,26 @@ function documentUrl(id: string, fragment?: string): string {
   return `/doc/${encodeURIComponent(id)}${fragment ? `#${fragment}` : ''}`;
 }
 
+const ATTACHMENT_URL = new RegExp(
+  `^${API_BASE_PATH.replace(/[/.]/g, '\\$&')}/documents/([^/?#]+)/attachments/([^/?#]+)`,
+);
+
+/** Owner and file name of an attachment URL (`…/documents/<id>/attachments/My%20file.pdf`). */
+export function attachmentTarget(
+  href: string | undefined,
+): { documentId: string; name: string } | null {
+  const match = href ? ATTACHMENT_URL.exec(href) : null;
+  if (!match) return null;
+  const decode = (value: string) => {
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  };
+  return { documentId: decode(match[1]!), name: decode(match[2]!) };
+}
+
 /** Resolve portable Markdown asset paths only; other URLs retain their existing policy. */
 export function resolveAttachmentUrl(url: string, context: RenderContext): string {
   if (/^[a-z][a-z0-9+.-]*:/i.test(url) || /^[/#]/.test(url)) return url;
@@ -64,17 +85,18 @@ export function resolveAttachmentUrl(url: string, context: RenderContext): strin
  * - drops a leading `# H1` that repeats the document title (P4-09);
  * - resolves `[[wiki links]]` and relative `.md` links to `/doc/<id>` URLs;
  * - marks unresolved document links as broken (UI_SPEC §76).
+ *
+ * Returns whether a title heading was dropped.
  */
-export function applyRenderContext(tree: Root, context: RenderContext): void {
+export function applyRenderContext(tree: Root, context: RenderContext): boolean {
   const first = tree.children[0];
-  if (
+  const titleHeading = Boolean(
     context.title &&
     first?.type === 'heading' &&
     first.depth === 1 &&
-    toString(first).trim().toLowerCase() === context.title.trim().toLowerCase()
-  ) {
-    tree.children.shift();
-  }
+    toString(first).trim().toLowerCase() === context.title.trim().toLowerCase(),
+  );
+  if (titleHeading) tree.children.shift();
 
   // Same resolution as the server's link index (title, alias, file name, path; P9-02).
   const resolver = createLinkResolver(context.documents);
@@ -102,4 +124,5 @@ export function applyRenderContext(tree: Root, context: RenderContext): void {
     if (target) node.url = documentUrl(target.id, parsed.fragment);
     else node.data = { ...node.data, ...BROKEN };
   });
+  return titleHeading;
 }

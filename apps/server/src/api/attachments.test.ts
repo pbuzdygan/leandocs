@@ -74,6 +74,43 @@ describe('attachment API', () => {
     expect((await app.inject(`${base}/picture.png`)).statusCode).toBe(404);
   });
 
+  it('answers a browser that opens a missing attachment with a page, the app with JSON', async () => {
+    const { app, id, base } = await setup();
+    const opened = await app.inject({
+      url: `${base}/gone.pdf`,
+      headers: { 'sec-fetch-mode': 'navigate', accept: 'text/html,*/*' },
+    });
+    expect(opened.statusCode).toBe(404);
+    expect(opened.headers['content-type']).toBe('text/html; charset=utf-8');
+    expect(opened.headers['content-security-policy']).toContain("default-src 'none'");
+    expect(opened.body).toContain('<h1>File not found</h1>');
+    expect(opened.body).toContain(`<a href="/doc/${id}">Back to the document</a>`);
+    // Without Fetch Metadata the Accept header decides.
+    const legacy = await app.inject({ url: `${base}/gone.pdf`, headers: { accept: 'text/html' } });
+    expect(legacy.headers['content-type']).toBe('text/html; charset=utf-8');
+
+    const unknownDocument = await app.inject({
+      url: '/api/v1/documents/00000000-0000-4000-8000-000000000000/attachments/gone.pdf',
+      headers: { 'sec-fetch-mode': 'navigate' },
+    });
+    expect(unknownDocument.statusCode).toBe(404);
+    expect(unknownDocument.body).toContain('<a href="/">Open LeanDocs</a>');
+
+    for (const headers of [{ 'sec-fetch-mode': 'cors' }, { accept: 'application/json' }]) {
+      const fetched = await app.inject({ url: `${base}/gone.pdf`, headers });
+      expect(fetched.statusCode).toBe(404);
+      expect(fetched.json()).toEqual({
+        error: { code: 'ATTACHMENT_NOT_FOUND', message: 'Attachment not found' },
+      });
+    }
+    const head = await app.inject({
+      method: 'HEAD',
+      url: `${base}/gone.pdf`,
+      headers: { 'sec-fetch-mode': 'cors' },
+    });
+    expect(head.statusCode).toBe(404);
+  });
+
   it('avoids collisions, preserves Unicode names and forces download for generic files', async () => {
     const { app, upload } = await setup();
     const first = await upload('notes.txt', 'text/plain', Buffer.from('first'));

@@ -102,7 +102,7 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-code);
 }
 /* Tables look like View (.markdown table, UI_SPEC §160): natural width, same cell padding. Cells
    keep a minimum width so a new, empty table still has room to click into. */
@@ -127,12 +127,33 @@
   cursor: pointer;
 }
 
-.visual-toolbar button:nth-child(4),
-.visual-toolbar button:nth-child(8),
-.visual-toolbar button:nth-child(12) {
-  border-right: 1px solid var(--border-default);
-  margin-right: var(--space-2);
-  border-radius: 0;
+/* Groups (UI_SPEC §36) and the separators between them. */
+.visual-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.visual-toolbar__separator {
+  flex-shrink: 0;
+  width: 1px;
+  height: var(--space-6);
+  margin: 0 var(--space-1);
+  background: var(--border-default);
+}
+
+/* On/off state of marks and block types (aria-pressed), not only by colour: also a background. */
+.visual-toolbar button[aria-pressed='true'],
+.visual-bubble button[aria-pressed='true'] {
+  background: var(--bg-selected);
+  color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.visual-toolbar button:focus-visible,
+.visual-bubble button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
 }
 
 .visual-content pre:not(.visual-opaque) {
@@ -142,7 +163,7 @@
   background: var(--code-bg);
   color: var(--code-text);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-code);
 }
 
 /* Contextual tools for the block at the caret: table, code block, callout (P6-09…P6-11). */

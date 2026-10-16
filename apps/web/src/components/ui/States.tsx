@@ -22,6 +22,18 @@ export function SkeletonLines({ count = 3, widths }: { count?: number; widths?: 
   );
 }
 
+/** Loading placeholder for a document-shaped area, with a status text for screen readers. */
+export function LoadingLines({ label, count = 6 }: { label: string; count?: number }) {
+  return (
+    <div aria-busy="true">
+      <span className="visually-hidden" role="status">
+        {label}
+      </span>
+      <SkeletonLines count={count} widths={['92%', '85%', '96%', '60%', '88%', '74%']} />
+    </div>
+  );
+}
+
 /** Centered empty/error state with a small icon — never a large illustration (UI_SPEC §73). */
 export function EmptyState({
   icon,
@@ -54,12 +66,15 @@ export function ErrorState({
   message,
   details,
   onRetry,
+  action,
   level,
 }: {
   title: string;
   message: string;
   details?: string;
   onRetry?: () => void;
+  /** Another way forward instead of (or besides) Retry. */
+  action?: ReactNode;
   level?: 1 | 2;
 }) {
   const [open, setOpen] = useState(false);
@@ -67,7 +82,14 @@ export function ErrorState({
     <EmptyState
       title={title}
       level={level}
-      actions={onRetry && <Button onClick={onRetry}>Retry</Button>}
+      actions={
+        (onRetry || action) && (
+          <>
+            {action}
+            {onRetry && <Button onClick={onRetry}>Retry</Button>}
+          </>
+        )
+      }
     >
       <p>{message}</p>
       {details && (

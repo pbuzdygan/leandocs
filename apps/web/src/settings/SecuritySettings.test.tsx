@@ -36,14 +36,14 @@ describe('security settings', () => {
       'src',
       'data:image/png;base64,abc',
     );
-    expect(screen.getByText('Not enabled.')).toBeInTheDocument();
+    expect(screen.getByText('Not enabled')).toBeInTheDocument();
     await user.type(screen.getByLabelText('Authenticator code'), '123456');
     await user.click(screen.getByRole('button', { name: 'Confirm and enable' }));
     expect(await screen.findByLabelText('Recovery codes')).toHaveTextContent(
       'private-recovery-one',
     );
     await waitFor(() =>
-      expect(screen.getByText('Enabled. 10 recovery codes remaining.')).toBeInTheDocument(),
+      expect(screen.getByText('Enabled · 10 recovery codes remaining')).toBeInTheDocument(),
     );
     expect(
       JSON.stringify(
@@ -98,7 +98,7 @@ describe('security settings', () => {
     await user.type((await mfa()).getByLabelText('Current password'), 'my current passphrase');
     await user.type(screen.getByLabelText('Authenticator or recovery code'), 'unused recovery');
     await user.click(screen.getByRole('button', { name: 'Disable two-factor authentication' }));
-    expect(await screen.findByText('Not enabled.')).toBeInTheDocument();
+    expect(await screen.findByText('Not enabled')).toBeInTheDocument();
   });
   it('cancels enrollment on the server and clears the displayed setup secret', async () => {
     const requests = mockApi((request) => {

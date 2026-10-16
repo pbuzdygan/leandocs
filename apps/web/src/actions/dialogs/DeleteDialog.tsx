@@ -60,7 +60,7 @@ export function DeleteDialog({ target, onClose }: { target: ItemTarget; onClose:
           <Button onClick={onClose} autoFocus>
             Cancel
           </Button>
-          <Button variant="danger" onClick={confirm} disabled={remove.isPending}>
+          <Button variant="danger" onClick={confirm} loading={remove.isPending}>
             Move to Trash
           </Button>
         </>

@@ -38,7 +38,12 @@ export function NewFolderDialog({ parent, onClose }: { parent: string; onClose: 
       actions={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={name.trim() === '' || create.isPending}>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={name.trim() === ''}
+            loading={create.isPending}
+          >
             Create
           </Button>
         </>

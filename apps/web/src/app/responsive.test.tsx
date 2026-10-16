@@ -4,15 +4,15 @@ import { documentDto, mockApi, renderApp, sampleTree } from '../test/render';
 
 /** P16-02 (UI_SPEC §98–106). Widths are answered by the matchMedia stub in test/setup.ts. */
 
-const ID = 'id-buzhulk';
-const CONTENT = '# BUZHULK\n\n## Hardware\n\nText.\n\n## Network\n\nText.\n';
+const ID = 'id-atlas';
+const CONTENT = '# ATLAS\n\n## Hardware\n\nText.\n\n## Network\n\nText.\n';
 
 function api() {
   mockApi((request) => {
     if (request.path === '/tree') return { body: { root: sampleTree() } };
     if (request.path === `/documents/${ID}`)
       return {
-        body: documentDto(ID, 'Infrastructure/Servers/BUZHULK.md', { content: CONTENT }),
+        body: documentDto(ID, 'Infrastructure/Servers/ATLAS.md', { content: CONTENT }),
       };
     if (request.path.startsWith('/documents/recent')) return { body: { items: [] } };
     if (request.path === '/pins') return { body: { items: [] } };
@@ -32,7 +32,7 @@ describe('context panel', () => {
     window.innerWidth = 1024;
     api();
     const { user } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     expect(screen.queryByRole('complementary', { name: 'Document context' })).toBeNull();
     const opener = screen.getByRole('button', { name: 'Contents, links and info' });
     await user.click(opener);
@@ -55,7 +55,7 @@ describe('phone navigation drawer', () => {
     window.innerWidth = 390;
     api();
     const { user } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     const drawer = document.getElementById('navigation-drawer')!;
     expect(drawer).toHaveAttribute('inert');
 
@@ -63,7 +63,7 @@ describe('phone navigation drawer', () => {
     await user.click(menu);
     expect(drawer).not.toHaveAttribute('inert');
     await waitFor(() =>
-      expect(within(drawer).getByRole('treeitem', { name: /BUZHULK/ })).toHaveFocus(),
+      expect(within(drawer).getByRole('treeitem', { name: /ATLAS/ })).toHaveFocus(),
     );
     await user.keyboard('{Escape}');
     expect(drawer).toHaveAttribute('inert');
@@ -74,7 +74,7 @@ describe('phone navigation drawer', () => {
     window.innerWidth = 390;
     api();
     const { user, location } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     await user.click(screen.getByRole('button', { name: 'Open navigation' }));
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     await waitFor(() => expect(location()).toBe('/settings/general'));
@@ -86,7 +86,7 @@ describe('navigation sidebar on wider screens', () => {
   it('can be hidden and shown again, and stays as chosen (UI_SPEC §160)', async () => {
     api();
     const { user, unmount } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     const sidebar = document.getElementById('navigation-drawer')!;
     const hide = screen.getByRole('button', { name: 'Hide navigation' });
     expect(hide).toHaveAttribute('aria-expanded', 'true');
@@ -103,7 +103,7 @@ describe('navigation sidebar on wider screens', () => {
     unmount();
     api();
     renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     expect(document.getElementById('navigation-drawer')).toHaveClass('sidebar--hidden');
     await user.click(screen.getByRole('button', { name: 'Show navigation' }));
     expect(document.getElementById('navigation-drawer')).not.toHaveClass('sidebar--hidden');
@@ -112,7 +112,7 @@ describe('navigation sidebar on wider screens', () => {
   it('resizes with the keyboard within 220–400 px and remembers the width (UI_SPEC §17)', async () => {
     api();
     const { user } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     const separator = screen.getByRole('separator', { name: 'Resize navigation' });
     const sidebar = document.getElementById('navigation-drawer')!;
     expect(separator).toHaveAttribute('aria-valuenow', '280');

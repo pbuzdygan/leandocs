@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
+import { readSetupToken } from '../test/setup-token.js';
 
 const apps: FastifyInstance[] = [];
 afterEach(async () => {
@@ -140,8 +141,8 @@ describe('trusted proxy authentication', () => {
   it('bypasses local setup and disables local credential/session endpoints before parsing', async () => {
     const { app } = await start();
     const status = await app.inject('/api/v1/auth/setup');
-    expect(status.json()).toMatchObject({ required: false, authMode: 'proxy' });
-    expect(status.json().setupToken).toBeUndefined();
+    // Only these two fields: no setup token and no storage path (ADR-0026).
+    expect(status.json()).toEqual({ required: false, authMode: 'proxy' });
     for (const endpoint of ['setup', 'login', 'logout']) {
       const response = await app.inject({
         method: 'POST',
@@ -158,14 +159,13 @@ describe('trusted proxy authentication', () => {
 
   it('ignores existing local cookies and preserves local accounts when switching modes', async () => {
     const first = await start({ AUTH_MODE: 'local' });
-    const setup = (await first.app.inject('/api/v1/auth/setup')).json();
     const password = 'a local administrator passphrase';
     expect(
       (
         await first.app.inject({
           method: 'POST',
           url: '/api/v1/auth/setup',
-          headers: { 'x-leandocs-setup-token': setup.setupToken },
+          headers: { 'x-leandocs-setup-token': readSetupToken(first.dataDir) },
           payload: { username: 'admin', password, confirmPassword: password },
         })
       ).statusCode,

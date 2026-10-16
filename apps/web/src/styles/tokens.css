@@ -55,6 +55,16 @@
   --font-size-ui: 14px;
   --font-size-ui-emphasis: 15px;
   --font-size-body: 16px;
+  /* Headings (UI_SPEC §9): document titles and Markdown headings; app pages use h2. */
+  --font-size-h1: 32px;
+  --font-size-h2: 24px;
+  --font-size-h3: 20px;
+  --font-size-h4: 17px;
+  /* Document title on phones (UI_SPEC §104). */
+  --font-size-mobile-title: 26px;
+  /* Code blocks, diffs and the source view (UI_SPEC §40: 13–14 px). */
+  --font-size-code: 13px;
+  --font-size-source-editor: 14px;
   --line-height-ui: 1.4;
   --line-height-body: 1.7;
 
@@ -135,4 +145,12 @@
   --source-link: #7dd3fc;
   --source-code: #fda4af;
   --source-meta: #94a3b8;
+}
+
+/* Touch screens (guidelines §17): rows that are tapped (tree, pinned, Trash, Settings sections,
+   folder picker) get a comfortable height. Desktop layouts keep UI_SPEC §20's 30 px. */
+@media (pointer: coarse) {
+  :root {
+    --tree-row-height: 40px;
+  }
 }

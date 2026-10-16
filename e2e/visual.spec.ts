@@ -8,11 +8,11 @@ import { expect, test, type Page } from '@playwright/test';
  * `--update-snapshots` (see docs/development.md).
  */
 
-const DOCUMENT = '/doc/visual-buzhulk';
+const DOCUMENT = '/doc/visual-atlas';
 
 async function openDocument(page: Page) {
   await page.goto(DOCUMENT);
-  await expect(page.getByRole('heading', { level: 1, name: 'BUZHULK' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'ATLAS' })).toBeVisible();
   await expect(page.locator('.code-block').first()).toBeVisible();
 }
 

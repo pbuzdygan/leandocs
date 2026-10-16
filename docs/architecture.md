@@ -1,6 +1,6 @@
 # Architecture
 
-How LeanDocs is built today. The binding requirements are in [`PROJECT_SPEC.md`](../PROJECT_SPEC.md) and the [ADRs](adr/). This file describes the current implementation. User-facing guides: [deployment](deployment.md), [configuration](configuration.md), [import](import.md), [Markdown](markdown.md), [attachments](attachments.md).
+How LeanDocs is built today. The binding requirements are in [`PROJECT_SPEC.md`](PROJECT_SPEC.md) and the [ADRs](adr/). This file describes the current implementation. User-facing guides: [deployment](deployment.md), [configuration](configuration.md), [import](import.md), [Markdown](markdown.md), [attachments](attachments.md).
 
 ## Data layout
 
@@ -8,8 +8,8 @@ How LeanDocs is built today. The binding requirements are in [`PROJECT_SPEC.md`]
 DATA_DIR/
 ├── content/                 ← the documentation (source of truth)
 │   ├── Infrastructure/
-│   │   ├── BUZHULK.md
-│   │   └── BUZHULK.assets/  ← attachments of BUZHULK.md (not a navigation folder)
+│   │   ├── ATLAS.md
+│   │   └── ATLAS.assets/  ← attachments of ATLAS.md (not a navigation folder)
 │   ├── _templates/          ← system folder (hidden from the tree)
 │   └── _trash/              ← system folder (hidden from the tree)
 └── system/                  ← durable app state and rebuildable SQLite index; back up together
@@ -87,8 +87,8 @@ Scan issues (`FRONTMATTER_INVALID`, `INVALID_ID`, `DUPLICATE_ID`, `ID_ASSIGNMENT
 content/_trash/
 └── 20261002T153000Z-1a2b3c4d/          ← trashId (UTC timestamp + random)
     ├── .leandocs-trash.json            ← { version, kind, name, originalPath, deletedAt, documentId?, title?, assetsName? }
-    ├── BUZHULK.md                      ← the document, unchanged
-    └── BUZHULK.assets/                 ← its attachments (if any)
+    ├── ATLAS.md                      ← the document, unchanged
+    └── ATLAS.assets/                 ← its attachments (if any)
 ```
 
 - Folders with content are trashed the same way (`kind: "folder"`). Empty folders are removed directly.
@@ -311,7 +311,8 @@ without hashing; minimum password policy belongs to setup. Argon2id hashing take
 operation and uses the worker pool. Legacy scrypt hashes remain verifiable and upgrade on successful login. See ADR-0011 for format and resource considerations.
 
 First-run setup (P11-02) exposes `GET /auth/setup` and `POST /auth/setup` under `/api/v1`.
-`auth/setup.ts` checks the singleton account, issues a process-local setup token, validates
+`auth/setup.ts` checks the singleton account, issues a process-local setup token that only the
+operator sees (server log and `system/setup-token`, ADR-0026), validates
 credentials and bounds creation to one in-flight hash. It inserts without replacing an existing
 account, including when another server instance wins the race. Responses are never cached.
 The token must be supplied in a custom header; cross-site Fetch Metadata requests and non-JSON

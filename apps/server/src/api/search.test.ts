@@ -110,22 +110,22 @@ describe('GET /api/v1/search', () => {
 
   it('applies tag:, path: and title: filters (§33)', async () => {
     const instance = await start({
-      'Infrastructure/Servers/BUZHULK.md': doc('BUZHULK', 'docker host', ['tags: [server]']),
+      'Infrastructure/Servers/ATLAS.md': doc('ATLAS', 'docker host', ['tags: [server]']),
       'Infrastructure/Network/UniFi.md': doc('UniFi', 'docker controller', ['tags: [network]']),
       'Applications/Vaultwarden.md': doc('Vaultwarden', 'docker app', ['tags: [server]']),
     });
     expect(titles(await search(instance, 'docker tag:server')).sort()).toEqual([
-      'BUZHULK',
+      'ATLAS',
       'Vaultwarden',
     ]);
     expect(titles(await search(instance, 'docker path:Infrastructure')).sort()).toEqual([
-      'BUZHULK',
+      'ATLAS',
       'UniFi',
     ]);
     expect(titles(await search(instance, 'docker path:network'))).toEqual(['UniFi']);
-    expect(titles(await search(instance, 'title:buz'))).toEqual(['BUZHULK']);
+    expect(titles(await search(instance, 'title:atl'))).toEqual(['ATLAS']);
     // Filter-only queries list matching documents by title.
-    expect(titles(await search(instance, 'tag:server'))).toEqual(['BUZHULK', 'Vaultwarden']);
+    expect(titles(await search(instance, 'tag:server'))).toEqual(['ATLAS', 'Vaultwarden']);
     expect(titles(await search(instance, 'tag:server path:Applications'))).toEqual(['Vaultwarden']);
   });
 

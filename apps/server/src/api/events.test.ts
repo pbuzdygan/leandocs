@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
+import { readSetupToken } from '../test/setup-token.js';
 
 const apps: FastifyInstance[] = [];
 const requests: ClientRequest[] = [];
@@ -102,12 +103,11 @@ describe('GET /api/v1/events', () => {
   it('requires local authentication and stops an existing stream before disclosing post-logout changes', async () => {
     const { app, address, content } = await setup('local');
     expect((await app.inject('/api/v1/events')).statusCode).toBe(401);
-    const setupStatus = (await app.inject('/api/v1/auth/setup')).json();
     const password = 'an administrator passphrase';
     await app.inject({
       method: 'POST',
       url: '/api/v1/auth/setup',
-      headers: { 'x-leandocs-setup-token': setupStatus.setupToken },
+      headers: { 'x-leandocs-setup-token': readSetupToken(path.dirname(content)) },
       payload: { username: 'Admin', password, confirmPassword: password },
     });
     const anonymous = (await app.inject('/api/v1/auth/session')).json();

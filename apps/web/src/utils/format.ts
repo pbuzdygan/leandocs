@@ -30,7 +30,7 @@ export function readingMinutes(text: string): number {
   return Math.max(1, Math.round(words / 200));
 }
 
-/** "Infrastructure/Servers/BUZHULK.md" → ["Infrastructure", "Servers"] */
+/** "Infrastructure/Servers/ATLAS.md" → ["Infrastructure", "Servers"] */
 export function folderSegments(documentPath: string): string[] {
   const parts = documentPath.split('/');
   parts.pop();

@@ -48,6 +48,14 @@ export function AboutSettings() {
         <a href={APP_REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
           GitHub
         </a>
+        {' · '}
+        <a
+          href={`${APP_REPOSITORY_URL}/blob/main/LICENSE`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          License
+        </a>
       </p>
     </section>
   );

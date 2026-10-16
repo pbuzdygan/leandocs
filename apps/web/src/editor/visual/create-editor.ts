@@ -7,7 +7,12 @@ import {
   editorViewOptionsCtx,
   parserCtx,
 } from '@milkdown/kit/core';
-import { commonmark, linkSchema, imageSchema } from '@milkdown/kit/preset/commonmark';
+import {
+  commonmark,
+  linkSchema,
+  imageSchema,
+  inlineCodeKeymap,
+} from '@milkdown/kit/preset/commonmark';
 import { gfm, extendListItemSchemaForTask } from '@milkdown/kit/preset/gfm';
 import { history } from '@milkdown/kit/plugin/history';
 import { $nodeSchema, $remark, $prose } from '@milkdown/kit/utils';
@@ -326,6 +331,10 @@ export async function createVisualEditor(options: VisualOptions): Promise<Editor
     .config((ctx) => {
       ctx.set(rootCtx, options.root);
       ctx.set(defaultValueCtx, options.source);
+      // Ctrl/Cmd+E is the app-wide View ↔ Edit toggle. Milkdown's default inline-code key would
+      // also run and save the selection as code on the way out; inline code stays on the
+      // toolbar and the `code` input rule.
+      ctx.set(inlineCodeKeymap.key, { ToggleInlineCode: { shortcuts: [] } });
       ctx.update(editorViewOptionsCtx, (value) => ({
         ...value,
         attributes: { 'aria-label': 'Visual document', role: 'textbox', 'aria-multiline': 'true' },

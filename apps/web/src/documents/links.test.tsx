@@ -11,15 +11,15 @@ const routes = {
   'GET /tree': { root: sampleTree() },
   'GET /documents/id-vlan': documentDto('id-vlan', 'Network/VLAN.md', {
     title: 'VLAN',
-    content: 'See [[BUZHULK]] and [[Old Switch]].\n',
+    content: 'See [[ATLAS]] and [[Old Switch]].\n',
   }),
   'GET /documents/id-vlan/attachments': { items: [] },
   'GET /documents/id-vlan/links': {
     items: [
       {
         kind: 'wiki',
-        raw: 'BUZHULK',
-        target: { id: 'id-buzhulk', title: 'BUZHULK', path: 'Infrastructure/Servers/BUZHULK.md' },
+        raw: 'ATLAS',
+        target: { id: 'id-atlas', title: 'ATLAS', path: 'Infrastructure/Servers/ATLAS.md' },
         count: 1,
       },
       { kind: 'wiki', raw: 'Old Switch', target: null, count: 1 },
@@ -53,10 +53,10 @@ describe('Links tab (P9-03)', () => {
     expect(within(referenced).getByRole('link', { name: 'Read me' })).toBeInTheDocument();
     expect(referenced).toHaveTextContent('2 links');
     const outgoing = screen.getByRole('region', { name: 'Links to' });
-    expect(within(outgoing).getByRole('link', { name: 'BUZHULK' })).toBeInTheDocument();
+    expect(within(outgoing).getByRole('link', { name: 'ATLAS' })).toBeInTheDocument();
     expect(within(outgoing).getByText('[[Old Switch]]')).toHaveClass('broken-link');
-    await user.click(within(outgoing).getByRole('link', { name: 'BUZHULK' }));
-    await waitFor(() => expect(location()).toBe('/doc/id-buzhulk'));
+    await user.click(within(outgoing).getByRole('link', { name: 'ATLAS' }));
+    await waitFor(() => expect(location()).toBe('/doc/id-atlas'));
   });
 
   it('remembers the chosen tab', async () => {

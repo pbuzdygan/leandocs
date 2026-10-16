@@ -19,7 +19,7 @@ const RICH = [
   '',
   '| Key | Value |',
   '| --- | ----- |',
-  '| CPU | N100  |',
+  '| CPU | Quad  |',
   '',
   '- [x] Done item',
   '- [ ] Open item',
@@ -144,6 +144,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
         'links',
         'security',
         'about',
+        'help/shortcuts',
       ]) {
         await page.goto(`/settings/${section}`);
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -204,6 +205,7 @@ test('pages reflow to 320 px without horizontal page scrolling', async ({
     `/doc/${id}/edit`,
     '/settings/storage',
     '/settings/about',
+    '/settings/help/shortcuts',
     '/trash',
   ]) {
     await page.goto(url);

@@ -1,16 +1,23 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navigate, Outlet, useNavigate } from 'react-router';
-import { APP_NAME, validateSetup } from '@leandocs/shared';
+import { APP_NAME, MIN_ACCOUNT_PASSWORD_LENGTH, validateSetup } from '@leandocs/shared';
 import { api, ApiError, errorMessage } from '../api/client';
 import { AppLogo, Wordmark } from '../components/AppLogo';
 import { Button } from '../components/ui/Button';
 import { FormError, TextField } from '../components/ui/Field';
 import { ErrorState, SkeletonLines } from '../components/ui/States';
 import { usePageTitle } from '../utils/page-title';
+import { AppLoading } from '../app/AppLoading';
 import './setup.css';
 
 const setupKey = ['auth', 'setup'] as const;
+
+/** The token as printed in the server log (ADR-0026); copied text may carry spaces. */
+function normalizeToken(value: string): string | null {
+  const token = value.trim().toLowerCase();
+  return /^[0-9a-f]{64}$/.test(token) ? token : null;
+}
 
 function useSetupStatus() {
   return useQuery({ queryKey: setupKey, queryFn: api.setupStatus, staleTime: Infinity });
@@ -19,12 +26,7 @@ function useSetupStatus() {
 /** The app shell mounts only after local setup or gateway configuration has been checked. */
 export function SetupGate() {
   const status = useSetupStatus();
-  if (status.isPending)
-    return (
-      <main className="setup" aria-label="Checking setup">
-        <SkeletonLines />
-      </main>
-    );
+  if (status.isPending) return <AppLoading />;
   if (status.isError)
     return (
       <main className="setup">
@@ -46,6 +48,8 @@ export function SetupPage() {
   const client = useQueryClient();
   const navigate = useNavigate();
   const [step, setStep] = useState<'account' | 'storage' | 'ready'>('account');
+  const [token, setToken] = useState('');
+  const [contentDir, setContentDir] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -56,23 +60,24 @@ export function SetupPage() {
     event.preventDefault();
     if (saving || !status.data?.required) return;
     const input = { username, password, confirmPassword: confirmation };
-    const validation = validateSetup(input);
+    const setupToken = normalizeToken(token);
+    const validation = setupToken
+      ? validateSetup(input)
+      : 'Enter the 64-character setup token from the server log.';
     setError(validation);
-    if (validation) return;
+    if (validation || !setupToken) return;
     setSaving(true);
     try {
-      const completed = await api.createAdministrator(input, status.data.setupToken);
+      const completed = await api.createAdministrator(input, setupToken);
+      setToken('');
       setPassword('');
       setConfirmation('');
-      client.setQueryData(setupKey, completed);
+      setContentDir(completed.contentDir);
+      client.setQueryData(setupKey, { required: false });
       setStep('storage');
     } catch (failure) {
       setError(errorMessage(failure));
-      if (
-        failure instanceof ApiError &&
-        ['SETUP_COMPLETE', 'INVALID_SETUP_TOKEN'].includes(failure.code)
-      )
-        void status.refetch();
+      if (failure instanceof ApiError && failure.code === 'SETUP_COMPLETE') void status.refetch();
     } finally {
       setSaving(false);
     }
@@ -112,13 +117,34 @@ export function SetupPage() {
         ) : step === 'account' ? (
           status.data.required ? (
             <>
+              <p className="setup__step">Step 1 of 3</p>
               <h1>Welcome</h1>
               <p>Create your administrator account.</p>
+              <p>
+                To prove you run this server, enter the setup token from its log, for example{' '}
+                <code>docker compose logs leandocs</code>.
+              </p>
               <form
                 onSubmit={(event) => void submit(event)}
                 className="setup__form"
                 aria-busy={saving}
               >
+                <TextField
+                  label="Setup token"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={token}
+                  onChange={(event) => setToken(event.target.value)}
+                  required
+                  maxLength={200}
+                  hint={
+                    <>
+                      Also saved in <code>system/setup-token</code> in the data folder. A restart
+                      creates a new one.
+                    </>
+                  }
+                  disabled={saving}
+                />
                 <TextField
                   label="Username"
                   autoComplete="username"
@@ -135,7 +161,7 @@ export function SetupPage() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
-                  hint="Use at least 15 characters. Spaces and Unicode are welcome."
+                  hint={`Use at least ${MIN_ACCOUNT_PASSWORD_LENGTH} characters. Spaces and Unicode are welcome.`}
                   disabled={saving}
                 />
                 <TextField
@@ -148,8 +174,8 @@ export function SetupPage() {
                   disabled={saving}
                 />
                 <FormError message={error} />
-                <Button type="submit" variant="primary" disabled={saving}>
-                  {saving ? 'Creating account…' : 'Create account'}
+                <Button type="submit" variant="primary" loading={saving}>
+                  Create account
                 </Button>
               </form>
             </>
@@ -162,15 +188,17 @@ export function SetupPage() {
           )
         ) : step === 'storage' ? (
           <>
+            <p className="setup__step">Step 2 of 3</p>
             <h1>Documentation storage</h1>
             <p>Your documents stay as Markdown files in this folder.</p>
-            <code className="setup__path">{status.data.contentDir}</code>
+            <code className="setup__path">{contentDir}</code>
             <Button variant="primary" onClick={() => setStep('ready')}>
               Continue
             </Button>
           </>
         ) : (
           <>
+            <p className="setup__step">Step 3 of 3</p>
             <h1>Ready</h1>
             <p>Your administrator account has been created.</p>
             <Button variant="primary" onClick={() => navigate('/login', { replace: true })}>

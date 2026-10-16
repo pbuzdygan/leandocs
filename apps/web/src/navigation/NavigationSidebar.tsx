@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { AddIcon, NewFileIcon, NewFolderIcon, TrashIcon } from '../components/icons';
 import { NavLink, useLocation, useMatch } from 'react-router';
 import { errorMessage } from '../api/client';
@@ -10,7 +10,7 @@ import { IconButton } from '../components/ui/IconButton';
 import { DropdownMenuButton } from '../components/ui/Menu';
 import { SkeletonLines } from '../components/ui/States';
 import { MEDIA, useMediaQuery } from '../utils/media';
-import { readPreference, writePreference } from '../utils/storage';
+import { clampPanelWidth, useResizablePanel } from '../utils/resizable-panel';
 import { NAVIGATION_DRAWER_ID, useNavigationState } from './NavigationContext';
 import { NavigationTree, dropTargetProps } from './NavigationTree';
 import { PinnedSection } from './PinnedSection';
@@ -22,7 +22,7 @@ export const SIDEBAR_MAX = 400;
 const SIDEBAR_DEFAULT = 280;
 
 export function clampWidth(width: number): number {
-  return Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, Math.round(width)));
+  return clampPanelWidth(width, { min: SIDEBAR_MIN, max: SIDEBAR_MAX });
 }
 
 /** UI_SPEC §17–19: resizable (220–400 px, remembered), header with "+" menu, filesystem tree. */
@@ -32,12 +32,15 @@ export function NavigationSidebar() {
   const { reveal, drawerOpen, setDrawerOpen, sidebarHidden } = useNavigationState();
   const match = useMatch('/doc/:id/*');
   const activeId = match?.params.id;
-  const [width, setWidth] = useState(() =>
-    clampWidth(readPreference('sidebar.width', SIDEBAR_DEFAULT)),
-  );
+  const { width, separatorProps } = useResizablePanel({
+    key: 'sidebar.width',
+    min: SIDEBAR_MIN,
+    max: SIDEBAR_MAX,
+    initial: SIDEBAR_DEFAULT,
+    edge: 'right',
+  });
   const [dragging, setDragging] = useState<ItemTarget | null>(null);
   const [rootDrop, setRootDrop] = useState(false);
-  const resize = useRef<{ startX: number; startWidth: number } | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const mobile = useMediaQuery(MEDIA.mobile);
   const { pathname } = useLocation();
@@ -50,6 +53,8 @@ export function NavigationSidebar() {
   useEffect(() => {
     if (!mobile || !drawerOpen) return;
     const nav = navRef.current;
+    // Something inside already took focus (a folder shown from the breadcrumb).
+    if (nav?.contains(document.activeElement)) return;
     const target =
       nav?.querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]') ??
       nav?.querySelector<HTMLElement>('button, a[href]');
@@ -69,32 +74,6 @@ export function NavigationSidebar() {
     if (activePath) reveal(activePath);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the active path changes
   }, [activePath]);
-
-  const commitWidth = (next: number) => {
-    const clamped = clampWidth(next);
-    setWidth(clamped);
-    writePreference('sidebar.width', clamped);
-  };
-
-  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    resize.current = { startX: event.clientX, startWidth: width };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (resize.current) {
-      setWidth(clampWidth(resize.current.startWidth + event.clientX - resize.current.startX));
-    }
-  };
-  const onPointerUp = () => {
-    if (resize.current) commitWidth(width);
-    resize.current = null;
-  };
-  const onSeparatorKey = (event: KeyboardEvent) => {
-    if (event.key === 'ArrowLeft') commitWidth(width - 16);
-    else if (event.key === 'ArrowRight') commitWidth(width + 16);
-    else return;
-    event.preventDefault();
-  };
 
   return (
     <>
@@ -172,26 +151,12 @@ export function NavigationSidebar() {
           )}
         </div>
         <div className="sidebar__footer">
-          <NavLink to="/trash" className="sidebar__footer-link">
+          <NavLink to="/trash" className="nav-item">
             <TrashIcon size={15} />
             Trash
           </NavLink>
         </div>
-        <div
-          className="sidebar__resizer"
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize navigation"
-          aria-valuemin={SIDEBAR_MIN}
-          aria-valuemax={SIDEBAR_MAX}
-          aria-valuenow={width}
-          tabIndex={0}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onKeyDown={onSeparatorKey}
-          onDoubleClick={() => commitWidth(SIDEBAR_DEFAULT)}
-        />
+        <div className="sidebar__resizer" aria-label="Resize navigation" {...separatorProps} />
       </nav>
     </>
   );

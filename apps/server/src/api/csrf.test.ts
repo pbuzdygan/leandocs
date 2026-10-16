@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
+import { readSetupToken } from '../test/setup-token.js';
 
 const apps: FastifyInstance[] = [];
 afterEach(async () => {
@@ -31,14 +32,13 @@ async function start(mode: 'local' | 'proxy' | 'none', extra: NodeJS.ProcessEnv 
     : {};
   // Real setup/login for local mode; proxy/none use their actual session protocol.
   if (mode === 'local') {
-    const setup = (await app.inject({ url: '/api/v1/auth/setup', headers })).json();
     const password = 'a csrf administrator passphrase';
     expect(
       (
         await app.inject({
           method: 'POST',
           url: '/api/v1/auth/setup',
-          headers: { ...headers, 'x-leandocs-setup-token': setup.setupToken },
+          headers: { ...headers, 'x-leandocs-setup-token': readSetupToken(dataDir) },
           payload: { username: 'owner', password, confirmPassword: password },
         })
       ).statusCode,

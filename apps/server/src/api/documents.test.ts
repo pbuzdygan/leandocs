@@ -56,18 +56,18 @@ describe('GET /api/v1/tree', () => {
 
 describe('GET /api/v1/documents/:id', () => {
   it('returns the document DTO', async () => {
-    const source = `---\nid: ${ID_A}\ntitle: BUZHULK\ncreated: 2026-10-01T00:00:00Z\nupdated: 2026-10-02T00:00:00Z\ntags:\n  - server\n---\n\n# BUZHULK\n`;
-    const { app } = await setup({ 'Infrastructure/BUZHULK.md': source });
+    const source = `---\nid: ${ID_A}\ntitle: ATLAS\ncreated: 2026-10-01T00:00:00Z\nupdated: 2026-10-02T00:00:00Z\ntags:\n  - server\n---\n\n# ATLAS\n`;
+    const { app } = await setup({ 'Infrastructure/ATLAS.md': source });
     const res = await app.inject({ method: 'GET', url: `/api/v1/documents/${ID_A}` });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({
       id: ID_A,
-      title: 'BUZHULK',
-      path: 'Infrastructure/BUZHULK.md',
-      content: '# BUZHULK\n',
+      title: 'ATLAS',
+      path: 'Infrastructure/ATLAS.md',
+      content: '# ATLAS\n',
       frontmatter: {
         id: ID_A,
-        title: 'BUZHULK',
+        title: 'ATLAS',
         created: '2026-10-01T00:00:00Z',
         updated: '2026-10-02T00:00:00Z',
         tags: ['server'],
@@ -140,15 +140,15 @@ describe('POST /api/v1/documents', () => {
   });
 
   it('never overwrites an existing document', async () => {
-    const { app, content } = await setup({ 'BUZHULK.md': 'original' });
+    const { app, content } = await setup({ 'ATLAS.md': 'original' });
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/documents',
-      payload: { name: 'BUZHULK' },
+      payload: { name: 'ATLAS' },
     });
     expect(res.statusCode).toBe(409);
     expect(res.json().error.code).toBe('DOCUMENT_EXISTS');
-    expect(await readFile(path.join(content, 'BUZHULK.md'), 'utf8')).toContain('original');
+    expect(await readFile(path.join(content, 'ATLAS.md'), 'utf8')).toContain('original');
   });
 
   it.each([
@@ -172,8 +172,8 @@ describe('POST /api/v1/documents', () => {
 
 describe('PUT /api/v1/documents/:id', () => {
   it('replaces the body, refreshes `updated` and keeps other front matter untouched', async () => {
-    const original = `---\nid: ${ID_A}\ntitle: BUZHULK # main host\nupdated: 2020-01-01T00:00:00Z\ncustom:\n  nested: true\n---\nOld body\n`;
-    const { app, content } = await setup({ 'BUZHULK.md': original });
+    const original = `---\nid: ${ID_A}\ntitle: ATLAS # main host\nupdated: 2020-01-01T00:00:00Z\ncustom:\n  nested: true\n---\nOld body\n`;
+    const { app, content } = await setup({ 'ATLAS.md': original });
     const res = await app.inject({
       method: 'PUT',
       url: `/api/v1/documents/${ID_A}`,
@@ -184,9 +184,9 @@ describe('PUT /api/v1/documents/:id', () => {
     expect(doc.content).toBe('New body\n');
     expect(doc.updated).not.toBe('2020-01-01T00:00:00Z');
 
-    const written = await readFile(path.join(content, 'BUZHULK.md'), 'utf8');
+    const written = await readFile(path.join(content, 'ATLAS.md'), 'utf8');
     expect(written).toBe(
-      `---\nid: ${ID_A}\ntitle: BUZHULK # main host\nupdated: ${doc.updated}\ncustom:\n  nested: true\n---\nNew body\n`,
+      `---\nid: ${ID_A}\ntitle: ATLAS # main host\nupdated: ${doc.updated}\ncustom:\n  nested: true\n---\nNew body\n`,
     );
   });
 

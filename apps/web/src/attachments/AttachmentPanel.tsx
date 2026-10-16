@@ -6,6 +6,7 @@ import { api, errorMessage } from '../api/client';
 import { Button } from '../components/ui/Button';
 import { Dialog } from '../components/ui/Dialog';
 import { useNotify } from '../components/ui/Toast';
+import { formatBytes } from '../utils/format';
 import './attachments.css';
 
 export const attachmentKey = (id: string) => ['attachments', id];
@@ -36,9 +37,12 @@ export function AttachmentPanel({ id }: { id: string }) {
         <summary>Attachments{query.data ? ` (${query.data.items.length})` : ''}</summary>
         {query.isPending && <p role="status">Loading attachments…</p>}
         {query.isError && (
-          <p role="alert">
-            Unable to load attachments. <Button onClick={() => void query.refetch()}>Retry</Button>
-          </p>
+          <div role="alert" className="attachments__message">
+            <p>Unable to load attachments.</p>
+            <Button size="small" onClick={() => void query.refetch()}>
+              Retry
+            </Button>
+          </div>
         )}
         {query.data?.items.length === 0 && (
           <p>
@@ -46,21 +50,26 @@ export function AttachmentPanel({ id }: { id: string }) {
             editor.
           </p>
         )}
+        {/* UI_SPEC §58: name with its size below, actions on the right. */}
         <ul>
           {query.data?.items.map((item) => (
-            <li key={item.name}>
-              <AttachmentIcon size={16} aria-hidden="true" />
-              <span className="attachment-name">{item.name}</span>
-              <a href={item.url} target="_blank" rel="noopener noreferrer">
-                Open
-              </a>
-              <span>{Math.max(1, Math.ceil(item.size / 1024))} KB</span>
-              <a href={`${item.url}?download=1`} download={item.name}>
-                Download
-              </a>
-              <Button size="small" onClick={() => setTarget(item)}>
-                Delete
-              </Button>
+            <li key={item.name} className="attachment">
+              <AttachmentIcon size={16} aria-hidden="true" className="attachment__icon" />
+              <div className="attachment__info">
+                <span className="attachment-name">{item.name}</span>
+                <span className="attachment__size">{formatBytes(item.size)}</span>
+              </div>
+              <div className="attachment__actions">
+                <a href={item.url} target="_blank" rel="noopener noreferrer">
+                  Open
+                </a>
+                <a href={`${item.url}?download=1`} download={item.name}>
+                  Download
+                </a>
+                <Button size="small" onClick={() => setTarget(item)}>
+                  Delete
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
@@ -76,7 +85,7 @@ export function AttachmentPanel({ id }: { id: string }) {
               <Button disabled={deleting} onClick={() => setTarget(undefined)}>
                 Cancel
               </Button>
-              <Button disabled={deleting} type="submit" variant="danger">
+              <Button loading={deleting} type="submit" variant="danger">
                 Delete permanently
               </Button>
             </>

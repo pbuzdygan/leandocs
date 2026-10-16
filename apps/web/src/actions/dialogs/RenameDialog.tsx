@@ -57,7 +57,8 @@ export function RenameDialog({ target, onClose }: { target: ItemTarget; onClose:
           <Button
             type="submit"
             variant="primary"
-            disabled={name.trim() === '' || unchanged || mutation.isPending}
+            disabled={name.trim() === '' || unchanged}
+            loading={mutation.isPending}
           >
             Rename
           </Button>
@@ -65,21 +66,29 @@ export function RenameDialog({ target, onClose }: { target: ItemTarget; onClose:
       }
     >
       <FormError message={mutation.error ? errorMessage(mutation.error) : null} />
-      <TextField
-        label={target.kind === 'document' ? 'File name' : 'Name'}
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        autoFocus
-        onFocus={(event) => event.target.select()}
-      />
+      {/* Documents: the title first, as it is what people see; the file name is secondary. */}
       {target.kind === 'document' && (
         <TextField
           label="Title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           hint="Shown above the document and in the navigation."
+          autoFocus
+          onFocus={(event) => event.target.select()}
         />
       )}
+      <TextField
+        label={target.kind === 'document' ? 'File name' : 'Name'}
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        hint={
+          target.kind === 'document'
+            ? 'The Markdown file on disk. Changing the title does not change it.'
+            : undefined
+        }
+        autoFocus={target.kind === 'folder'}
+        onFocus={(event) => event.target.select()}
+      />
     </Dialog>
   );
 }

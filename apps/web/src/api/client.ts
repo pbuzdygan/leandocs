@@ -3,6 +3,7 @@ import {
   API_BASE_PATH,
   IMPORT_NAME_ONLY_TYPE,
   type SetupRequest,
+  type SetupResult,
   type SetupStatus,
   type LoginRequest,
   type LoginResponse,
@@ -135,7 +136,7 @@ export const api = {
     request<void>('/auth/logout', { method: 'POST', headers: { 'X-LeanDocs-CSRF': csrfToken } }),
   setupStatus: () => request<SetupStatus>('/auth/setup'),
   createAdministrator: (body: SetupRequest, token: string) =>
-    request<SetupStatus>('/auth/setup', {
+    request<SetupResult>('/auth/setup', {
       ...json('POST', body),
       headers: { 'X-LeanDocs-Setup-Token': token },
     }),

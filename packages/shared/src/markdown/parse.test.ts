@@ -52,13 +52,13 @@ describe('parseMarkdown', () => {
   });
 
   it('parses wiki links with heading and alias', () => {
-    const tree = parseMarkdown('See [[BUZHULK]], [[VLAN#IoT]] and [[Home Assistant|HA]].\n');
+    const tree = parseMarkdown('See [[ATLAS]], [[VLAN#IoT]] and [[Home Assistant|HA]].\n');
     expect(links(tree).map((link) => [link.data?.wikiLink, toString(link)])).toEqual([
-      [{ target: 'BUZHULK' }, 'BUZHULK'],
+      [{ target: 'ATLAS' }, 'ATLAS'],
       [{ target: 'VLAN', heading: 'IoT' }, 'VLAN › IoT'],
       [{ target: 'Home Assistant', alias: 'HA' }, 'HA'],
     ]);
-    expect(toString(tree)).toBe('See BUZHULK, VLAN › IoT and HA.');
+    expect(toString(tree)).toBe('See ATLAS, VLAN › IoT and HA.');
   });
 
   it('ignores wiki-link syntax inside code', () => {

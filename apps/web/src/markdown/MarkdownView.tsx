@@ -1,16 +1,70 @@
-import { useMemo, type ComponentProps, type ReactNode } from 'react';
+import { useMemo, useState, type ComponentProps, type MouseEvent, type ReactNode } from 'react';
 import type { Element, Root } from 'hast';
 import { toString as hastToString } from 'hast-util-to-string';
 import { toJsxRuntime, type Components } from 'hast-util-to-jsx-runtime';
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 import { Link } from 'react-router';
+import { useNotify } from '../components/ui/Toast';
 import { CodeBlock } from './CodeBlock';
+import { attachmentTarget } from './links';
 import { MermaidDiagram } from './MermaidDiagram';
 import './markdown.css';
 
 type WithNode<T extends keyof React.JSX.IntrinsicElements> = ComponentProps<T> & { node?: Element };
 
+/** `data-attachment` value; the Links tab finds an attachment's place in the text by it. */
+export function attachmentRefKey(documentId: string, name: string): string {
+  return `${documentId}/${name}`;
+}
+
+/**
+ * Attachment links lead to the API, outside the app. A file deleted or renamed on disk would end
+ * there on an error, so a plain click checks first (HEAD) and stays in the app when the file is
+ * gone. Modified clicks (new tab) open directly; the server answers those with a short page.
+ */
+function AttachmentAnchor({
+  href,
+  documentId,
+  name,
+  children,
+  ...props
+}: Omit<WithNode<'a'>, 'node'> & { href: string; documentId: string; name: string }) {
+  const notify = useNotify();
+  const open = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return;
+    event.preventDefault();
+    fetch(href, { method: 'HEAD', credentials: 'same-origin' })
+      .then((response) => {
+        if (response.ok) window.location.assign(href);
+        else if (response.status === 404)
+          notify.error(
+            `"${name}" is no longer attached to this document. It may have been deleted or renamed; Attachments below the document lists the files attached now.`,
+          );
+        else
+          notify.error(
+            `"${name}" could not be opened (HTTP ${response.status}). Reload the page and try again.`,
+          );
+      })
+      .catch(() =>
+        notify.error(`"${name}" could not be opened. Check the connection and try again.`),
+      );
+  };
+  return (
+    <a href={href} {...props} data-attachment={attachmentRefKey(documentId, name)} onClick={open}>
+      {children}
+    </a>
+  );
+}
+
 function Anchor({ href, children, node: _node, ...props }: WithNode<'a'>) {
+  const attachment = attachmentTarget(href);
+  if (href && attachment !== null)
+    return (
+      <AttachmentAnchor href={href} {...attachment} {...props}>
+        {children}
+      </AttachmentAnchor>
+    );
   if (href?.startsWith('/doc/')) {
     return (
       <Link to={href} {...props}>
@@ -56,7 +110,26 @@ function Table({ node: _node, ...props }: WithNode<'table'>) {
 }
 
 function Image({ node: _node, alt = '', ...props }: WithNode<'img'>) {
-  return <img alt={alt} loading="lazy" decoding="async" {...props} />;
+  const [missing, setMissing] = useState(false);
+  const attachment = attachmentTarget(props.src);
+  const key = attachment ? attachmentRefKey(attachment.documentId, attachment.name) : undefined;
+  // A missing attached image says so instead of the browser's broken-image icon.
+  if (missing && attachment !== null)
+    return (
+      <span className="broken-link" title="Image not found" data-attachment={key}>
+        Image not found: {alt || attachment.name}
+      </span>
+    );
+  return (
+    <img
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      {...props}
+      data-attachment={key}
+      onError={attachment !== null ? () => setMissing(true) : undefined}
+    />
+  );
 }
 
 const components: Partial<Components> = {

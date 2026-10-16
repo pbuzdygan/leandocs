@@ -182,5 +182,10 @@ export function useUpdateSettings() {
     },
     [queryClient, mutate],
   );
-  return { save, error: mutation.error };
+  const { variables } = mutation;
+  const retry = useCallback(() => {
+    if (variables) mutate(variables);
+  }, [mutate, variables]);
+  // `status` drives the subtle "Saving… / Saved / Not saved" line in Settings.
+  return { save, retry, error: mutation.error, status: mutation.status };
 }

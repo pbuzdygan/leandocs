@@ -16,6 +16,7 @@
 #   LEANDOCS_BIND=127.0.0.1     host address to listen on (default: all addresses)
 #   LEANDOCS_UID=1001           run as your user so files in ./data stay yours (`id -u`)
 #   LEANDOCS_GID=1001           (`id -g`)
+#   LEANDOCS_MEMORY=4g          memory limit of the container (default: 2g)
 services:
   leandocs:
     image: '${LEANDOCS_IMAGE:-ghcr.io/pbuzdygan/leandocs}:${LEANDOCS_TAG:-latest}'
@@ -43,6 +44,10 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    # Upper bounds, so a runaway request cannot take the whole host. 10,000 documents peaked below
+    # 1 GiB (docs/performance.md); very large attachments or libraries may need LEANDOCS_MEMORY.
+    mem_limit: '${LEANDOCS_MEMORY:-2g}'
+    pids_limit: 256
     restart: unless-stopped
     # The image has a healthcheck (`docker compose ps` shows healthy); stop it cleanly.
     stop_grace_period: 20s

@@ -52,7 +52,12 @@ export function NewDocumentDialog({ folder, onClose }: { folder?: string; onClos
       actions={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={name.trim() === '' || create.isPending}>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={name.trim() === ''}
+            loading={create.isPending}
+          >
             Create
           </Button>
         </>

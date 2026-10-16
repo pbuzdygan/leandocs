@@ -2,8 +2,7 @@ import { csrfRequest } from './csrf-request';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
+import { CONTENT as content, RESULTS_DIR } from './paths';
 
 test('visual editing, toolbar and mode switching preserve Markdown and front matter', async ({
   page,
@@ -108,15 +107,42 @@ test('visual checklists, links, images and tables are editable and saved as Mark
   await page.keyboard.type('Column');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('status', { name: 'Save status' })).toHaveText('Saved');
-  await page.screenshot({ path: 'test-results/visual-desktop.png', fullPage: true });
+  await page.screenshot({ path: path.join(RESULTS_DIR, 'visual-desktop.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
     page.getByRole('navigation', { name: 'Documentation navigation' }),
   ).not.toBeInViewport();
-  await page.screenshot({ path: 'test-results/visual-mobile.png', fullPage: true });
+  await page.screenshot({ path: path.join(RESULTS_DIR, 'visual-mobile.png'), fullPage: true });
   const file = readFileSync(path.join(content, 'Visual Elements.md'), 'utf8');
   expect(file).toContain('[x] Pending');
   expect(file).toContain('[Website](/doc/example)');
   expect(file).toContain('![Logo](/favicon.svg)');
   expect(file).toContain('Column');
+});
+
+test('Ctrl/Cmd+E with selected text leaves the visual editor without changing the text', async ({
+  page,
+}) => {
+  const response = await csrfRequest(page.request).post('/api/v1/documents', {
+    data: { name: 'Visual Toggle Key', content: 'First paragraph.\n\nKeep me plain.\n' },
+  });
+  const { id } = (await response.json()) as { id: string };
+  await page.goto(`/doc/${id}/edit`);
+  const editor = page.getByRole('textbox', { name: 'Visual document' });
+  const target = editor.locator('p', { hasText: 'Keep me plain.' });
+  // Keys sent while the editor is still settling can be lost; retry the selection until it holds.
+  await expect(async () => {
+    await target.click();
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Shift+End');
+    expect(await page.evaluate(() => window.getSelection()?.toString())).toBe('Keep me plain.');
+  }).toPass({ timeout: 15_000 });
+  await page.keyboard.press('ControlOrMeta+e');
+  await expect(page).toHaveURL(new RegExp(`/doc/${id}$`));
+  await expect(page.locator('.doc__body p', { hasText: 'Keep me plain.' })).toBeVisible();
+  await expect(page.locator('.doc__body code')).toHaveCount(0);
+  const file = readFileSync(path.join(content, 'Visual Toggle Key.md'), 'utf8');
+  expect(file).toContain('\nKeep me plain.\n');
+  expect(file).not.toContain('`');
+  await csrfRequest(page.request).delete(`/api/v1/documents/${id}`);
 });

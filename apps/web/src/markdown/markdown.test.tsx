@@ -17,10 +17,10 @@ vi.mock('mermaid', () => ({
 }));
 
 const context: RenderContext = {
-  documentPath: 'Infrastructure/Servers/BUZHULK.md',
-  title: 'BUZHULK',
+  documentPath: 'Infrastructure/Servers/ATLAS.md',
+  title: 'ATLAS',
   documents: [
-    { id: 'id-buzhulk', title: 'BUZHULK', path: 'Infrastructure/Servers/BUZHULK.md' },
+    { id: 'id-atlas', title: 'ATLAS', path: 'Infrastructure/Servers/ATLAS.md' },
     {
       id: 'id-ha',
       title: 'Home Assistant',
@@ -70,9 +70,15 @@ describe('Markdown rendering', () => {
   });
 
   it('does not repeat a leading H1 that equals the title (P4-09)', () => {
-    expect(html('# BUZHULK\n\nText\n')).not.toContain('<h1');
+    expect(html('# ATLAS\n\nText\n')).not.toContain('<h1');
     expect(html('# Something else\n')).toContain('<h1');
-    expect(html('Intro\n\n# BUZHULK\n')).toContain('<h1');
+    expect(html('Intro\n\n# ATLAS\n')).toContain('<h1');
+  });
+
+  it('reports whether the content starts with the title heading', () => {
+    expect(renderMarkdown('# ATLAS\n\nText\n', context).titleHeading).toBe(true);
+    expect(renderMarkdown('# Other\n', context).titleHeading).toBe(false);
+    expect(renderMarkdown('Intro\n\n# ATLAS\n', context).titleHeading).toBe(false);
   });
 
   it('renders callouts with title and type class', () => {
@@ -120,8 +126,8 @@ describe('Markdown rendering', () => {
     });
 
     it('resolves attachment URLs and opens external links in a new tab', () => {
-      expect(html('[cfg](BUZHULK.assets/compose.yaml)\n')).toContain(
-        'href="/api/v1/documents/id-buzhulk/attachments/compose.yaml"',
+      expect(html('[cfg](ATLAS.assets/compose.yaml)\n')).toContain(
+        'href="/api/v1/documents/id-atlas/attachments/compose.yaml"',
       );
       expect(html('<https://example.com>\n')).toContain(
         '<a href="https://example.com" target="_blank" rel="noopener noreferrer">',

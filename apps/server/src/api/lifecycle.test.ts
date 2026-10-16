@@ -78,7 +78,7 @@ async function setup(files: Record<string, string> = {}) {
 describe('save with revision check (P2-02)', () => {
   it('saves when the revision matches and returns the new revision', async () => {
     const { api, create } = await setup();
-    const doc = await create('BUZHULK');
+    const doc = await create('ATLAS');
     const res = await api.put(`/documents/${doc.id}`, {
       content: 'v2\n',
       expectedRevision: doc.revision,
@@ -89,9 +89,9 @@ describe('save with revision check (P2-02)', () => {
 
   it('rejects a save when the file changed on disk and keeps the external change', async () => {
     const { api, create, content, file } = await setup();
-    const doc = await create('BUZHULK');
-    const external = (await file('BUZHULK.md')).replace('# BUZHULK', '# Edited in VS Code');
-    await writeFile(path.join(content, 'BUZHULK.md'), external);
+    const doc = await create('ATLAS');
+    const external = (await file('ATLAS.md')).replace('# ATLAS', '# Edited in VS Code');
+    await writeFile(path.join(content, 'ATLAS.md'), external);
 
     const res = await api.put(`/documents/${doc.id}`, {
       content: 'my editor version\n',
@@ -102,7 +102,7 @@ describe('save with revision check (P2-02)', () => {
       code: 'DOCUMENT_CONFLICT',
       details: { currentRevision: expect.stringMatching(/^sha256:/) },
     });
-    expect(await file('BUZHULK.md')).toBe(external);
+    expect(await file('ATLAS.md')).toBe(external);
   });
 
   it('a stale editor cannot overwrite a newer save', async () => {
@@ -132,20 +132,20 @@ describe('rename (P2-03)', () => {
   it('renames the file and its attachments folder, keeping the id', async () => {
     const { api, create, content, exists, expectInSync } = await setup();
     await mkdir(path.join(content, 'Servers'));
-    const doc = await create('BUZHULK', 'Servers');
-    await mkdir(path.join(content, 'Servers/BUZHULK.assets'));
-    await writeFile(path.join(content, 'Servers/BUZHULK.assets/rack.png'), 'png');
+    const doc = await create('ATLAS', 'Servers');
+    await mkdir(path.join(content, 'Servers/ATLAS.assets'));
+    await writeFile(path.join(content, 'Servers/ATLAS.assets/rack.png'), 'png');
 
-    const res = await api.post(`/documents/${doc.id}/rename`, { name: 'BUZHULK old' });
+    const res = await api.post(`/documents/${doc.id}/rename`, { name: 'ATLAS old' });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
       id: doc.id,
-      path: 'Servers/BUZHULK old.md',
-      title: 'BUZHULK',
+      path: 'Servers/ATLAS old.md',
+      title: 'ATLAS',
     });
-    expect(await exists('Servers/BUZHULK old.assets/rack.png')).toBe(true);
-    expect(await exists('Servers/BUZHULK.md')).toBe(false);
-    expect(await exists('Servers/BUZHULK.assets')).toBe(false);
+    expect(await exists('Servers/ATLAS old.assets/rack.png')).toBe(true);
+    expect(await exists('Servers/ATLAS.md')).toBe(false);
+    expect(await exists('Servers/ATLAS.assets')).toBe(false);
     await expectInSync();
   });
 
@@ -177,11 +177,11 @@ describe('rename (P2-03)', () => {
 
   it('handles a case-only rename', async () => {
     const { api, create, exists } = await setup();
-    const doc = await create('buzhulk');
-    const res = await api.post(`/documents/${doc.id}/rename`, { name: 'BUZHULK' });
+    const doc = await create('atlas');
+    const res = await api.post(`/documents/${doc.id}/rename`, { name: 'ATLAS' });
     expect(res.status).toBe(200);
-    expect(res.body.path).toBe('BUZHULK.md');
-    expect(await exists('BUZHULK.md')).toBe(true);
+    expect(res.body.path).toBe('ATLAS.md');
+    expect(await exists('ATLAS.md')).toBe(true);
   });
 
   it('rejects invalid names', async () => {
@@ -253,22 +253,22 @@ describe('trash, restore and permanent delete (P2-05, P2-06)', () => {
   it('moves a document with its attachments to the trash and restores it', async () => {
     const { api, create, content, exists, expectInSync } = await setup();
     await mkdir(path.join(content, 'Servers'));
-    const doc = await create('BUZHULK', 'Servers');
-    await mkdir(path.join(content, 'Servers/BUZHULK.assets'));
-    await writeFile(path.join(content, 'Servers/BUZHULK.assets/a.png'), 'png');
+    const doc = await create('ATLAS', 'Servers');
+    await mkdir(path.join(content, 'Servers/ATLAS.assets'));
+    await writeFile(path.join(content, 'Servers/ATLAS.assets/a.png'), 'png');
 
     const trashed = await api.delete(`/documents/${doc.id}`);
     expect(trashed.status).toBe(200);
     expect(trashed.body).toMatchObject({
       kind: 'document',
-      name: 'BUZHULK.md',
-      originalPath: 'Servers/BUZHULK.md',
+      name: 'ATLAS.md',
+      originalPath: 'Servers/ATLAS.md',
       documentId: doc.id,
-      title: 'BUZHULK',
+      title: 'ATLAS',
     });
-    expect(await exists('Servers/BUZHULK.md')).toBe(false);
-    expect(await exists(`_trash/${trashed.body.trashId}/BUZHULK.md`)).toBe(true);
-    expect(await exists(`_trash/${trashed.body.trashId}/BUZHULK.assets/a.png`)).toBe(true);
+    expect(await exists('Servers/ATLAS.md')).toBe(false);
+    expect(await exists(`_trash/${trashed.body.trashId}/ATLAS.md`)).toBe(true);
+    expect(await exists(`_trash/${trashed.body.trashId}/ATLAS.assets/a.png`)).toBe(true);
     expect((await api.get(`/documents/${doc.id}`)).status).toBe(404);
     expect((await api.get('/trash')).body.items).toHaveLength(1);
     await expectInSync();
@@ -276,10 +276,10 @@ describe('trash, restore and permanent delete (P2-05, P2-06)', () => {
     const restored = await api.post(`/trash/${trashed.body.trashId}/restore`);
     expect(restored.body).toEqual({
       kind: 'document',
-      path: 'Servers/BUZHULK.md',
+      path: 'Servers/ATLAS.md',
       documentId: doc.id,
     });
-    expect(await exists('Servers/BUZHULK.assets/a.png')).toBe(true);
+    expect(await exists('Servers/ATLAS.assets/a.png')).toBe(true);
     expect((await api.get(`/documents/${doc.id}`)).status).toBe(200);
     expect((await api.get('/trash')).body.items).toEqual([]);
     await expectInSync();

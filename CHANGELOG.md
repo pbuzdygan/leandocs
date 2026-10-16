@@ -2,19 +2,41 @@
 
 What changes for you in each LeanDocs version. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions use [Semantic Versioning](https://semver.org/). Entries are written for users. Rules for contributors are in [`CONTRIBUTING.md`](CONTRIBUTING.md#changelog).
 
-## [Unreleased]
+## [0.2.1] — Unreleased
 
 ### New features
 
-- Nothing yet.
+- **The side panel next to a document can be resized** by dragging its edge or with the arrow keys, like the navigation, and keeps its width.
+- **Undo a title change.** In the side panel's **Info**, **Reset to file name** brings back the file's name as the title, and after you save a new title the message offers **Undo**. **Rename** now asks for the title first and the file name second.
+- **More ways to add from the New button.** **New** still creates a document with one click; the arrow next to it offers **New folder** and **Import Markdown**, in the folder of the open document.
+- **Keyboard shortcuts in Settings › Help › Shortcuts.** One page lists every shortcut, grouped by where it works (navigation, search, both editors, Markdown you can type), with the keys of your device (Ctrl or ⌘).
+- **See which attached files are missing.** When a document links to files that are no longer attached, the side panel's **Links** tab lists them under **Missing files**; choose one to jump to where it is linked.
+- **Empty folders say so.** An open folder without documents shows "This folder is empty" with links to create a document or folder in it.
 
 ### Improvements
 
-- Nothing yet.
+- **LeanDocs is now open source** under the MIT License: you may use, change and share it freely, as long as the copyright notice stays with it.
+- Diagrams are drawn with an updated version of the diagram component that includes its latest security fixes.
+- **Safer first start.** Creating the administrator account now needs a setup token that LeanDocs writes to its log and to `data/system/setup-token`, so someone who finds a new installation on the network can no longer take it over. The setup page tells you where to find the token.
+- **Calmer, more consistent screens.** Home, Trash and Settings share one page layout, the active item looks the same in every list, and the document title appears only once while you edit visually.
+- **The formatting toolbar shows what is active** (for example Bold or Heading 2), is reached with one Tab press and then the arrow keys, and on phones shows the most used tools with the rest under **+**.
+- **Easier on touch screens.** Rows and buttons are larger to tap, and the **…** menu of a document in the navigation is always visible.
+- **Clicking a folder in the path above a document** opens the navigation at that folder, also on phones and when the navigation is hidden.
+- **Settings tell you when a change was saved**, and offer to try again when it was not.
+- **Trash** keeps **Restore** next to each item and moves **Delete permanently** into the item's **…** menu, so the page is no longer full of red buttons.
+- Moving a document or folder: the folder list works with the arrow keys like the navigation.
+- Attachments list their size in KB or MB and keep **Open**, **Download** and **Delete** together on the right.
+- Sign-in with two-factor authentication puts **Verify and sign in** first, with the other options below it. First-run setup shows which step you are on.
+- **Docker: LeanDocs now has a memory limit** (2 GB by default), so an unusually heavy request cannot slow down or stop everything else on your server. Very large libraries or attachments can raise it with `LEANDOCS_MEMORY` in `.env`.
 
 ### Bug fixes
 
-- Nothing yet.
+- **Phones and tablets no longer zoom in when you tap a text field.** Search, the editors, settings and every other field now use text large enough that the browser stays at its normal size; pinch-to-zoom still works.
+- **A link to a deleted attachment no longer replaces LeanDocs with an error.** Clicking it now keeps you in the app and says the file is no longer attached; a missing image shows **Image not found**, and opening the link in a new tab shows a short **File not found** page with a way back.
+- **Ctrl+E (⌘E) in the visual editor no longer changes your text.** With text selected it turned the selection into inline code and saved it while switching back to reading; it now only switches. Inline code stays on the toolbar and with `` `text` ``.
+- Hovering over a section in Settings now highlights it; before, the highlight had the same colour as the page.
+- The loading screen at startup now shows "Loading documentation…" instead of an empty page.
+- A failed sign-out is reported as a message instead of squeezing an error into the top bar.
 
 ## [0.2.0] — 2026-10-15
 
@@ -34,7 +56,7 @@ The first stable release of LeanDocs. Earlier `dev` previews led up to it; their
 - **Code blocks** show their language, are coloured for easier reading and have a **Copy** button.
 - **Callouts** (`:::note`, `:::info`, `:::tip`, `:::warning`, `:::danger`) appear as clear coloured notes.
 - **Diagrams:** Mermaid flowcharts and other diagrams written as text are drawn as pictures. A diagram with a mistake shows an error and its source instead of breaking the page.
-- **Links between documents:** write `[[BUZHULK]]` or `[[BUZHULK#Hardware]]` to link to a document or one of its sections, also through its aliases. Links to documents that do not exist are greyed out with a dashed underline.
+- **Links between documents:** write `[[ATLAS]]` or `[[ATLAS#Hardware]]` to link to a document or one of its sections, also through its aliases. Links to documents that do not exist are greyed out with a dashed underline.
 - **Side panel** with three tabs: **Contents** lists the sections, highlights where you are and jumps to a section with one click. **Links** shows which documents refer to this one and where it links to. **Info** shows the location and dates and lets you change the title, description, tags and aliases.
 - **Source** shows the original Markdown with subtle colouring.
 - **Full-width documents** by default. A button next to the document's `…` menu switches to a narrower reading width, and LeanDocs remembers your choice.
@@ -64,8 +86,8 @@ The first stable release of LeanDocs. Earlier `dev` previews led up to it; their
 
 **Finding**
 
-- **Search everything** with Ctrl+K (⌘K) or the search field at the top. Results show where the words appear, highlighted. Titles come first, then aliases, tags, headings and text. Narrow a search with `tag:docker`, `path:Infrastructure` or `title:BUZHULK`, and use quotes for an exact phrase. Accents are ignored: "zrodlo" finds "Źródło".
-- **Open any document by name** with Ctrl+P (⌘P). A few letters are enough: `bzh` finds "BUZHULK".
+- **Search everything** with Ctrl+K (⌘K) or the search field at the top. Results show where the words appear, highlighted. Titles come first, then aliases, tags, headings and text. Narrow a search with `tag:docker`, `path:Infrastructure` or `title:ATLAS`, and use quotes for an exact phrase. Accents are ignored: "zrodlo" finds "Źródło".
+- **Open any document by name** with Ctrl+P (⌘P). A few letters are enough: `atl` finds "ATLAS".
 - **Back and Forward** buttons in the top bar move between the pages you opened, together with the browser's own Back and Forward.
 - **Broken links overview.** Settings › Broken links lists every link that points to a document that does not exist.
 

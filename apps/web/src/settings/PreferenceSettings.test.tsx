@@ -13,8 +13,8 @@ import {
 
 /** P16-01, P16-03: General, Editor and Appearance settings (UI_SPEC §81–84). */
 
-const ID = 'id-buzhulk';
-const PATH = 'Infrastructure/Servers/BUZHULK.md';
+const ID = 'id-atlas';
+const PATH = 'Infrastructure/Servers/ATLAS.md';
 
 type Handler = (request: MockRequest) => { status?: number; body?: unknown } | undefined;
 
@@ -59,6 +59,7 @@ describe('Settings › General', () => {
       'Index',
       'Broken links',
       'About',
+      'Shortcuts',
     ]);
 
     const openLast = await screen.findByRole('checkbox', { name: 'Open last document on startup' });
@@ -106,8 +107,24 @@ describe('Settings › General', () => {
     const { user } = renderApp('/settings/general');
     const autosave = await screen.findByRole('checkbox', { name: 'Autosave' });
     await user.click(autosave);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Not saved: Disk full');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Not saved (Disk full)');
     expect(autosave).toBeChecked();
+  });
+
+  it('says when a change was saved, and offers a retry when it was not', async () => {
+    let fail = true;
+    api((request) =>
+      request.method === 'PATCH' && fail
+        ? { status: 500, body: { error: { code: 'INTERNAL_ERROR', message: 'Disk full' } } }
+        : undefined,
+    );
+    const { user } = renderApp('/settings/general');
+    const status = await screen.findByText(/Changes are saved automatically/);
+    await user.click(screen.getByRole('checkbox', { name: 'Autosave' }));
+    const retry = await screen.findByRole('button', { name: 'Not saved — retry' });
+    fail = false;
+    await user.click(retry);
+    await waitFor(() => expect(status).toHaveTextContent('Saved'));
   });
 });
 
@@ -179,7 +196,7 @@ describe('default location for new documents', () => {
     api();
     setTestSettings({ general: { newDocumentFolder: 'Network' } });
     const { user } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     await user.click(screen.getByRole('button', { name: 'New' }));
     const dialog = await screen.findByRole('dialog', { name: 'New document' });
     expect(within(dialog).getByRole('combobox', { name: 'Location' })).toHaveValue(
@@ -209,7 +226,7 @@ describe('open last document on startup', () => {
   it('remembers the document viewed last', async () => {
     api();
     const { location } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
     expect(window.localStorage.getItem('leandocs.lastDocument')).toBe(JSON.stringify(ID));
     expect(location()).toBe(`/doc/${ID}`);
   });

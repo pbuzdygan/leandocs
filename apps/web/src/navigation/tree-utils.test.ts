@@ -23,8 +23,8 @@ describe('tree utils', () => {
     expect(rows.map((row) => [row.node.path, row.level])).toEqual([
       ['Infrastructure', 1],
       ['Infrastructure/Servers', 2],
-      ['Infrastructure/Servers/BUZHULK.md', 3],
-      ['Infrastructure/Servers/BUZPI00.md', 3],
+      ['Infrastructure/Servers/ATLAS.md', 3],
+      ['Infrastructure/Servers/ORION.md', 3],
       ['Network', 1],
       ['README.md', 1],
     ]);

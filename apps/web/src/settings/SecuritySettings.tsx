@@ -10,6 +10,7 @@ import { api, errorMessage } from '../api/client';
 import { sessionKey, useSession } from '../auth/Login';
 import { Button } from '../components/ui/Button';
 import { TextField, FormError } from '../components/ui/Field';
+import { CheckIcon, InfoIcon } from '../components/icons';
 
 export function SecuritySettings() {
   const session = useSession();
@@ -118,7 +119,7 @@ function ChangePassword() {
             Password changed. Other browsers and devices have been signed out.
           </p>
         )}
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" loading={busy}>
           Change password
         </Button>
       </form>
@@ -180,10 +181,24 @@ function LocalSecurity() {
         </>
       ) : (
         <>
-          <p className="settings__note">
-            {status.data.enabled
-              ? `Enabled. ${status.data.recoveryCodesRemaining} recovery codes remaining.`
-              : 'Not enabled.'}
+          {/* A status, not a sentence: label with icon, not colour alone (guidelines §13, §18). */}
+          <p
+            className={
+              status.data.enabled
+                ? 'status-label status-label--success'
+                : 'status-label status-label--neutral'
+            }
+          >
+            {status.data.enabled ? (
+              <>
+                <CheckIcon size={14} aria-hidden="true" /> Enabled ·{' '}
+                {status.data.recoveryCodesRemaining} recovery codes remaining
+              </>
+            ) : (
+              <>
+                <InfoIcon size={14} aria-hidden="true" /> Not enabled
+              </>
+            )}
           </p>
           {codes ? (
             <div>
@@ -230,7 +245,8 @@ function LocalSecurity() {
                     required
                     disabled={busy}
                   />
-                  <Button type="submit" disabled={busy}>
+                  <FormError message={error} />
+                  <Button type="submit" loading={busy}>
                     Confirm and enable
                   </Button>
                   <Button
@@ -281,12 +297,11 @@ function LocalSecurity() {
                       disabled={busy}
                     />
                   )}
-                  <Button type="submit" disabled={busy}>
-                    {busy
-                      ? 'Checking…'
-                      : status.data.enabled
-                        ? 'Disable two-factor authentication'
-                        : 'Set up two-factor authentication'}
+                  <FormError message={error} />
+                  <Button type="submit" loading={busy}>
+                    {status.data.enabled
+                      ? 'Disable two-factor authentication'
+                      : 'Set up two-factor authentication'}
                   </Button>
                 </>
               )}
@@ -294,7 +309,6 @@ function LocalSecurity() {
           )}
         </>
       )}
-      <FormError message={error} />
     </section>
   );
 }

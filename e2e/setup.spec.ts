@@ -1,5 +1,7 @@
 import { expectAccessible } from './axe';
 import { expect, test } from '@playwright/test';
+import { readSetupToken } from './setup-token';
+import { AUTH_STATE, dataDir } from './paths';
 
 test('first run creates the administrator and completes the storage flow', async ({
   page,
@@ -10,6 +12,7 @@ test('first run creates the administrator and completes the storage flow', async
   await expect(page.getByRole('heading', { name: 'Welcome' })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('setup-welcome.png') });
   await expectAccessible(page, 'setup: welcome');
+  await page.getByLabel('Setup token').fill(readSetupToken(dataDir('default')));
   await page.getByLabel('Username').fill('admin');
   await page.getByLabel('Password', { exact: true }).fill('a long browser test passphrase');
   await page.getByLabel('Confirm password').fill('a long browser test passphrase');
@@ -30,7 +33,7 @@ test('first run creates the administrator and completes the storage flow', async
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('No documentation yet')).toBeVisible();
   await expectAccessible(page, 'empty home');
-  await page.context().storageState({ path: 'test-results/auth-state.json' });
+  await page.context().storageState({ path: AUTH_STATE });
   await page.reload();
   await expect(page.getByText('No documentation yet')).toBeVisible();
   const status = await request.get('/api/v1/auth/setup');

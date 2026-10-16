@@ -2,13 +2,13 @@
 
 > **LeanDocs** — _Documentation without the bloat._
 
-|                                |                                                                                                    |
-| ------------------------------ | -------------------------------------------------------------------------------------------------- |
-| **Status**                     | Approved UI direction                                                                              |
-| **Document version**           | 1.8                                                                                                |
-| **Chosen direction**           | A — Technical Minimal                                                                              |
-| **Related documents**          | [`PROJECT_SPEC.md`](PROJECT_SPEC.md), [`AGENTS.md`](AGENTS.md), [`.ai/PROJECT.md`](.ai/PROJECT.md) |
-| **Target application release** | 1.0                                                                                                |
+|                                |                                                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **Status**                     | Approved UI direction                                                                                    |
+| **Document version**           | 1.8                                                                                                      |
+| **Chosen direction**           | A — Technical Minimal                                                                                    |
+| **Related documents**          | [`PROJECT_SPEC.md`](PROJECT_SPEC.md), [`AGENTS.md`](../AGENTS.md), [`.ai/PROJECT.md`](../.ai/PROJECT.md) |
+| **Target application release** | 1.0                                                                                                      |
 
 ### Revision history
 
@@ -188,7 +188,9 @@ Height **52 px**, always visible.
 
 - **Left:** logo/icon placeholder (`APP_LOGO`), product name (`APP_NAME` = LeanDocs), optional breadcrumb.
 - **Centre:** global search.
-- **Right:** New Document, optional utility actions, Settings, user menu.
+- **Right:** New Document, optional utility actions, Settings, user menu. **New** is a split button: the
+  main part creates a document at once; its arrow opens _New document_, _New folder_ and
+  _Import Markdown_, all in the folder of the open document.
 
 ## 16. Global search field
 
@@ -211,8 +213,8 @@ DOCUMENTATION
 
 ▾ Infrastructure
     ▾ Servers
-        BUZHULK
-        BUZPI00
+        ATLAS
+        ORION
     ▸ Storage
 ▾ Network
     UniFi
@@ -240,7 +242,7 @@ Height **30 px**. Contains: chevron, icon, label, optional actions.
 
 ```text
 ▾ 📁 Infrastructure
-    📄 BUZHULK
+    📄 ATLAS
 ```
 
 ## 21. Tree indentation
@@ -294,9 +296,9 @@ Top 32–40 px; left/right 40–64 px; on small desktops 24–32 px.
 ## 27. Document header
 
 ```text
-Infrastructure / Servers / BUZHULK          (breadcrumb)
+Infrastructure / Servers / ATLAS          (breadcrumb)
 
-BUZHULK                                   View   Source   Edit   …
+ATLAS                                   View   Source   Edit   …
 Main Docker and Incus host
 server  docker  incus
 Updated 4 minutes ago
@@ -420,7 +422,7 @@ Automatic TOC (Overview, Hardware, Network, …) from H1–H4 (1.3: H1 included;
 
 ```text
 Properties
-Path      Infrastructure/Servers/BUZHULK.md
+Path      Infrastructure/Servers/ATLAS.md
 Created   27 Sep 2026
 Updated   2 Oct 2026
 Tags      server  docker  incus
@@ -430,13 +432,15 @@ Tags      server  docker  incus
 
 _Referenced by_ (backlinks, with a count when a document links more than once) and _Links to_ (outgoing links; broken ones in the broken-link style with "Not found"). The context sidebar remembers the chosen tab.
 
+_Missing files_ follows when the document links to its own attachments: files it links to (links and images) that are not attached, in the broken-link style with "Not found" and how they are used (`2 links · image`); "All linked files are attached." when none are missing. Choosing one scrolls to its first place in the rendered text, highlights it briefly and focuses it; while editing, the names are shown without that action. Only the current document's attachments are checked, and links written as raw HTML are not.
+
 ## 48. Collapsing the context sidebar
 
 Button `›`. When closed, the centre expands. State is remembered.
 
 ## 49. Breadcrumb
 
-Above the title, subtle, 12–13 px, clickable segments (`Infrastructure / Servers / BUZHULK`). Must not dominate.
+Above the title, subtle, 12–13 px, clickable segments (`Infrastructure / Servers / ATLAS`). Must not dominate.
 
 ## 50. Tags
 
@@ -504,7 +508,7 @@ Opened with `Ctrl/Cmd + K`.
 ┌────────────────────────────────────────────┐
 │ 🔍 Search documentation...                 │
 ├────────────────────────────────────────────┤
-│ BUZHULK                                    │
+│ ATLAS                                      │
 │ Infrastructure / Servers                   │
 │ …macvlan interface configuration…          │
 │                                            │
@@ -558,7 +562,7 @@ A plain list: Blank, Server, Application, Procedure, Network Device, Incident. N
 A simple folder picker:
 
 ```text
-Move "BUZHULK"
+Move "ATLAS"
 
 Documentation
 ▾ Infrastructure
@@ -574,7 +578,7 @@ Documentation
 
 ```text
 Move document to trash?
-BUZHULK will be moved to Trash and can be restored.
+ATLAS will be moved to Trash and can be restored.
 
                 Cancel   Move to Trash
 ```
@@ -655,6 +659,11 @@ May suggest `Search for "macvlan"` if a simple fuzzy-match mechanism exists.
 
 `[[Old Server]]` renders as `Old Server` in muted text with a dashed underline; hover shows `Document not found`.
 
+Attachment links are checked when clicked: a missing file shows an error toast and the app stays
+open. A missing attached image renders as `Image not found: <alt>` in the same broken-link style.
+Opened directly (new tab), the server answers a missing attachment with a small HTML page and a
+link back to the document instead of the JSON error.
+
 ## 77. Loading
 
 Prefer skeletons (tree, title, lines) over a full-screen spinner. Small spinner for minor operations.
@@ -694,6 +703,11 @@ Back to documentation
 ## 81. Settings
 
 Left mini-sidebar + main panel. Sections: General, Editor, Appearance, Security (local Authentication), Storage, Index, About.
+
+Below the sections, a **Help** group (labelled like the sidebar section labels, §18) holds
+help pages. **Shortcuts** lists every keyboard shortcut by context (everywhere, navigation tree,
+search, both editors, visual editor, Markdown typed in the visual editor, source editor, tag fields)
+with the key names of the current device (`Ctrl`/`Alt` or `⌘`/`Option`).
 
 Security offers optional local two-factor authentication: current-password reauthentication,
 locally generated authenticator QR code and manual key, six-digit confirmation, then ten recovery
@@ -791,7 +805,7 @@ Password
 
 ## 90. First run
 
-1. `Welcome — Create your administrator account.` (Username, Password, Confirm password, _Create account_)
+1. `Welcome — Create your administrator account.` (Setup token from the server log, Username, Password, Confirm password, _Create account_; ADR-0026)
 2. `Documentation storage — /data/content`
 3. `Ready`
 
@@ -812,7 +826,7 @@ Pinned
 A list, not cards:
 
 ```text
-BUZHULK
+ATLAS
 Infrastructure / Servers · Updated 12 min ago
 
 Home Assistant
@@ -849,7 +863,7 @@ Never remove the focus ring without an alternative.
 
 Minimum **WCAG AA**: keyboard navigation, focus states, sufficient contrast, ARIA labels, semantic HTML, correct heading levels, labelled form fields, status communicated by more than colour.
 
-How this is checked, the colour and focus rules for new UI, and the review results: [`docs/accessibility.md`](docs/accessibility.md).
+How this is checked, the colour and focus rules for new UI, and the review results: [`docs/accessibility.md`](accessibility.md).
 
 ---
 
@@ -879,7 +893,7 @@ Topbar · Document. Navigation as a drawer; context as a separate panel/drawer.
 ## 102. Mobile topbar
 
 ```text
-☰   BUZHULK                    ⋮
+☰   ATLAS                    ⋮
 ```
 
 A second row may hold `View | Edit`. Search via an icon.
@@ -945,6 +959,11 @@ After `Ctrl+V` the screenshot appears immediately in the visual editor with an `
 ## 115. Properties editing
 
 The Info panel allows editing Title, Description, Tags and Aliases (Icon later), saved with **Save properties**. Path is not a plain text input — changing it requires a Move operation (`Move…` next to the path). While the document is open in the editor the panel is read-only.
+
+When the title differs from the file name, **Reset to file name** below Title puts the file name back
+into the field (applied with Save properties). After a saved title change a toast offers **Undo**,
+which restores only the previous title. The title never renames the file. The Rename dialog shows
+**Title** first (focused) and **File name** second.
 
 ## 116. Tags editor
 
@@ -1014,7 +1033,7 @@ Document URLs are stable and based on the document **UUID**, not the path, so re
 
 ## 128. Browser title
 
-`BUZHULK — LeanDocs`; on Home just `LeanDocs` (always via `APP_NAME`).
+`ATLAS — LeanDocs`; on Home just `LeanDocs` (always via `APP_NAME`).
 
 ## 129. Document context menu (tree)
 
@@ -1056,7 +1075,7 @@ Copies the application link: `https://docs.example/doc/<uuid>`.
 
 ## 132. Copy path
 
-Copies `Infrastructure/Servers/BUZHULK.md`.
+Copies `Infrastructure/Servers/ATLAS.md`.
 
 ## 133. Download Markdown
 
@@ -1078,7 +1097,7 @@ Then _Import preview_.
 
 ```text
 Source           Destination          Status
-BUZHULK.md       Infrastructure/...   Ready
+ATLAS.md       Infrastructure/...   Ready
 old-note.html    Imported/...         Converted
 image.png        assets/...           Ready
 ```
@@ -1281,22 +1300,22 @@ Later, maintain screenshot tests for key views: Document view, Visual editor, So
 ┌────────────────────────────────────────────────────────────────────────────┐
 │ [logo] LeanDocs  ← →      Search documentation...  Ctrl K     + New   ⚙   │
 ├──────────────────┬───────────────────────────────────────┬─────────────────┤
-│ Documentation  + │ Infrastructure / Servers / BUZHULK    │ Contents        │
+│ Documentation  + │ Infrastructure / Servers / ATLAS      │ Contents        │
 │                  │                                       │                 │
-│ ▾ Infrastructure │ BUZHULK              View Source Edit │ Overview        │
+│ ▾ Infrastructure │ ATLAS                View Source Edit │ Overview        │
 │   ▾ Servers      │                                       │ Hardware        │
-│     BUZHULK      │ Main Docker and Incus host            │ Network         │
-│     BUZPI00      │                                       │ Docker          │
+│     ATLAS        │ Main Docker and Incus host            │ Network         │
+│     ORION        │                                       │ Docker          │
 │   ▸ Storage      │ server  docker  incus                 │ Incus           │
 │                  │                                       │ Backup          │
 │ ▾ Network        │ Overview                              │                 │
 │   UniFi          │                                       │                 │
-│   VLAN           │ Main production host for BUZLAB...    │                 │
+│   VLAN           │ Main production host for my lab...    │                 │
 │   DNS            │                                       │                 │
 │                  │ Hardware                              │                 │
 │ ▾ Applications   │ ┌─────────────┬────────────────────┐  │                 │
-│   Home Assistant │ │ CPU         │ Intel N100         │  │                 │
-│   Vaultwarden    │ │ Network     │ Intel I226-V       │  │                 │
+│   Home Assistant │ │ CPU         │ 4-core CPU         │  │                 │
+│   Vaultwarden    │ │ Network     │ 2.5 GbE NIC        │  │                 │
 │                  │ └─────────────┴────────────────────┘  │                 │
 │ ▸ Procedures     │                                       │                 │
 │                  │ Docker                                │                 │

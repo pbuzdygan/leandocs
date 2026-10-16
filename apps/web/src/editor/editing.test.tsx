@@ -10,8 +10,8 @@ import {
   type MockRequest,
 } from '../test/render';
 
-const ID = 'id-buzhulk';
-const PATH = 'Infrastructure/Servers/BUZHULK.md';
+const ID = 'id-atlas';
+const PATH = 'Infrastructure/Servers/ATLAS.md';
 
 function editorView(): EditorView {
   const dom = screen.getByTestId('source-editor').querySelector('.cm-editor');
@@ -31,7 +31,7 @@ type Handler = (request: MockRequest) => { status?: number; body?: unknown } | u
 
 /** API with one document; `onPut` decides how saves are answered. */
 function api(onPut: Handler, extra: Handler = () => undefined) {
-  let current = documentDto(ID, PATH, { content: '# BUZHULK\n\nHello\n', revision: 'rev-1' });
+  let current = documentDto(ID, PATH, { content: '# ATLAS\n\nHello\n', revision: 'rev-1' });
   const requests = mockApi((request) => {
     if (request.path === '/tree') return { body: { root: sampleTree() } };
     const custom = extra(request);
@@ -57,13 +57,26 @@ describe('editing a document (Phase 5)', () => {
   it('opens the source editor from the Edit tab without leaving the page layout', async () => {
     api((request) => saved(request));
     const { user, location } = renderApp(`/doc/${ID}`);
-    await screen.findByRole('heading', { level: 1, name: 'BUZHULK' });
-    await user.click(screen.getByRole('tab', { name: 'Edit' }));
+    await screen.findByRole('heading', { level: 1, name: 'ATLAS' });
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
     await waitFor(() => expect(location()).toBe(`/doc/${ID}/edit`));
     expect(await screen.findByTestId('source-editor')).toBeInTheDocument();
-    expect(editorView().state.doc.toString()).toBe('# BUZHULK\n\nHello\n');
-    expect(screen.getByRole('heading', { level: 1, name: 'BUZHULK' })).toBeInTheDocument();
+    expect(editorView().state.doc.toString()).toBe('# ATLAS\n\nHello\n');
+    expect(screen.getByRole('heading', { level: 1, name: 'ATLAS' })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Save status' })).toHaveTextContent('Saved');
+  });
+
+  it('shows the title once in the visual editor, where the content H1 takes its place', async () => {
+    api((request) => saved(request));
+    const { user } = renderApp(`/doc/${ID}/edit`);
+    await screen.findByTestId('source-editor');
+    // Source shows the raw "# ATLAS" line, so the header keeps the visible title.
+    const header = () => document.querySelector('.doc__header h1');
+    expect(header()).toHaveClass('doc__title');
+    await user.click(screen.getByRole('tab', { name: 'Visual' }));
+    // Still in the accessibility tree, but not drawn a second time (owner decision A).
+    await waitFor(() => expect(header()).toHaveClass('visually-hidden'));
+    expect(screen.getAllByRole('heading', { level: 1, name: 'ATLAS' }).length).toBeGreaterThan(0);
   });
 
   it('marks changes as unsaved and saves with Ctrl+S using the expected revision', async () => {
@@ -79,7 +92,7 @@ describe('editing a document (Phase 5)', () => {
     );
     const put = requests.find((request) => request.method === 'PUT');
     expect(put?.body).toEqual({
-      content: '# BUZHULK\n\nHello\nMore text\n',
+      content: '# ATLAS\n\nHello\nMore text\n',
       expectedRevision: 'rev-1',
     });
   });
@@ -135,7 +148,7 @@ describe('editing a document (Phase 5)', () => {
         diskVersion && request.method === 'GET' && request.path === `/documents/${ID}`
           ? {
               body: documentDto(ID, PATH, {
-                content: '# BUZHULK\n\nChanged in VS Code\n',
+                content: '# ATLAS\n\nChanged in VS Code\n',
                 revision: 'rev-disk',
               }),
             }
@@ -154,7 +167,7 @@ describe('editing a document (Phase 5)', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Reload from disk' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       await waitFor(() =>
-        expect(editorView().state.doc.toString()).toBe('# BUZHULK\n\nChanged in VS Code\n'),
+        expect(editorView().state.doc.toString()).toBe('# ATLAS\n\nChanged in VS Code\n'),
       );
       expect(screen.getByRole('status', { name: 'Save status' })).toHaveTextContent('Saved');
     });
@@ -164,12 +177,12 @@ describe('editing a document (Phase 5)', () => {
         if (request.method === 'POST' && request.path === '/documents') {
           return {
             status: 201,
-            body: documentDto('id-copy', 'Infrastructure/Servers/BUZHULK (conflict copy).md'),
+            body: documentDto('id-copy', 'Infrastructure/Servers/ATLAS (conflict copy).md'),
           };
         }
         if (request.path === '/documents/id-copy') {
           return {
-            body: documentDto('id-copy', 'Infrastructure/Servers/BUZHULK (conflict copy).md'),
+            body: documentDto('id-copy', 'Infrastructure/Servers/ATLAS (conflict copy).md'),
           };
         }
         return undefined;
@@ -190,9 +203,9 @@ describe('editing a document (Phase 5)', () => {
         string,
         string
       >;
-      expect(post.name).toMatch(/^BUZHULK \(conflict copy \d{4}-\d\d-\d\d \d{4}\)$/);
+      expect(post.name).toMatch(/^ATLAS \(conflict copy \d{4}-\d\d-\d\d \d{4}\)$/);
       expect(post.folder).toBe('Infrastructure/Servers');
-      expect(post.content).toBe('# BUZHULK\n\nHello\nmine\n');
+      expect(post.content).toBe('# ATLAS\n\nHello\nmine\n');
     });
 
     it('Cancel keeps the conflict state visible and it can be reopened', async () => {
@@ -212,7 +225,7 @@ describe('editing a document (Phase 5)', () => {
 
   describe('local drafts (PROJECT_SPEC §47)', () => {
     const draft = {
-      content: '# BUZHULK\n\nUnsaved draft\n',
+      content: '# ATLAS\n\nUnsaved draft\n',
       baseRevision: 'rev-1',
       updatedAt: new Date().toISOString(),
     };
@@ -239,7 +252,7 @@ describe('editing a document (Phase 5)', () => {
     it('ignores drafts identical to the saved document', async () => {
       window.localStorage.setItem(
         `leandocs.draft.${ID}`,
-        JSON.stringify({ ...draft, content: '# BUZHULK\n\nHello\n' }),
+        JSON.stringify({ ...draft, content: '# ATLAS\n\nHello\n' }),
       );
       api((request) => saved(request));
       renderApp(`/doc/${ID}`);

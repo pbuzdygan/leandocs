@@ -15,21 +15,34 @@ const SECTIONS = [
   { to: 'about', label: 'About' },
 ];
 
+/** Help pages, listed under their own label below the settings sections. */
+const HELP = [{ to: 'help/shortcuts', label: 'Shortcuts' }];
+
 /** UI_SPEC §81: left mini-sidebar + main panel. */
 export function SettingsLayout() {
   const session = useSession();
   const { pathname } = useLocation();
-  const section = SECTIONS.find((item) => pathname.endsWith(`/${item.to}`));
+  const section = [...SECTIONS, ...HELP].find((item) => pathname.endsWith(`/${item.to}`));
   usePageTitle(section ? `${section.label} · Settings` : 'Settings');
   return (
-    <div className="settings">
+    <div className="page settings">
       <nav className="settings__nav" aria-label="Settings">
         <h1 className="settings__heading">Settings</h1>
         {SECTIONS.map((section) => (
-          <NavLink key={section.to} to={section.to} className="settings__link">
+          <NavLink key={section.to} to={section.to} className="nav-item">
             {section.label}
           </NavLink>
         ))}
+        <h2 id="settings-help" className="settings__nav-label">
+          Help
+        </h2>
+        <div role="group" aria-labelledby="settings-help" className="settings__nav-group">
+          {HELP.map((page) => (
+            <NavLink key={page.to} to={page.to} className="nav-item">
+              {page.label}
+            </NavLink>
+          ))}
+        </div>
       </nav>
       <div className="settings__panel">
         {session.data?.authMode === 'none' && (

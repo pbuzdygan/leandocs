@@ -1,6 +1,6 @@
 # ADR-0010: First-run administrator setup
 
-- **Status:** Accepted
+- **Status:** Accepted; token delivery and the storage path in the status superseded by [ADR-0026](0026-setup-token-for-the-operator.md) (2026-10-15)
 - **Date:** 2026-10-04
 - **Author:** @codex
 - **Related:** PROJECT_SPEC §48–52; UI_SPEC §89–90, §126; P11-02; ADR-0009

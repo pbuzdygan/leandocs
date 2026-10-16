@@ -3,8 +3,12 @@ import { UserMenu } from '../auth/Login';
 import {
   AddIcon,
   BackIcon,
+  ChevronDownIcon,
   ForwardIcon,
+  ImportIcon,
   MenuIcon,
+  NewFileIcon,
+  NewFolderIcon,
   SearchIcon,
   SettingsIcon,
 } from '../components/icons';
@@ -15,6 +19,7 @@ import { AppLogo, Wordmark } from '../components/AppLogo';
 import { Button } from '../components/ui/Button';
 import '../search/search.css';
 import { IconButton } from '../components/ui/IconButton';
+import { DropdownMenuButton } from '../components/ui/Menu';
 import { NAVIGATION_DRAWER_ID, useNavigationState } from '../navigation/NavigationContext';
 import { findDocument } from '../navigation/tree-utils';
 import { modifierLabel, useSearchControls } from '../search/SearchContext';
@@ -37,6 +42,8 @@ export function Topbar() {
   const match = useMatch('/doc/:id/*');
   const openDocument =
     match?.params.id && tree.data ? findDocument(tree.data, match.params.id) : undefined;
+  // New items go next to the open document; otherwise the defaults of each action apply.
+  const folder = openDocument ? parentPath(openDocument.path) : undefined;
 
   return (
     <header className="topbar">
@@ -85,16 +92,43 @@ export function Topbar() {
       <IconButton label="Search" className="topbar-search-icon" onClick={() => search.openSearch()}>
         <SearchIcon size={18} />
       </IconButton>
-      <Button
-        variant="primary"
-        size="small"
-        onClick={() =>
-          actions.newDocument(openDocument ? parentPath(openDocument.path) : undefined)
-        }
-      >
-        <AddIcon size={15} />
-        New
-      </Button>
+      {/* Split button: New creates a document at once, the arrow offers the other ways to add. */}
+      <div className="btn-split">
+        <Button variant="primary" size="small" onClick={() => actions.newDocument(folder)}>
+          <AddIcon size={15} />
+          New
+        </Button>
+        <DropdownMenuButton
+          entries={[
+            {
+              label: 'New document',
+              icon: <NewFileIcon size={15} />,
+              onSelect: () => actions.newDocument(folder),
+            },
+            {
+              label: 'New folder',
+              icon: <NewFolderIcon size={15} />,
+              onSelect: () => actions.newFolder(folder),
+            },
+            'separator',
+            {
+              label: 'Import Markdown',
+              icon: <ImportIcon size={15} />,
+              onSelect: () => actions.importDocuments(folder),
+            },
+          ]}
+          trigger={
+            <Button
+              variant="primary"
+              size="small"
+              className="btn-split__toggle"
+              aria-label="More ways to add"
+            >
+              <ChevronDownIcon size={15} aria-hidden="true" />
+            </Button>
+          }
+        />
+      </div>
       <IconButton label="Settings" onClick={() => navigate('/settings')}>
         <SettingsIcon size={18} />
       </IconButton>

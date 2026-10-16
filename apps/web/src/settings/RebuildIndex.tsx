@@ -23,7 +23,9 @@ export function RebuildIndex({ rebuild }: { rebuild: IndexRebuildStatus }) {
     else if (wasRunning.current) {
       wasRunning.current = false;
       if (rebuild.state === 'failed')
-        notify.error(`Rebuild failed: ${rebuild.error ?? 'unknown error'}`);
+        notify.error(
+          `The search index was not rebuilt (${rebuild.error ?? 'unknown error'}). Documents are unchanged; check the server log and run Rebuild index again.`,
+        );
       else notify.info('Search index rebuilt.');
       void queryClient.invalidateQueries({ queryKey: queryKeys.searches });
       void queryClient.invalidateQueries({ queryKey: queryKeys.tree });

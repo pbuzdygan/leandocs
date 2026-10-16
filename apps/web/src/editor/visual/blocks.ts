@@ -232,11 +232,66 @@ export interface BlockContext {
   callout: { pos: number; kind: string } | null;
   /** Text typed after `[[` before the caret (link picker, P9-06), or null. */
   wiki: string | null;
+  /** Toolbar labels that apply at the caret or selection (marks and block type). */
+  active: string[];
+}
+
+const MARK_LABELS: Record<string, string> = {
+  strong: 'Bold',
+  emphasis: 'Italic',
+  strike_through: 'Strikethrough',
+  inlineCode: 'Inline code',
+  link: 'Link',
+};
+
+/** Which toolbar buttons are "on" for the current selection (pressed state, guidelines §9). */
+export function activeFormats(state: EditorState): string[] {
+  const active: string[] = [];
+  const { from, to, empty, $from } = state.selection;
+  for (const [name, label] of Object.entries(MARK_LABELS)) {
+    const type = state.schema.marks[name];
+    if (!type) continue;
+    const on = empty
+      ? Boolean(type.isInSet(state.storedMarks ?? $from.marks()))
+      : state.doc.rangeHasMark(from, to, type);
+    if (on) active.push(label);
+  }
+  const parent = $from.parent;
+  if (parent.type.name === 'heading') active.push(`Heading ${String(parent.attrs.level)}`);
+  else if (parent.type.name === 'paragraph') active.push('Paragraph');
+  // The innermost list or quote around the caret decides the structure button.
+  for (let depth = $from.depth; depth > 0; depth--) {
+    const node = $from.node(depth);
+    const name = node.type.name;
+    if (name === 'list_item' && node.attrs.checked != null) {
+      active.push('Checklist');
+      break;
+    }
+    if (name === 'bullet_list') {
+      active.push('Bullet list');
+      break;
+    }
+    if (name === 'ordered_list') {
+      active.push('Numbered list');
+      break;
+    }
+    if (name === 'blockquote') {
+      active.push('Quote');
+      break;
+    }
+  }
+  return active;
 }
 
 export function blockContext(state: EditorState): BlockContext {
   const { $from } = state.selection;
-  const context: BlockContext = { table: null, code: null, callout: null, wiki: wikiQuery(state) };
+  const context: BlockContext = {
+    table: null,
+    code: null,
+    callout: null,
+    wiki: wikiQuery(state),
+    active: activeFormats(state),
+  };
   for (let depth = $from.depth; depth > 0; depth--) {
     const node = $from.node(depth);
     const pos = $from.before(depth);

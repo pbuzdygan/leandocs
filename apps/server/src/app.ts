@@ -232,13 +232,19 @@ export async function buildApp(
     proxyAuth,
     noneSession,
   });
+  const setup = new SetupService(
+    db,
+    contentDir,
+    initialization,
+    systemDir,
+    app.log.child({ module: 'setup' }),
+  );
+  await setup.prepare(config.authMode === 'local');
   await app.register(setupRoutes, {
     prefix: API_BASE_PATH,
-    setup: new SetupService(db, contentDir, initialization),
+    setup,
     bypassSetup:
-      config.authMode === 'local'
-        ? undefined
-        : { required: false, contentDir, authMode: config.authMode },
+      config.authMode === 'local' ? undefined : { required: false, authMode: config.authMode },
   });
   await app.register(documentRoutes, { prefix: API_BASE_PATH, registry, sync, service });
   await app.register(folderRoutes, { prefix: API_BASE_PATH, folders });

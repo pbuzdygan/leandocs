@@ -1,6 +1,8 @@
 import {
   IconAlertCircle,
   IconAlertTriangle,
+  IconArrowAutofitContent,
+  IconArrowAutofitWidth,
   IconArrowLeft,
   IconArrowRight,
   IconFolderSymlink,
@@ -13,6 +15,7 @@ import {
   IconChevronRight,
   IconCode,
   IconCopy,
+  IconCursorText,
   IconDots,
   IconDownload,
   IconExternalLink,
@@ -48,8 +51,6 @@ import {
   IconStrikethrough,
   IconTable,
   IconTrash,
-  IconViewportNarrow,
-  IconViewportWide,
   IconX,
   type Icon as TablerIcon,
 } from '@tabler/icons-react';
@@ -92,8 +93,9 @@ export const SettingsIcon = icon(IconSettings, 'SettingsIcon');
 export const ChevronDownIcon = icon(IconChevronDown, 'ChevronDownIcon');
 export const ChevronLeftIcon = icon(IconChevronLeft, 'ChevronLeftIcon');
 export const ChevronRightIcon = icon(IconChevronRight, 'ChevronRightIcon');
-export const ExpandWidthIcon = icon(IconViewportWide, 'ExpandWidthIcon');
-export const ShrinkWidthIcon = icon(IconViewportNarrow, 'ShrinkWidthIcon');
+// Arrows to the edges / around the content: clearer than the viewport icons at 16 px.
+export const ExpandWidthIcon = icon(IconArrowAutofitWidth, 'ExpandWidthIcon');
+export const ShrinkWidthIcon = icon(IconArrowAutofitContent, 'ShrinkWidthIcon');
 export const MoreIcon = icon(IconDots, 'MoreIcon');
 export const CloseIcon = icon(IconX, 'CloseIcon');
 export const BackIcon = icon(IconArrowLeft, 'BackIcon');
@@ -111,6 +113,7 @@ export const NewFolderIcon = icon(IconFolderPlus, 'NewFolderIcon');
 export const MoveIcon = icon(IconFolderSymlink, 'MoveIcon');
 export const AddIcon = icon(IconPlus, 'AddIcon');
 export const EditIcon = icon(IconPencil, 'EditIcon');
+export const RenameIcon = icon(IconCursorText, 'RenameIcon');
 export const TrashIcon = icon(IconTrash, 'TrashIcon');
 export const RestoreIcon = icon(IconRestore, 'RestoreIcon');
 export const CopyIcon = icon(IconCopy, 'CopyIcon');

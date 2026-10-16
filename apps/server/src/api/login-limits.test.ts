@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config/config.js';
 import { makeTempDir } from '../test/temp-dir.js';
+import { readSetupToken } from '../test/setup-token.js';
 
 const apps: FastifyInstance[] = [];
 afterEach(async () => {
@@ -13,15 +14,15 @@ const password = 'a rate limit administrator passphrase';
 async function start() {
   let seconds = 0;
   vi.spyOn(performance, 'now').mockImplementation(() => seconds * 1000);
-  const app = await buildApp(loadConfig({ DATA_DIR: await makeTempDir(), LOG_LEVEL: 'silent' }));
+  const dataDir = await makeTempDir();
+  const app = await buildApp(loadConfig({ DATA_DIR: dataDir, LOG_LEVEL: 'silent' }));
   apps.push(app);
-  const setup = (await app.inject('/api/v1/auth/setup')).json();
   expect(
     (
       await app.inject({
         method: 'POST',
         url: '/api/v1/auth/setup',
-        headers: { 'x-leandocs-setup-token': setup.setupToken },
+        headers: { 'x-leandocs-setup-token': readSetupToken(dataDir) },
         payload: { username: 'Owner', password, confirmPassword: password },
       })
     ).statusCode,

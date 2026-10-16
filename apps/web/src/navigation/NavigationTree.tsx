@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type KeyboardEvent,
+} from 'react';
 import type { TreeFolderNode, TreeNode } from '@leandocs/shared';
 import {
   ChevronDownIcon,
@@ -49,7 +57,8 @@ interface NavigationTreeProps {
  * Hierarchy is shown by indentation, chevrons and icons — no guide lines.
  */
 export function NavigationTree({ root, activeId, dragging, onDragChange }: NavigationTreeProps) {
-  const { expanded, toggle, setExpanded, setDrawerOpen } = useNavigationState();
+  const { expanded, toggle, setExpanded, setDrawerOpen, focusRequest, clearFocusRequest } =
+    useNavigationState();
   const actions = useContentActions();
   const navigate = useNavigate();
   const rows = useMemo(() => flattenVisible(root, expanded), [root, expanded]);
@@ -69,6 +78,17 @@ export function NavigationTree({ root, activeId, dragging, onDragChange }: Navig
     if (keyboardMove.current && focusKey) refs.current.get(focusKey)?.focus();
     keyboardMove.current = false;
   }, [focusKey]);
+
+  // A folder shown from elsewhere (breadcrumb) takes focus once its row is rendered.
+  useEffect(() => {
+    if (focusRequest === null) return;
+    const key = `f:${focusRequest}`;
+    const row = refs.current.get(key);
+    if (!row) return;
+    setFocusKey(key);
+    row.focus();
+    clearFocusRequest();
+  }, [focusRequest, rows, clearFocusRequest]);
 
   const open = (node: TreeNode) => {
     if (node.type === 'document') {
@@ -159,78 +179,110 @@ export function NavigationTree({ root, activeId, dragging, onDragChange }: Navig
         const entries = itemMenuEntries(target, actions, isFolder ? undefined : () => open(node));
         const label = node.type === 'document' ? node.title : node.name;
         return (
-          <ContextMenuArea key={key} entries={entries}>
-            <div
-              ref={(element) => {
-                if (element) refs.current.set(key, element);
-                else refs.current.delete(key);
-              }}
-              role="treeitem"
-              aria-label={label}
-              aria-level={level}
-              aria-expanded={isFolder ? isOpen : undefined}
-              aria-selected={key === activeKey}
-              tabIndex={key === tabKey ? 0 : -1}
-              className={[
-                'tree-row',
-                key === activeKey && 'tree-row--active',
-                isFolder && dropFolder === node.path && 'tree-row--drop',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              style={{ paddingLeft: `calc(var(--space-2) + ${level - 1} * var(--tree-indent))` }}
-              title={node.type === 'document' ? node.path : undefined}
-              draggable
-              onDragStart={(event) => {
-                event.dataTransfer.setData(DRAG_TYPE, node.path);
-                event.dataTransfer.effectAllowed = 'move';
-                onDragChange(target);
-              }}
-              onDragEnd={() => {
-                onDragChange(null);
-                setDropFolder(null);
-              }}
-              {...(isFolder ? dropProps(node.path) : {})}
-              onClick={() => {
-                setFocusKey(key);
-                open(node);
-              }}
-              onFocus={() => setFocusKey(key)}
-              onKeyDown={(event) => onKeyDown(event, index)}
-            >
-              <span className="tree-row__chevron" aria-hidden="true">
-                {isFolder &&
-                  (isOpen ? <ChevronDownIcon size={14} /> : <ChevronRightIcon size={14} />)}
-              </span>
-              <span className="tree-row__icon" aria-hidden="true">
-                {isFolder ? (
-                  isOpen ? (
-                    <FolderOpenIcon size={15} />
+          <Fragment key={key}>
+            <ContextMenuArea entries={entries}>
+              <div
+                ref={(element) => {
+                  if (element) refs.current.set(key, element);
+                  else refs.current.delete(key);
+                }}
+                role="treeitem"
+                aria-label={label}
+                aria-level={level}
+                aria-expanded={isFolder ? isOpen : undefined}
+                aria-selected={key === activeKey}
+                tabIndex={key === tabKey ? 0 : -1}
+                className={[
+                  'tree-row',
+                  key === activeKey && 'tree-row--active',
+                  isFolder && dropFolder === node.path && 'tree-row--drop',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                style={{ paddingLeft: `calc(var(--space-2) + ${level - 1} * var(--tree-indent))` }}
+                title={node.type === 'document' ? node.path : undefined}
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData(DRAG_TYPE, node.path);
+                  event.dataTransfer.effectAllowed = 'move';
+                  onDragChange(target);
+                }}
+                onDragEnd={() => {
+                  onDragChange(null);
+                  setDropFolder(null);
+                }}
+                {...(isFolder ? dropProps(node.path) : {})}
+                onClick={() => {
+                  setFocusKey(key);
+                  open(node);
+                }}
+                onFocus={() => setFocusKey(key)}
+                onKeyDown={(event) => onKeyDown(event, index)}
+              >
+                <span className="tree-row__chevron" aria-hidden="true">
+                  {isFolder &&
+                    (isOpen ? <ChevronDownIcon size={14} /> : <ChevronRightIcon size={14} />)}
+                </span>
+                <span className="tree-row__icon" aria-hidden="true">
+                  {isFolder ? (
+                    isOpen ? (
+                      <FolderOpenIcon size={15} />
+                    ) : (
+                      <FolderIcon size={15} />
+                    )
                   ) : (
-                    <FolderIcon size={15} />
-                  )
-                ) : (
-                  <FileIcon size={15} />
-                )}
-              </span>
-              <span className="tree-row__label">{label}</span>
-              <span className="tree-row__actions" onClick={(event) => event.stopPropagation()}>
-                <DropdownMenuButton
-                  entries={entries}
-                  trigger={
-                    <button
-                      type="button"
-                      className="icon-btn tree-row__more"
-                      aria-label={`Actions for ${label}`}
-                      tabIndex={-1}
-                    >
-                      <MoreIcon size={15} />
-                    </button>
-                  }
-                />
-              </span>
-            </div>
-          </ContextMenuArea>
+                    <FileIcon size={15} />
+                  )}
+                </span>
+                <span className="tree-row__label">{label}</span>
+                <span className="tree-row__actions" onClick={(event) => event.stopPropagation()}>
+                  <DropdownMenuButton
+                    entries={entries}
+                    trigger={
+                      <button
+                        type="button"
+                        className="icon-btn tree-row__more"
+                        aria-label={`Actions for ${label}`}
+                        tabIndex={-1}
+                      >
+                        <MoreIcon size={15} />
+                      </button>
+                    }
+                  />
+                </span>
+              </div>
+            </ContextMenuArea>
+            {/* UI_SPEC §74: an open folder without content says so and offers the next step. */}
+            {isOpen && node.type === 'folder' && node.children.length === 0 && (
+              <div
+                role="group"
+                aria-label={`${label} is empty`}
+                className="tree-empty"
+                style={{
+                  paddingLeft: `calc(var(--space-2) + ${level} * var(--tree-indent) + 2px)`,
+                }}
+              >
+                <span>This folder is empty.</span>
+                <span>
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => actions.newDocument(node.path)}
+                  >
+                    Create document
+                  </button>
+                  {' · '}
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => actions.newFolder(node.path)}
+                  >
+                    Create folder
+                  </button>
+                </span>
+              </div>
+            )}
+          </Fragment>
         );
       })}
     </div>

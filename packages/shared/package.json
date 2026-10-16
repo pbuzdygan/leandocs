@@ -1,6 +1,7 @@
 {
   "name": "@leandocs/shared",
   "version": "0.0.0-dev",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "exports": {

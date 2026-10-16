@@ -10,7 +10,7 @@ import {
 describe('sanitizeName', () => {
   it.each([
     ['Home Assistant', 'Home Assistant'],
-    ['  BUZHULK  ', 'BUZHULK'],
+    ['  ATLAS  ', 'ATLAS'],
     ['Nginx: Proxy/Manager', 'Nginx- Proxy-Manager'],
     ['a\\b*c?d"e<f>g|h', 'a-b-c-d-e-f-g-h'],
     ['multiple   spaces\tand\ttabs', 'multiple spaces and tabs'],
@@ -38,8 +38,8 @@ describe('sanitizeName', () => {
 
 describe('document file names', () => {
   it('appends .md once', () => {
-    expect(toDocumentFileName('BUZHULK')).toBe('BUZHULK.md');
-    expect(toDocumentFileName('BUZHULK.md')).toBe('BUZHULK.md');
+    expect(toDocumentFileName('ATLAS')).toBe('ATLAS.md');
+    expect(toDocumentFileName('ATLAS.md')).toBe('ATLAS.md');
     expect(toDocumentFileName('Notes.MD')).toBe('Notes.md');
   });
 

@@ -124,7 +124,7 @@ Every API mutation (POST/PUT/PATCH/DELETE, including uploads and index rebuilds)
 also requires the session cookie, and proxy mode requires the verified gateway identity.
 For login use the anonymous token, then fetch a new token after login. Tokens from another local
 session are rejected. Proxy and none tokens change after restart. Setup uses its separate
-`X-LeanDocs-Setup-Token` from GET `/api/v1/auth/setup`; local credential mutations remain
+`X-LeanDocs-Setup-Token`, printed in the server log and saved in `system/setup-token` (ADR-0026); local credential mutations remain
 unavailable in proxy/none mode.
 
 The browser client obtains a fresh session token before each content mutation, including multipart
@@ -178,11 +178,12 @@ shares the account/peer budget and adds bounded challenge limits (P11-11). See
 ### Local test artifacts and Git
 
 Keep `e2e/` and `*.test.ts` / `*.test.tsx` files in Git: these are test source code.
-The browser tests create disposable `.e2e-data/`, `.e2e-proxy-data/`,
-`.e2e-none-data/` and `.e2e-mfa-data/` folders containing test documents,
-SQLite databases and, in local-auth modes, authentication state. Each test server
-recreates its own folder on startup; these folders are never application backups.
-Playwright writes screenshots, traces and saved login cookies to `test-results/`.
+Everything a browser-test run writes stays in one ignored folder, `.e2e/` (paths in
+`e2e/paths.ts`). `.e2e/data/` holds one disposable data directory per test server (`default`,
+`mfa`, `visual`, `none`, `proxy`) with test documents, SQLite databases and, in local-auth modes,
+authentication state. Each test server recreates its own folder on startup; these folders are
+never application backups. Playwright writes screenshots, traces and saved login cookies to
+`.e2e/results/`.
 These outputs are ignored by Git and excluded from the Docker build context,
 as are `test_results/`, `playwright-report/`, local caches and temporary output.
 You may remove the test output folders when browser tests and their servers are stopped;
@@ -217,18 +218,19 @@ Setup does not overwrite an existing account. Ready opens `/login`; sign in to a
 Use the user menu to sign out. Sessions last eight hours and survive server restarts; logout
 revokes the current session. New passwords use Argon2id; scrypt accounts upgrade on successful login.
 No additional database migration is required for the hash change.
-The setup token changes on server restart; reload an open setup form after restarting.
+The setup token changes on server restart; enter the newest one from the log. Tests read it from
+`system/setup-token` in their data folder (`apps/server/src/test/setup-token.ts`, `e2e/setup-token.ts`).
 
 - **Unit tests** sit next to the code: `foo.ts` → `foo.test.ts`.
 - **Server/API tests** normally use `buildApp(config)` + `app.inject()`. SSE integration tests use temporary loopback ports to verify real streaming responses and shutdown.
 - **Filesystem tests** use a real temp directory (`mkdtemp(os.tmpdir())`) and clean it up in `afterEach`.
 - **Web tests** use jsdom + Testing Library (`apps/web/src/test/setup.ts`).
-- **End-to-end tests** (Playwright) live in `e2e/` and run against the production build with a fresh data directory (`.e2e-data/`):
+- **End-to-end tests** (Playwright) live in `e2e/` and run against the production build with a fresh data directory (`.e2e/data/default/`):
   The `setup` project completes first run and login, then writes cookie state under ignored
-  `test-results/` before the content tests (project named after the browser, `chromium` by default). A separate `proxy` project checks gateway-mode access on port 18766 using disposable `.e2e-proxy-data/`. A `none` project on port 18767 uses `.e2e-none-data/` to verify anonymous access and the Settings warning. Never commit this state file.
+  `.e2e/results/` before the content tests (project named after the browser, `chromium` by default). A separate `proxy` project checks gateway-mode access on port 18766 using disposable `.e2e/data/proxy/`. A `none` project on port 18767 uses `.e2e/data/none/` to verify anonymous access and the Settings warning. Never commit this state file.
   `e2e/accessibility.spec.ts` scans every screen with axe-core (WCAG AA) and checks focus, keyboard use and reflow; give new screens, menus and dialogs an `expectAccessible` call (see [accessibility.md](accessibility.md)).
 
-  **Visual regression (P16-06).** `e2e/visual.spec.ts` takes screenshots of the document view, both editors, the search palette, Settings and the phone document view in the light and dark theme, and compares them with the images in `e2e/visual.spec.ts-snapshots/`. A separate server (port 18770, `.e2e-visual-data/`) starts with the fixed documents in `e2e/visual-content/`, and `e2e/visual.setup.ts` signs in once. The baselines are rendered by Chromium in the official Playwright image, so these tests run only there (as in CI) or with `E2E_VISUAL=1`. When a failure is an intended change of the UI, look at the expected, actual and diff images in `test-results/` (in CI: the `playwright-traces-chromium` artifact), then update the baselines and commit them:
+  **Visual regression (P16-06).** `e2e/visual.spec.ts` takes screenshots of the document view, both editors, the search palette, Settings and the phone document view in the light and dark theme, and compares them with the images in `e2e/visual.spec.ts-snapshots/`. A separate server (port 18770, `.e2e/data/visual/`) starts with the fixed documents in `e2e/visual-content/`, and `e2e/visual.setup.ts` signs in once. The baselines are rendered by Chromium in the official Playwright image, so these tests run only there (as in CI) or with `E2E_VISUAL=1`. When a failure is an intended change of the UI, look at the expected, actual and diff images in `.e2e/results/` (in CI: the `playwright-traces-chromium` artifact), then update the baselines and commit them:
 
   ```bash
   pnpm build
@@ -244,7 +246,7 @@ The setup token changes on server restart; reload an open setup form after resta
   pnpm test:e2e
   ```
 
-  **Other browsers (P15-09).** `E2E_BROWSER=firefox` or `E2E_BROWSER=webkit` (Safari's engine) runs the whole suite in that engine; install it first (`pnpm exec playwright install --with-deps firefox webkit`). Run one engine at a time: the tests share fixed document names and each run starts from empty data folders. CI runs Chromium for pushes to `dev` and all three engines for pull requests and `main` (D-69), in parallel jobs inside the same official Playwright image (no browser download or `apt` install in CI); when `@playwright/test` is updated, update the image tag in `.github/workflows/ci.yml` and in the command below. Engine differences the tests account for: Firefox ignores `clipboardData` given to a synthetic paste event (set it with `Object.defineProperty`), throws from `form.submit()` when the CSP blocks it, and rejects images with a bad checksum; WebKit does not pass files from hidden folders when a directory is chosen.
+  **Other browsers (P15-09).** `E2E_BROWSER=firefox` or `E2E_BROWSER=webkit` (Safari's engine) runs the whole suite in that engine; install it first (`pnpm exec playwright install --with-deps firefox webkit`). Run one engine at a time: the tests share fixed document names and each run starts from empty data folders. CI runs Chromium for pushes to `dev` and all three engines for pull requests and `main` (D-69), in parallel jobs inside the same official Playwright image (no browser download or `apt` install in CI); when `@playwright/test` is updated, update the image tag and its digest (`docker buildx imagetools inspect <image>:<tag>`) in `.github/workflows/ci.yml`, and the tag in the command below. Engine differences the tests account for: Firefox ignores `clipboardData` given to a synthetic paste event (set it with `Object.defineProperty`), throws from `form.submit()` when the CSP blocks it, and rejects images with a bad checksum; WebKit does not pass files from hidden folders when a directory is chosen.
 
   If Chromium cannot start on your machine (missing system libraries, no sudo), run the tests in the official image instead. The version must match `@playwright/test`:
 
@@ -283,8 +285,9 @@ Published images report the **release tag** as their version (D-53): the release
 - **Local patches.** `patches/` holds fixes to dependencies, applied by pnpm on install (`patchedDependencies` in `pnpm-workspace.yaml`). `micromark-util-edit-map@1.0.0`: linear-time edits; without it, documents with many quotes or list items parse in quadratic time (100 KiB of quotes took ~7 s) and large documents exhaust memory. Guarded by `packages/shared/src/markdown/performance.test.ts`. When the package is updated, check whether upstream fixed it and drop or re-create the patch (`pnpm patch`).
 - **Base images.** `docker/Dockerfile` pins `node:26-trixie-slim` (build) and `gcr.io/distroless/nodejs26-debian13:nonroot` (runtime) by digest, so the same commit always builds from the same images. Dependabot (`.github/dependabot.yml`) opens a weekly pull request against `dev` with new digests (security fixes in Debian and Node.js 26), grouped with GitHub Actions SHA updates in a second weekly pull request. CI builds and starts the image for every pull request. By hand: `docker buildx imagetools inspect <image:tag>` prints the `Digest` of the multi-platform index; use that one, not a per-platform digest. A new Node.js major or Debian release is a deliberate task, not an automatic update; both images move together so they keep the same glibc (ADR-0024 amendment).
 - **Updating.** `pnpm update -r` stays within the ranges; then run the full verification, including the browser tests.
+- **Minimum release age.** `minimumReleaseAge: 1440` in `pnpm-workspace.yaml`: pnpm resolves only versions published at least one day ago, and `pnpm install --frozen-lockfile` (CI, Docker build) refuses a lockfile that contains a younger one. Most malicious releases are found and withdrawn within that time. For an urgent security fix that is younger, wait the day or add the package to `minimumReleaseAgeExclude` temporarily and remove it afterwards.
 - **Audit.** CI and the release workflow run `pnpm audit --audit-level=moderate`, so moderate, high and critical advisories fail the build. Low advisories are reviewed and, when accepted, recorded with the reason in [decisions.md](decisions.md#known-issues).
-- **Licences.** Runtime dependencies are permissive (MIT, ISC, BSD, Apache-2.0, 0BSD, BlueOak, Unlicense; DOMPurify under Apache-2.0 of its dual licence; fonts under OFL-1.1). `elkjs`, which Mermaid uses, is EPL-2.0 and is shipped unmodified. Check `pnpm licenses list --prod` when adding a runtime dependency; no GPL/AGPL/SSPL-style licences.
+- **Licences.** LeanDocs is MIT-licensed (D-70). Runtime dependencies are permissive (MIT, ISC, BSD, Apache-2.0, 0BSD, BlueOak, Unlicense; DOMPurify under Apache-2.0 of its dual licence; fonts under OFL-1.1) or weak copyleft limited to their own files (`elkjs`, Mermaid's diagram layout engine: EPL-2.0, shipped unmodified as its own chunk). When adding a runtime dependency, run `pnpm licenses list --prod` in `apps/web` and `apps/server` (the root lists nothing); no GPL/AGPL/SSPL-style licences, which would impose their terms on the whole application.
 
 ## Releasing
 
@@ -366,7 +369,7 @@ invalid or mismatched keys with active MFA fail local-auth startup closed. Resto
 backup; never delete the key to reset protection. Losing the authenticator and all recovery codes
 has no unauthenticated recovery bypass. See [ADR-0018](adr/0018-local-totp-mfa.md).
 
-Browser MFA coverage uses port 18769 and disposable `.e2e-mfa-data/`, independently of the normal
+Browser MFA coverage uses port 18769 and disposable `.e2e/data/mfa/`, independently of the normal
 local/proxy/none projects. Its real rate-limit wait avoids any production test bypass.
 
 ## Authentication database recovery

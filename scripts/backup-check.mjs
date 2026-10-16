@@ -99,7 +99,7 @@ async function run({ image, keep }) {
     let instance = await new Instance(image, live).start();
     running.push(instance);
     log(`${image} reports ${instance.version}`);
-    let { client, authenticator } = await setUpAccount(instance.base);
+    let { client, authenticator } = await setUpAccount(instance);
     await client.ok('POST', '/documents', {
       name: 'Before backup',
       folder: 'Notes',
@@ -200,7 +200,7 @@ async function run({ image, keep }) {
     const copied = hashTree(path.join(moved, 'content'));
     const fresh = await new Instance(image, moved).start();
     running.push(fresh);
-    const second = await setUpAccount(fresh.base);
+    const second = await setUpAccount(fresh);
     same(
       await snapshot(second.client, { withPins: false }),
       current,

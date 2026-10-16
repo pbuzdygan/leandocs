@@ -3,10 +3,9 @@ import path from 'node:path';
 import { test, expect } from './document-fixture';
 import { csrfRequest } from './csrf-request';
 import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+import { CONTENT as content } from './paths';
 
 restoreSettingsAfterEach();
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 /**
  * E2E-05 (PROJECT_SPEC §91) and critical test C (§103): a Markdown file edited in an external

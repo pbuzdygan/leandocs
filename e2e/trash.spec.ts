@@ -2,10 +2,9 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { csrfRequest } from './csrf-request';
 import { createTrashedDocument, expect, test } from './document-fixture';
+import { CONTENT as content } from './paths';
 
 /** P16-04 (UI_SPEC §136): restore and permanent deletion from the Trash page. */
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 test('restores a document and deletes another one permanently', async ({ page }) => {
   await createTrashedDocument(page, 'Trash Keep', '# Trash Keep\n\nStill here.\n');
@@ -25,7 +24,8 @@ test('restores a document and deletes another one permanently', async ({ page })
   await expect(page.getByRole('treeitem', { name: 'Trash Keep', exact: true })).toBeVisible();
   expect(existsSync(path.join(content, 'Trash Keep.md'))).toBe(true);
 
-  await page.getByRole('button', { name: 'Delete permanently Trash Gone' }).click();
+  await page.getByRole('button', { name: 'More actions for Trash Gone' }).click();
+  await page.getByRole('menuitem', { name: 'Delete permanently' }).click();
   const dialog = page.getByRole('dialog', { name: 'Delete permanently?' });
   await dialog.getByRole('button', { name: 'Delete permanently' }).click();
   await expect(page.getByText('"Trash Gone" deleted permanently', { exact: true })).toBeVisible();

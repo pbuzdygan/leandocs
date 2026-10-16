@@ -2,12 +2,11 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test } from './document-fixture';
 import { expectStoredSettings, restoreSettingsAfterEach } from './settings';
+import { CONTENT as content } from './paths';
 
 /** P16-01 (UI_SPEC §81–83): settings are saved on the server and change how editing works. */
 
 restoreSettingsAfterEach();
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 test('editor settings: default editor, tab size and autosave off', async ({
   page,

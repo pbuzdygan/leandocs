@@ -27,13 +27,13 @@ describe('documents that are not UTF-8', () => {
     api();
     renderApp('/doc/id-vlan');
     expect(await screen.findByText(/This file is not saved as UTF-8 text/)).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Edit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
   });
 
   it('open read-only even from an edit link', async () => {
     api();
     renderApp('/doc/id-vlan/edit');
-    expect(await screen.findByRole('tab', { name: 'Edit' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'Edit' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
   });
 });

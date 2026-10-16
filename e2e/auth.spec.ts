@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { AUTH_STATE } from './paths';
 
 test('logout revokes the session; login failures are generic and successful login restores access', async ({
   page,
@@ -18,7 +19,7 @@ test('logout revokes the session; login failures are generic and successful logi
   await expect(page).toHaveURL(/\/$/);
   expect((await page.request.get('/api/v1/tree')).status()).toBe(200);
   // Logout affected the setup project's stored session, so refresh it for later isolated tests.
-  await page.context().storageState({ path: 'test-results/auth-state.json' });
+  await page.context().storageState({ path: AUTH_STATE });
   expect((await request.get('/api/v1/health')).status()).toBe(200);
 });
 

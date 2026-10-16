@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, newParagraphAtEnd, test, type Page } from './document-fixture';
 import { setDefaultEditor } from './settings';
+import { CONTENT, RESULTS_DIR } from './paths';
 
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
@@ -82,7 +83,7 @@ for (const mode of ['Visual', 'Source'] as const) {
       'href',
       `/api/v1/documents/${id}/attachments/compose.yaml`,
     );
-    const file = readFileSync(path.resolve('.e2e-data/content', `${name}.md`), 'utf8');
+    const file = readFileSync(path.join(CONTENT, `${name}.md`), 'utf8');
     expect(file).toContain(`${encodeURIComponent(name)}.assets/screenshot.png`);
     expect(file).not.toContain('/api/v1/');
     await page.reload();
@@ -133,7 +134,7 @@ for (const mode of ['Visual', 'Source'] as const) {
       404,
     );
     await page.screenshot({
-      path: `test-results/attachments-${mode.toLowerCase()}.png`,
+      path: path.join(RESULTS_DIR, `attachments-${mode.toLowerCase()}.png`),
       fullPage: true,
     });
   });
@@ -188,7 +189,7 @@ for (const mode of ['Visual', 'Source'] as const) {
       .setInputFiles({ name: 'fake.png', mimeType: 'image/png', buffer: Buffer.from('not a PNG') });
     // Scoped to the toast body: Radix also mirrors the text into a transient aria-live region.
     await expect(
-      page.locator('.toast__message', { hasText: /Upload failed: The file contents/ }),
+      page.locator('.toast__message', { hasText: /Could not upload fake.png \(The file contents/ }),
     ).toBeVisible();
     await expect(page.locator(selector)).not.toContainText('fake.png');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -251,4 +252,47 @@ test('the slash menu attaches files at the caret (UI_SPEC §38)', async ({
   await expect(page.getByRole('status', { name: 'Save status' })).toHaveCount(0);
   const saved = await (await page.request.get(`/api/v1/documents/${id}`)).json();
   expect(saved.content).toContain('Attachments%20Slash.assets/slash.png');
+});
+
+test('a link to an attachment deleted on disk keeps the app and explains it', async ({
+  page,
+  createDocument,
+}) => {
+  const id = await createDocument(
+    'Missing Attachment',
+    'Read [the manual](Missing%20Attachment.assets/manual.txt) and [the notes](Missing%20Attachment.assets/notes.txt).\n',
+  );
+  const upload = async (name: string) => {
+    const response = await csrfRequest(page.request).post(`/api/v1/documents/${id}/attachments`, {
+      multipart: { file: { name, mimeType: 'text/plain', buffer: Buffer.from('text\n') } },
+    });
+    expect(response.status(), await response.text()).toBe(201);
+  };
+  await upload('notes.txt');
+  // manual.txt was never there (as if it had been deleted from the folder by hand).
+  await page.goto(`/doc/${id}`);
+  await page.getByRole('link', { name: 'the manual' }).click();
+  await expect(
+    page.locator('.toast__message', { hasText: /"manual.txt" is no longer attached/ }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/doc/${id}$`));
+  await expect(page.getByRole('heading', { level: 1, name: 'Missing Attachment' })).toBeVisible();
+
+  // The Links tab lists the missing file only and leads to where it is linked.
+  await page.getByRole('tab', { name: 'Links' }).click();
+  const missing = page.getByRole('region', { name: 'Missing files' });
+  await expect(missing.getByRole('button')).toHaveText(['manual.txt']);
+  await missing.getByRole('button', { name: 'manual.txt' }).click();
+  await expect(page.getByRole('link', { name: 'the manual' })).toBeFocused();
+
+  // An existing file still opens (a download here, so the page stays).
+  const download = page.waitForEvent('download');
+  await page.getByRole('link', { name: 'the notes' }).click();
+  expect((await download).suggestedFilename()).toBe('notes.txt');
+
+  // Opened directly (new tab, bookmark): a page, not the JSON error.
+  await page.goto(`/api/v1/documents/${id}/attachments/manual.txt`);
+  await expect(page.getByRole('heading', { level: 1, name: 'File not found' })).toBeVisible();
+  await page.getByRole('link', { name: 'Back to the document' }).click();
+  await expect(page).toHaveURL(new RegExp(`/doc/${id}$`));
 });

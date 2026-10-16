@@ -3,12 +3,11 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+import { CONTENT as content } from './paths';
 
 restoreSettingsAfterEach();
 
 /** Phase 9 acceptance: a reference is visible from both sides and survives a rename. */
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 async function createDocument(
   page: Page,

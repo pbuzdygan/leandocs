@@ -2,21 +2,25 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Dialog as RadixDialog } from 'radix-ui';
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from '../components/icons';
 import { IconButton } from '../components/ui/IconButton';
-import type { TocHeading } from '../markdown/pipeline';
+import { Tab, TabPanel, Tabs, TabsList } from '../components/ui/Tabs';
+import { useResizablePanel } from '../utils/resizable-panel';
+import type { AttachmentRef, TocHeading } from '../markdown/pipeline';
 import { readPreference, writePreference } from '../utils/storage';
 import { InfoPanel } from './InfoPanel';
 import { LinksPanel } from './LinksPanel';
 import type { DocumentDto } from '@leandocs/shared';
 
 type ContextTab = 'contents' | 'links' | 'info';
+/** UI_SPEC §44 order. */
 const TABS: { value: ContextTab; label: string }[] = [
   { value: 'contents', label: 'Contents' },
-  { value: 'links', label: 'Links' },
   { value: 'info', label: 'Info' },
+  { value: 'links', label: 'Links' },
 ];
 
 interface ContextProps {
   headings: TocHeading[];
+  attachmentRefs: AttachmentRef[];
   document: DocumentDto;
   editing: boolean;
 }
@@ -27,6 +31,13 @@ interface ContextProps {
  */
 export function ContextSidebar(props: ContextProps) {
   const [open, setOpen] = useState(() => readPreference('context.open', true));
+  const { width, separatorProps } = useResizablePanel({
+    key: 'context.width',
+    min: 220,
+    max: 400,
+    initial: 260,
+    edge: 'left',
+  });
   const toggle = (next: boolean) => {
     setOpen(next);
     writePreference('context.open', next);
@@ -43,7 +54,9 @@ export function ContextSidebar(props: ContextProps) {
   }
 
   return (
-    <aside className="context" aria-label="Document context">
+    <aside className="context" aria-label="Document context" style={{ width }}>
+      {/* UI_SPEC §108: the context panel is resizable like the navigation. */}
+      <div className="context__resizer" aria-label="Resize side panel" {...separatorProps} />
       <ContextPanel
         {...props}
         close={
@@ -59,7 +72,7 @@ export function ContextSidebar(props: ContextProps) {
 /**
  * The same panel as a drawer from the right on tablets and phones (UI_SPEC §100–101). Modal:
  * focus stays inside, Esc or the backdrop closes it, and focus returns to the opening button.
- * Choosing a heading closes it and moves focus to that heading.
+ * Choosing a heading or a missing file closes it and moves focus to that place in the text.
  */
 export function ContextDrawer({
   open,
@@ -83,12 +96,13 @@ export function ContextDrawer({
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
-            const heading = target.current;
+            const place = target.current;
             target.current = null;
-            if (heading?.isConnected) {
+            if (place?.isConnected) {
               // Focusing the opener would scroll back up to the document header.
-              if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
-              heading.focus({ preventScroll: true });
+              if (place.tabIndex < 0 && !place.hasAttribute('tabindex'))
+                place.setAttribute('tabindex', '-1');
+              place.focus({ preventScroll: true });
             } else if (opener.current?.isConnected) {
               opener.current.focus();
             }
@@ -97,8 +111,8 @@ export function ContextDrawer({
           <RadixDialog.Title className="visually-hidden">Document context</RadixDialog.Title>
           <ContextPanel
             {...props}
-            onNavigate={(heading) => {
-              target.current = heading;
+            onNavigate={(place) => {
+              target.current = place;
               onOpenChange(false);
             }}
             close={
@@ -116,14 +130,15 @@ export function ContextDrawer({
 /** "Contents", "Links" and "Info" tabs, one at a time; the chosen tab is remembered. */
 function ContextPanel({
   headings,
+  attachmentRefs,
   document: current,
   editing,
   close,
   onNavigate,
 }: ContextProps & {
   close: ReactNode;
-  /** After a heading in "Contents" was scrolled into view. */
-  onNavigate?: (heading: HTMLElement) => void;
+  /** After a heading in "Contents" or a missing file in "Links" was scrolled into view. */
+  onNavigate?: (place: HTMLElement) => void;
 }) {
   const documentId = current.id;
   const [tab, setTab] = useState<ContextTab>(() => {
@@ -133,62 +148,67 @@ function ContextPanel({
   const toc = tocEntries(headings);
   const activeId = useScrollSpy(tab === 'contents' ? toc.map((heading) => heading.id) : []);
 
-  return (
-    <>
-      <div className="context__header">
-        <div className="context__tabs" role="tablist" aria-label="Context">
-          {TABS.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              role="tab"
-              aria-selected={tab === value}
-              className="context__tab"
-              onClick={() => {
-                setTab(value);
-                writePreference('context.tab', value);
-              }}
-            >
-              {label}
-            </button>
+  const contents =
+    toc.length === 0 ? (
+      <p className="context__empty">No headings in this document.</p>
+    ) : (
+      <nav aria-label="Table of contents">
+        <ul className="toc">
+          {toc.map((heading) => (
+            <li key={heading.id} style={{ paddingLeft: `calc(${heading.level} * var(--space-3))` }}>
+              <a
+                href={`#${heading.id}`}
+                className={heading.id === activeId ? 'toc__link toc__link--active' : 'toc__link'}
+                aria-current={heading.id === activeId ? 'location' : undefined}
+                onClick={(event) => {
+                  event.preventDefault();
+                  const target = document.getElementById(heading.id);
+                  target?.scrollIntoView({ block: 'start' });
+                  window.history.replaceState(window.history.state, '', `#${heading.id}`);
+                  if (target) onNavigate?.(target);
+                }}
+              >
+                {heading.text}
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
+      </nav>
+    );
+
+  return (
+    <Tabs
+      value={tab}
+      onValueChange={(value) => {
+        setTab(value as ContextTab);
+        writePreference('context.tab', value);
+      }}
+    >
+      <div className="context__header">
+        <TabsList label="Context" className="context__tabs">
+          {TABS.map(({ value, label }) => (
+            <Tab key={value} value={value}>
+              {label}
+            </Tab>
+          ))}
+        </TabsList>
         {close}
       </div>
-      {tab === 'info' ? (
+      <TabPanel value="contents" tabIndex={-1}>
+        {contents}
+      </TabPanel>
+      <TabPanel value="info" tabIndex={-1}>
         <InfoPanel key={documentId} document={current} editing={editing} />
-      ) : tab === 'links' ? (
-        <LinksPanel documentId={documentId} />
-      ) : toc.length === 0 ? (
-        <p className="context__empty">No headings in this document.</p>
-      ) : (
-        <nav aria-label="Table of contents">
-          <ul className="toc">
-            {toc.map((heading) => (
-              <li
-                key={heading.id}
-                style={{ paddingLeft: `calc(${heading.level} * var(--space-3))` }}
-              >
-                <a
-                  href={`#${heading.id}`}
-                  className={heading.id === activeId ? 'toc__link toc__link--active' : 'toc__link'}
-                  aria-current={heading.id === activeId ? 'location' : undefined}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    const target = document.getElementById(heading.id);
-                    target?.scrollIntoView({ block: 'start' });
-                    window.history.replaceState(window.history.state, '', `#${heading.id}`);
-                    if (target) onNavigate?.(target);
-                  }}
-                >
-                  {heading.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
-    </>
+      </TabPanel>
+      <TabPanel value="links">
+        <LinksPanel
+          documentId={documentId}
+          attachmentRefs={attachmentRefs}
+          editing={editing}
+          onNavigate={onNavigate}
+        />
+      </TabPanel>
+    </Tabs>
   );
 }
 

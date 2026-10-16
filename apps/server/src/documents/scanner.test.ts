@@ -16,7 +16,7 @@ describe('scanContent', () => {
 
   it('finds nested folders and Markdown documents only', async () => {
     const root = await makeTempDir();
-    await put(root, 'Infrastructure/Servers/BUZHULK.md');
+    await put(root, 'Infrastructure/Servers/ATLAS.md');
     await put(root, 'Network/VLAN.md');
     await put(root, 'Network/diagram.png');
     await put(root, 'README.MD');
@@ -29,7 +29,7 @@ describe('scanContent', () => {
       'Network',
     ]);
     expect(result.files.map((file) => file.path)).toEqual([
-      'Infrastructure/Servers/BUZHULK.md',
+      'Infrastructure/Servers/ATLAS.md',
       'Network/VLAN.md',
       'README.MD',
     ]);
@@ -42,12 +42,12 @@ describe('scanContent', () => {
     await put(root, '_trash/Old.md');
     await put(root, '_templates/Server.md');
     await put(root, 'Docs/_drafts/Visible.md');
-    await put(root, 'Docs/BUZHULK.md');
-    await put(root, 'Docs/BUZHULK.assets/notes.md');
+    await put(root, 'Docs/ATLAS.md');
+    await put(root, 'Docs/ATLAS.assets/notes.md');
     const result = await scanContent(root);
     expect(result.folders).toEqual(['Docs', 'Docs/_drafts']);
     expect(result.files.map((file) => file.path)).toEqual([
-      'Docs/BUZHULK.md',
+      'Docs/ATLAS.md',
       'Docs/_drafts/Visible.md',
     ]);
   });

@@ -15,6 +15,7 @@ export interface MockRequest {
   method: string;
   path: string;
   body: unknown;
+  headers: Headers;
 }
 
 type Handler = (request: MockRequest) => { status?: number; body?: unknown } | undefined;
@@ -35,7 +36,7 @@ export function mockApi(routes: Record<string, unknown> | Handler) {
         : init?.body instanceof FormData
           ? init.body
           : undefined;
-    const request = { method, path, body };
+    const request = { method, path, body, headers: new Headers(init?.headers) };
     requests.push(request);
     const configured =
       typeof routes === 'function'
@@ -55,9 +56,7 @@ export function mockApi(routes: Record<string, unknown> | Handler) {
             },
           }
         : undefined) ??
-      (method === 'GET' && path === '/auth/setup'
-        ? { body: { required: false, contentDir: '/data/content' } }
-        : undefined) ??
+      (method === 'GET' && path === '/auth/setup' ? { body: { required: false } } : undefined) ??
       (path === '/settings' && method === 'GET' ? { body: getTestSettings() } : undefined) ??
       (path === '/settings' && method === 'PATCH'
         ? (setTestSettings(body as UpdateSettingsRequest), { body: getTestSettings() })
@@ -106,13 +105,13 @@ export function doc(path: string, id: string, title?: string): TreeNode {
   return { type: 'document', id, title: title ?? name.replace(/\.md$/, ''), name, path };
 }
 
-/** A small BUZLAB-like tree used by most tests. */
+/** A small homelab-like tree used by most tests. */
 export function sampleTree(): TreeFolderNode {
   return folder('', [
     folder('Infrastructure', [
       folder('Infrastructure/Servers', [
-        doc('Infrastructure/Servers/BUZHULK.md', 'id-buzhulk'),
-        doc('Infrastructure/Servers/BUZPI00.md', 'id-buzpi00'),
+        doc('Infrastructure/Servers/ATLAS.md', 'id-atlas'),
+        doc('Infrastructure/Servers/ORION.md', 'id-orion'),
       ]),
     ]),
     folder('Network', [doc('Network/VLAN.md', 'id-vlan')]),

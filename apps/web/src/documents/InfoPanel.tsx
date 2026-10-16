@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 import { FormError, TextField } from '../components/ui/Field';
 import { TagInput } from '../components/ui/TagInput';
 import { useNotify } from '../components/ui/Toast';
-import { formatDate } from '../utils/format';
+import { formatDate, stripExtension } from '../utils/format';
 
 function list(value: unknown): string[] {
   return Array.isArray(value)
@@ -59,15 +59,48 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
     setDraft(draftOf(document));
   }
   const original = draftOf(document);
+  // The title and the file name may differ (PROJECT_SPEC §9, D-18); the file name is what a new
+  // document's title started as, so it is the way back after an unwanted title change.
+  const fileTitle = stripExtension(document.path.split('/').pop() ?? '');
   const dirty =
     draft.title.trim() !== original.title ||
     draft.description.trim() !== original.description ||
     !same(draft.tags, original.tags) ||
     !same(draft.aliases, original.aliases);
 
+  const refresh = async (updated: DocumentDto) => {
+    queryClient.setQueryData(queryKeys.document(document.id), updated);
+    await Promise.all(
+      [queryKeys.tree, queryKeys.tags, queryKeys.searches, queryKeys.links, queryKeys.recent].map(
+        (queryKey) => queryClient.invalidateQueries({ queryKey }),
+      ),
+    );
+  };
+
+  /** Undo of a title change: only the title goes back; the newer revision guards against edits. */
+  const restoreTitle = (title: string, expectedRevision: string) => {
+    api
+      .updateProperties(document.id, { expectedRevision, title })
+      .then(async (restored) => {
+        await refresh(restored);
+        notify.info(`Title restored to "${title}".`);
+      })
+      .catch((reason: unknown) =>
+        notify.error(
+          `The title was not restored (${errorMessage(reason)}). Change it in Info › Title.`,
+        ),
+      );
+  };
+
   const save = async () => {
     setSaving(true);
     setError(undefined);
+    const titleChanged = draft.title.trim() !== original.title;
+    const onlyTitle =
+      titleChanged &&
+      draft.description.trim() === original.description &&
+      same(draft.tags, original.tags) &&
+      same(draft.aliases, original.aliases);
     try {
       const updated = await api.updateProperties(document.id, {
         expectedRevision: document.revision,
@@ -78,13 +111,13 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
         ...(!same(draft.tags, original.tags) ? { tags: draft.tags } : {}),
         ...(!same(draft.aliases, original.aliases) ? { aliases: draft.aliases } : {}),
       });
-      queryClient.setQueryData(queryKeys.document(document.id), updated);
-      await Promise.all(
-        [queryKeys.tree, queryKeys.tags, queryKeys.searches, queryKeys.links, queryKeys.recent].map(
-          (queryKey) => queryClient.invalidateQueries({ queryKey }),
-        ),
-      );
-      notify.info('Properties saved.');
+      await refresh(updated);
+      if (titleChanged)
+        notify.info(
+          `${onlyTitle ? 'Title' : 'Properties saved; title'} changed from "${original.title}".`,
+          { label: 'Undo', onClick: () => restoreTitle(original.title, updated.revision) },
+        );
+      else notify.info('Properties saved.');
     } catch (reason) {
       setError(errorMessage(reason));
     } finally {
@@ -141,44 +174,80 @@ export function InfoPanel({ document, editing }: { document: DocumentDto; editin
           This file is not UTF-8 text, so its properties cannot be changed here.
         </p>
       )}
-      <FormError message={error} />
-      <TextField
-        label="Title"
-        value={draft.title}
-        disabled={locked}
-        onChange={(event) => setDraft({ ...draft, title: event.target.value })}
-      />
-      <TextField
-        label="Description"
-        value={draft.description}
-        disabled={locked}
-        onChange={(event) => setDraft({ ...draft, description: event.target.value })}
-      />
-      <TagInput
-        label="Tags"
-        values={draft.tags}
-        disabled={locked}
-        suggestions={(tags.data?.items ?? []).map((tag) => tag.name)}
-        onChange={(values) => setDraft({ ...draft, tags: values })}
-      />
-      <TagInput
-        label="Aliases"
-        values={draft.aliases}
-        disabled={locked}
-        onChange={(values) => setDraft({ ...draft, aliases: values })}
-      />
-      {!locked && (
-        <div className="info-panel__actions">
-          <Button size="small" type="submit" variant="primary" disabled={!dirty || saving}>
-            {saving ? 'Saving…' : 'Save properties'}
-          </Button>
-          {dirty && (
-            <Button size="small" variant="ghost" onClick={() => setDraft(original)}>
-              Cancel
-            </Button>
+      {locked ? (
+        // Read-only: plain facts, not disabled fields (guidelines §12).
+        <dl className="info-panel__facts">
+          <dt>Title</dt>
+          <dd>{original.title}</dd>
+          <dt>Description</dt>
+          <dd>{original.description || <span className="context__empty">None</span>}</dd>
+          <dt>Tags</dt>
+          <dd>
+            <ReadOnlyList values={original.tags} />
+          </dd>
+          <dt>Aliases</dt>
+          <dd>
+            <ReadOnlyList values={original.aliases} />
+          </dd>
+        </dl>
+      ) : (
+        <>
+          <FormError message={error} />
+          <TextField
+            label="Title"
+            value={draft.title}
+            onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+          />
+          {draft.title.trim() !== fileTitle && (
+            <button
+              type="button"
+              className="info-panel__move info-panel__reset"
+              onClick={() => setDraft({ ...draft, title: fileTitle })}
+            >
+              Reset to file name
+            </button>
           )}
-        </div>
+          <TextField
+            label="Description"
+            value={draft.description}
+            onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+          />
+          <TagInput
+            label="Tags"
+            values={draft.tags}
+            suggestions={(tags.data?.items ?? []).map((tag) => tag.name)}
+            onChange={(values) => setDraft({ ...draft, tags: values })}
+          />
+          <TagInput
+            label="Aliases"
+            values={draft.aliases}
+            onChange={(values) => setDraft({ ...draft, aliases: values })}
+          />
+          <div className="info-panel__actions">
+            <Button size="small" type="submit" variant="primary" disabled={!dirty} loading={saving}>
+              Save properties
+            </Button>
+            {dirty && (
+              <Button size="small" variant="ghost" onClick={() => setDraft(original)}>
+                Cancel
+              </Button>
+            )}
+          </div>
+        </>
       )}
     </form>
+  );
+}
+
+function ReadOnlyList({ values }: { values: string[] }) {
+  if (values.length === 0) return <span className="context__empty">None</span>;
+  return (
+    <ul className="tag-input__readonly">
+      {values.map((value) => (
+        <li key={value} className="tag">
+          {value}
+        </li>
+      ))}
+    </ul>
   );
 }
