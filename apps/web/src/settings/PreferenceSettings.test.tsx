@@ -59,6 +59,7 @@ describe('Settings › General', () => {
       'Index',
       'Broken links',
       'About',
+      'Shortcuts',
     ]);
 
     const openLast = await screen.findByRole('checkbox', { name: 'Open last document on startup' });

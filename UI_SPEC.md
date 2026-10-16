@@ -695,6 +695,11 @@ Back to documentation
 
 Left mini-sidebar + main panel. Sections: General, Editor, Appearance, Security (local Authentication), Storage, Index, About.
 
+Below the sections, a **Help** group (labelled like the sidebar section labels, §18) holds
+help pages. **Shortcuts** lists every keyboard shortcut by context (everywhere, navigation tree,
+search, both editors, visual editor, Markdown typed in the visual editor, source editor, tag fields)
+with the key names of the current device (`Ctrl`/`Alt` or `⌘`/`Option`).
+
 Security offers optional local two-factor authentication: current-password reauthentication,
 locally generated authenticator QR code and manual key, six-digit confirmation, then ten recovery
 codes shown once with an explicit acknowledgment. Cancel enrollment clears the pending secret.

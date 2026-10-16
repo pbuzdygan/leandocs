@@ -41,6 +41,11 @@ const SecuritySettings = lazy(() =>
 const AboutSettings = lazy(() =>
   import('../settings/AboutSettings').then((module) => ({ default: module.AboutSettings })),
 );
+const ShortcutsSettings = lazy(() =>
+  import('../settings/ShortcutsSettings').then((module) => ({
+    default: module.ShortcutsSettings,
+  })),
+);
 
 const TrashPage = lazy(() =>
   import('../trash/TrashPage').then((module) => ({ default: module.TrashPage })),
@@ -102,6 +107,7 @@ export function AppRoutes() {
                 <Route path="links" element={<BrokenLinksSettings />} />
                 <Route path="security" element={<SecuritySettings />} />
                 <Route path="about" element={<AboutSettings />} />
+                <Route path="help/shortcuts" element={<ShortcutsSettings />} />
               </Route>
               <Route
                 path="trash"

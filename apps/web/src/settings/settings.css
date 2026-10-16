@@ -19,6 +19,21 @@
   font-weight: 700;
 }
 
+/* Group label in the settings nav ("Help"), styled like the sidebar section labels. */
+.settings__nav-label {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-1) var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--font-size-meta);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.settings__nav-group {
+  display: contents;
+}
+
 .settings__panel {
   flex: 1;
   min-width: 0;
@@ -150,8 +165,13 @@
     width: auto;
   }
 
-  .settings__heading {
+  .settings__heading,
+  .settings__nav-label {
     width: 100%;
+  }
+
+  .settings__nav-label {
+    margin-top: var(--space-1);
   }
 }
 
@@ -220,4 +240,41 @@
   margin: 0;
   color: var(--text-secondary);
   font-size: var(--font-size-ui);
+}
+
+/* Help › Shortcuts. */
+.shortcuts__table {
+  max-width: 720px;
+  margin-bottom: var(--space-2);
+}
+
+.shortcuts__table td:first-child {
+  width: 40%;
+}
+
+.shortcuts__combo {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.shortcuts__or {
+  color: var(--text-muted);
+}
+
+.shortcuts__key {
+  min-width: 20px;
+  padding: 1px var(--space-1);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-meta);
+  text-align: center;
+}
+
+.shortcuts__key--typed {
+  font-family: var(--font-mono);
 }
