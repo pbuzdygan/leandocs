@@ -657,6 +657,11 @@ May suggest `Search for "macvlan"` if a simple fuzzy-match mechanism exists.
 
 `[[Old Server]]` renders as `Old Server` in muted text with a dashed underline; hover shows `Document not found`.
 
+Attachment links are checked when clicked: a missing file shows an error toast and the app stays
+open. A missing attached image renders as `Image not found: <alt>` in the same broken-link style.
+Opened directly (new tab), the server answers a missing attachment with a small HTML page and a
+link back to the document instead of the JSON error.
+
 ## 77. Loading
 
 Prefer skeletons (tree, title, lines) over a full-screen spinner. Small spinner for minor operations.

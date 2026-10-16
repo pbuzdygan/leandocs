@@ -8,6 +8,8 @@ Uploads keep their insertion point while you continue typing. Visual mode shows 
 
 Expand **Attachments** below a document to open, download or delete files. Delete requires confirmation and is permanent; links are not removed from Markdown. Moving, renaming, trashing and restoring a document carries its assets with it. Renaming or moving updates the document's own Markdown links to its attachments. Links written as raw HTML (`<img src>`, `<a href>`) and links from other documents to these attachments are not updated.
 
+When a linked file is missing (deleted, or removed from the `.assets` folder by hand), clicking its link keeps you in LeanDocs and says the file is no longer attached; a missing image shows **Image not found** in its place. Opening such a link directly, for example in a new tab, shows a short **File not found** page with a link back to the document.
+
 SVG is delivered with sandbox restrictions. Scripts and external resources do not execute, including when opening an SVG directly. Generic files download instead of running in the application.
 
 Importing Markdown or HTML brings along the pictures and files that the imported notes link to. Each one is copied into the attachments folder of the document that uses it, and its links are updated. The same type and size rules apply as for uploads.

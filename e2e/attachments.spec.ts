@@ -252,3 +252,39 @@ test('the slash menu attaches files at the caret (UI_SPEC §38)', async ({
   const saved = await (await page.request.get(`/api/v1/documents/${id}`)).json();
   expect(saved.content).toContain('Attachments%20Slash.assets/slash.png');
 });
+
+test('a link to an attachment deleted on disk keeps the app and explains it', async ({
+  page,
+  createDocument,
+}) => {
+  const id = await createDocument(
+    'Missing Attachment',
+    'Read [the manual](Missing%20Attachment.assets/manual.txt) and [the notes](Missing%20Attachment.assets/notes.txt).\n',
+  );
+  const upload = async (name: string) => {
+    const response = await csrfRequest(page.request).post(`/api/v1/documents/${id}/attachments`, {
+      multipart: { file: { name, mimeType: 'text/plain', buffer: Buffer.from('text\n') } },
+    });
+    expect(response.status(), await response.text()).toBe(201);
+  };
+  await upload('notes.txt');
+  // manual.txt was never there (as if it had been deleted from the folder by hand).
+  await page.goto(`/doc/${id}`);
+  await page.getByRole('link', { name: 'the manual' }).click();
+  await expect(
+    page.locator('.toast__message', { hasText: /"manual.txt" is no longer attached/ }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/doc/${id}$`));
+  await expect(page.getByRole('heading', { level: 1, name: 'Missing Attachment' })).toBeVisible();
+
+  // An existing file still opens (a download here, so the page stays).
+  const download = page.waitForEvent('download');
+  await page.getByRole('link', { name: 'the notes' }).click();
+  expect((await download).suggestedFilename()).toBe('notes.txt');
+
+  // Opened directly (new tab, bookmark): a page, not the JSON error.
+  await page.goto(`/api/v1/documents/${id}/attachments/manual.txt`);
+  await expect(page.getByRole('heading', { level: 1, name: 'File not found' })).toBeVisible();
+  await page.getByRole('link', { name: 'Back to the document' }).click();
+  await expect(page).toHaveURL(new RegExp(`/doc/${id}$`));
+});
