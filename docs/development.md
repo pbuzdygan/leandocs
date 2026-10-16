@@ -178,11 +178,12 @@ shares the account/peer budget and adds bounded challenge limits (P11-11). See
 ### Local test artifacts and Git
 
 Keep `e2e/` and `*.test.ts` / `*.test.tsx` files in Git: these are test source code.
-The browser tests create disposable `.e2e-data/`, `.e2e-proxy-data/`,
-`.e2e-none-data/` and `.e2e-mfa-data/` folders containing test documents,
-SQLite databases and, in local-auth modes, authentication state. Each test server
-recreates its own folder on startup; these folders are never application backups.
-Playwright writes screenshots, traces and saved login cookies to `test-results/`.
+Everything a browser-test run writes stays in one ignored folder, `.e2e/` (paths in
+`e2e/paths.ts`). `.e2e/data/` holds one disposable data directory per test server (`default`,
+`mfa`, `visual`, `none`, `proxy`) with test documents, SQLite databases and, in local-auth modes,
+authentication state. Each test server recreates its own folder on startup; these folders are
+never application backups. Playwright writes screenshots, traces and saved login cookies to
+`.e2e/results/`.
 These outputs are ignored by Git and excluded from the Docker build context,
 as are `test_results/`, `playwright-report/`, local caches and temporary output.
 You may remove the test output folders when browser tests and their servers are stopped;
@@ -224,12 +225,12 @@ The setup token changes on server restart; enter the newest one from the log. Te
 - **Server/API tests** normally use `buildApp(config)` + `app.inject()`. SSE integration tests use temporary loopback ports to verify real streaming responses and shutdown.
 - **Filesystem tests** use a real temp directory (`mkdtemp(os.tmpdir())`) and clean it up in `afterEach`.
 - **Web tests** use jsdom + Testing Library (`apps/web/src/test/setup.ts`).
-- **End-to-end tests** (Playwright) live in `e2e/` and run against the production build with a fresh data directory (`.e2e-data/`):
+- **End-to-end tests** (Playwright) live in `e2e/` and run against the production build with a fresh data directory (`.e2e/data/default/`):
   The `setup` project completes first run and login, then writes cookie state under ignored
-  `test-results/` before the content tests (project named after the browser, `chromium` by default). A separate `proxy` project checks gateway-mode access on port 18766 using disposable `.e2e-proxy-data/`. A `none` project on port 18767 uses `.e2e-none-data/` to verify anonymous access and the Settings warning. Never commit this state file.
+  `.e2e/results/` before the content tests (project named after the browser, `chromium` by default). A separate `proxy` project checks gateway-mode access on port 18766 using disposable `.e2e/data/proxy/`. A `none` project on port 18767 uses `.e2e/data/none/` to verify anonymous access and the Settings warning. Never commit this state file.
   `e2e/accessibility.spec.ts` scans every screen with axe-core (WCAG AA) and checks focus, keyboard use and reflow; give new screens, menus and dialogs an `expectAccessible` call (see [accessibility.md](accessibility.md)).
 
-  **Visual regression (P16-06).** `e2e/visual.spec.ts` takes screenshots of the document view, both editors, the search palette, Settings and the phone document view in the light and dark theme, and compares them with the images in `e2e/visual.spec.ts-snapshots/`. A separate server (port 18770, `.e2e-visual-data/`) starts with the fixed documents in `e2e/visual-content/`, and `e2e/visual.setup.ts` signs in once. The baselines are rendered by Chromium in the official Playwright image, so these tests run only there (as in CI) or with `E2E_VISUAL=1`. When a failure is an intended change of the UI, look at the expected, actual and diff images in `test-results/` (in CI: the `playwright-traces-chromium` artifact), then update the baselines and commit them:
+  **Visual regression (P16-06).** `e2e/visual.spec.ts` takes screenshots of the document view, both editors, the search palette, Settings and the phone document view in the light and dark theme, and compares them with the images in `e2e/visual.spec.ts-snapshots/`. A separate server (port 18770, `.e2e/data/visual/`) starts with the fixed documents in `e2e/visual-content/`, and `e2e/visual.setup.ts` signs in once. The baselines are rendered by Chromium in the official Playwright image, so these tests run only there (as in CI) or with `E2E_VISUAL=1`. When a failure is an intended change of the UI, look at the expected, actual and diff images in `.e2e/results/` (in CI: the `playwright-traces-chromium` artifact), then update the baselines and commit them:
 
   ```bash
   pnpm build
@@ -368,7 +369,7 @@ invalid or mismatched keys with active MFA fail local-auth startup closed. Resto
 backup; never delete the key to reset protection. Losing the authenticator and all recovery codes
 has no unauthenticated recovery bypass. See [ADR-0018](adr/0018-local-totp-mfa.md).
 
-Browser MFA coverage uses port 18769 and disposable `.e2e-mfa-data/`, independently of the normal
+Browser MFA coverage uses port 18769 and disposable `.e2e/data/mfa/`, independently of the normal
 local/proxy/none projects. Its real rate-limit wait avoids any production test bypass.
 
 ## Authentication database recovery

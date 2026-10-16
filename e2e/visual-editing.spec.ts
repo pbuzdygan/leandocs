@@ -2,8 +2,7 @@ import { csrfRequest } from './csrf-request';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
+import { CONTENT as content, RESULTS_DIR } from './paths';
 
 test('visual editing, toolbar and mode switching preserve Markdown and front matter', async ({
   page,
@@ -108,12 +107,12 @@ test('visual checklists, links, images and tables are editable and saved as Mark
   await page.keyboard.type('Column');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('status', { name: 'Save status' })).toHaveText('Saved');
-  await page.screenshot({ path: 'test-results/visual-desktop.png', fullPage: true });
+  await page.screenshot({ path: path.join(RESULTS_DIR, 'visual-desktop.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
     page.getByRole('navigation', { name: 'Documentation navigation' }),
   ).not.toBeInViewport();
-  await page.screenshot({ path: 'test-results/visual-mobile.png', fullPage: true });
+  await page.screenshot({ path: path.join(RESULTS_DIR, 'visual-mobile.png'), fullPage: true });
   const file = readFileSync(path.join(content, 'Visual Elements.md'), 'utf8');
   expect(file).toContain('[x] Pending');
   expect(file).toContain('[Website](/doc/example)');

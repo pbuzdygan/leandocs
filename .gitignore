@@ -13,8 +13,8 @@ test-results/
 test_results/
 .DS_Store
 *.log
-# Disposable browser-test databases, documents and authentication keys
-.e2e*-data/
+# Browser-test output: disposable databases, documents, authentication keys and results
+.e2e/
 # Local caches and temporary output
 .cache/
 tmp/

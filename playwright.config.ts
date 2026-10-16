@@ -1,8 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import { AUTH_STATE, RESULTS_DIR, VISUAL_AUTH_STATE } from './e2e/paths';
 
 /**
  * End-to-end tests (PROJECT_SPEC §91) against the production build: run `pnpm build` first,
- * then `pnpm test:e2e`. The server uses a fresh data directory in `.e2e-data/`.
+ * then `pnpm test:e2e`. Each test server starts with a fresh data directory under `.e2e/data/`,
+ * and results (traces, screenshots) go to `.e2e/results/`.
  */
 const PORT = 18765;
 
@@ -31,6 +33,7 @@ const visual =
 
 export default defineConfig({
   testDir: 'e2e',
+  outputDir: RESULTS_DIR,
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
@@ -44,7 +47,7 @@ export default defineConfig({
     { name: 'setup', testMatch: /setup\.spec\.ts/, use: { ...device } },
     {
       name: browser,
-      use: { ...device, storageState: 'test-results/auth-state.json' },
+      use: { ...device, storageState: AUTH_STATE },
       testIgnore: /(?:setup|proxy-auth|none-auth|mfa|visual)\.spec\.ts/,
       dependencies: ['setup'],
     },
@@ -61,7 +64,7 @@ export default defineConfig({
             use: {
               ...device,
               baseURL: 'http://127.0.0.1:18770',
-              storageState: 'test-results/visual-auth-state.json',
+              storageState: VISUAL_AUTH_STATE,
             },
             dependencies: ['visual-setup'],
           },

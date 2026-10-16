@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, newParagraphAtEnd, test, type Page } from './document-fixture';
 import { setDefaultEditor } from './settings';
+import { CONTENT, RESULTS_DIR } from './paths';
 
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
@@ -82,7 +83,7 @@ for (const mode of ['Visual', 'Source'] as const) {
       'href',
       `/api/v1/documents/${id}/attachments/compose.yaml`,
     );
-    const file = readFileSync(path.resolve('.e2e-data/content', `${name}.md`), 'utf8');
+    const file = readFileSync(path.join(CONTENT, `${name}.md`), 'utf8');
     expect(file).toContain(`${encodeURIComponent(name)}.assets/screenshot.png`);
     expect(file).not.toContain('/api/v1/');
     await page.reload();
@@ -133,7 +134,7 @@ for (const mode of ['Visual', 'Source'] as const) {
       404,
     );
     await page.screenshot({
-      path: `test-results/attachments-${mode.toLowerCase()}.png`,
+      path: path.join(RESULTS_DIR, `attachments-${mode.toLowerCase()}.png`),
       fullPage: true,
     });
   });

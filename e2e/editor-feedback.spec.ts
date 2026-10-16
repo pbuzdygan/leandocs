@@ -2,12 +2,11 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, newParagraphAtEnd, test, type Page } from './document-fixture';
 import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+import { CONTENT as content } from './paths';
 
 restoreSettingsAfterEach();
 
 /** Owner feedback 2026-10-02 on the visual editor (P6-06…P6-12, P4-12). */
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 async function openVisual(page: Page, id: string) {
   await setDefaultEditor(page, 'visual');

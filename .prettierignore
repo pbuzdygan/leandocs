@@ -2,7 +2,7 @@ coverage
 data
 dist
 pnpm-lock.yaml
-.e2e*-data
+.e2e
 test-results
 test_results
 playwright-report

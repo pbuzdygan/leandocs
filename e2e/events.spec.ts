@@ -2,11 +2,12 @@ import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import type { ContentChanges } from '../packages/shared/src/events.js';
+import { CONTENT } from './paths';
 
 test('authenticated EventSource receives indexed external changes under the app security policy', async ({
   page,
 }) => {
-  const file = path.resolve(import.meta.dirname, '../.e2e-data/content/SSE external.md');
+  const file = path.join(CONTENT, 'SSE external.md');
   const received: ContentChanges[] = [];
   await page.exposeFunction('receiveExternalChange', (changes: ContentChanges) =>
     received.push(changes),

@@ -60,7 +60,7 @@ For HTTPS behind a reverse proxy, pinned versions, updates and backups, follow t
 - [Contributing](CONTRIBUTING.md) — workflow, commits and changelog rules; AI agents also follow [`AGENTS.md`](AGENTS.md).
 - [Development](docs/development.md) — local setup, tests and releases.
 - [Architecture](docs/architecture.md) — how the code is organised.
-- [Product](PROJECT_SPEC.md) and [UI](UI_SPEC.md) specifications.
+- [Product](docs/PROJECT_SPEC.md) and [UI](docs/UI_SPEC.md) specifications.
 - [Architecture decisions](docs/adr/) and [smaller decisions and known issues](docs/decisions.md).
 
 ## Project links

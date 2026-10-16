@@ -3,17 +3,19 @@ import { cpSync, mkdirSync, readdirSync, rmSync, utimesSync } from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
+// One folder per server, as `e2e/paths.ts` names them.
 const dataDir = path.join(
   root,
+  '.e2e/data',
   process.env.PORT === '18769'
-    ? '.e2e-mfa-data'
+    ? 'mfa'
     : process.env.E2E_VISUAL
-      ? '.e2e-visual-data'
+      ? 'visual'
       : process.env.AUTH_MODE === 'none'
-        ? '.e2e-none-data'
+        ? 'none'
         : process.env.AUTH_MODE === 'proxy'
-          ? '.e2e-proxy-data'
-          : '.e2e-data',
+          ? 'proxy'
+          : 'default',
 );
 rmSync(dataDir, { recursive: true, force: true });
 mkdirSync(dataDir, { recursive: true });

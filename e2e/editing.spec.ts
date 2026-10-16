@@ -3,14 +3,13 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { restoreSettingsAfterEach, setDefaultEditor } from './settings';
+import { CONTENT as content } from './paths';
 
 restoreSettingsAfterEach();
 
 test.beforeEach(async ({ page }) => {
   await setDefaultEditor(page, 'source');
 });
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 async function createDocument(page: Page, name: string, body: string): Promise<string> {
   const response = await csrfRequest(page.request).post('/api/v1/documents', {

@@ -1,10 +1,9 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import { CONTENT as content } from './paths';
 
 /** Phase 10 acceptance: typical infrastructure documentation needs minimal repetitive work. */
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 test('template, tags, Info panel and pins', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });

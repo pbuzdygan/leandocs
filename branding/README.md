@@ -1,6 +1,6 @@
 # LeanDocs brand assets
 
-The brand is **final** (owner, 2026-10-02): mark **Folded Stack** + wordmark **Inter ExtraBold**. The rules are in [`BRAND_SPEC.md`](../BRAND_SPEC.md). For an overview, open `preview.html` or look at `export/brand-sheet.png`.
+The brand is **final** (owner, 2026-10-02): mark **Folded Stack** + wordmark **Inter ExtraBold**. The rules are in [`BRAND_SPEC.md`](../docs/BRAND_SPEC.md). For an overview, open `preview.html` or look at `export/brand-sheet.png`.
 
 ```text
 branding/

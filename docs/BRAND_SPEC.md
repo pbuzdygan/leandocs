@@ -1,10 +1,10 @@
 # LeanDocs — Brand Specification
 
-|             |                                                                                                           |
-| ----------- | --------------------------------------------------------------------------------------------------------- |
-| **Status**  | Approved (owner, 2026-10-02)                                                                              |
-| **Version** | 1.0                                                                                                       |
-| **Related** | [`UI_SPEC.md`](UI_SPEC.md) (UI tokens), [`branding/`](branding/) (sources and exports), PROJECT_SPEC §110 |
+|             |                                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------ |
+| **Status**  | Approved (owner, 2026-10-02)                                                                                 |
+| **Version** | 1.0                                                                                                          |
+| **Related** | [`UI_SPEC.md`](UI_SPEC.md) (UI tokens), [`branding/`](../branding/) (sources and exports), PROJECT_SPEC §110 |
 
 ## 1. Name and tagline
 

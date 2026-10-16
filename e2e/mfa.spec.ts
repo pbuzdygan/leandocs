@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { readSetupToken } from './setup-token';
+import { dataDir } from './paths';
 
 /** Independent RFC 6238 fixture; production verification uses OTPAuth. */
 function authenticatorCode(secret: string) {
@@ -25,7 +26,7 @@ test('enrolls an authenticator, requires MFA, recovers access and reauthenticate
   expect(
     (
       await request.post('/api/v1/auth/setup', {
-        headers: { 'X-LeanDocs-Setup-Token': readSetupToken('.e2e-mfa-data') },
+        headers: { 'X-LeanDocs-Setup-Token': readSetupToken(dataDir('mfa')) },
         data: { username: 'owner', password, confirmPassword: password },
       })
     ).status(),

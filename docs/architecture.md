@@ -1,6 +1,6 @@
 # Architecture
 
-How LeanDocs is built today. The binding requirements are in [`PROJECT_SPEC.md`](../PROJECT_SPEC.md) and the [ADRs](adr/). This file describes the current implementation. User-facing guides: [deployment](deployment.md), [configuration](configuration.md), [import](import.md), [Markdown](markdown.md), [attachments](attachments.md).
+How LeanDocs is built today. The binding requirements are in [`PROJECT_SPEC.md`](PROJECT_SPEC.md) and the [ADRs](adr/). This file describes the current implementation. User-facing guides: [deployment](deployment.md), [configuration](configuration.md), [import](import.md), [Markdown](markdown.md), [attachments](attachments.md).
 
 ## Data layout
 

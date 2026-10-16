@@ -3,8 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { expect, test } from './document-fixture';
 import { csrfRequest } from './csrf-request';
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
+import { CONTENT as content } from './paths';
 
 /** Phase 13 acceptance: an existing Markdown library is imported without copying by hand. */
 test('imports a Markdown directory through the preview and keeps its structure', async ({

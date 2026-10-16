@@ -2,13 +2,13 @@
 
 > **LeanDocs** — _Documentation without the bloat._
 
-|                                |                                                                                                    |
-| ------------------------------ | -------------------------------------------------------------------------------------------------- |
-| **Status**                     | Approved UI direction                                                                              |
-| **Document version**           | 1.8                                                                                                |
-| **Chosen direction**           | A — Technical Minimal                                                                              |
-| **Related documents**          | [`PROJECT_SPEC.md`](PROJECT_SPEC.md), [`AGENTS.md`](AGENTS.md), [`.ai/PROJECT.md`](.ai/PROJECT.md) |
-| **Target application release** | 1.0                                                                                                |
+|                                |                                                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **Status**                     | Approved UI direction                                                                                    |
+| **Document version**           | 1.8                                                                                                      |
+| **Chosen direction**           | A — Technical Minimal                                                                                    |
+| **Related documents**          | [`PROJECT_SPEC.md`](PROJECT_SPEC.md), [`AGENTS.md`](../AGENTS.md), [`.ai/PROJECT.md`](../.ai/PROJECT.md) |
+| **Target application release** | 1.0                                                                                                      |
 
 ### Revision history
 
@@ -863,7 +863,7 @@ Never remove the focus ring without an alternative.
 
 Minimum **WCAG AA**: keyboard navigation, focus states, sufficient contrast, ARIA labels, semantic HTML, correct heading levels, labelled form fields, status communicated by more than colour.
 
-How this is checked, the colour and focus rules for new UI, and the review results: [`docs/accessibility.md`](docs/accessibility.md).
+How this is checked, the colour and focus rules for new UI, and the review results: [`docs/accessibility.md`](accessibility.md).
 
 ---
 

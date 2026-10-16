@@ -2,16 +2,16 @@
 
 > **LeanDocs** — _Documentation without the bloat._
 
-|                                |                                                                                                                                                              |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Status**                     | Approved product & architecture specification                                                                                                                |
-| **Document version**           | 0.5                                                                                                                                                          |
-| **Target application release** | 1.0                                                                                                                                                          |
-| **Project type**               | Self-hosted documentation manager / technical knowledge base                                                                                                 |
-| **Primary use case**           | Documentation of IT infrastructure, homelabs, applications, procedures and configuration                                                                     |
-| **Deployment model**           | Docker, single self-hosted instance                                                                                                                          |
-| **Core principle**             | **The filesystem is the source of truth**                                                                                                                    |
-| **Related documents**          | [`UI_SPEC.md`](UI_SPEC.md), [`AGENTS.md`](AGENTS.md), [`.ai/PROJECT.md`](.ai/PROJECT.md), [`docs/adr/`](docs/adr/), [`docs/decisions.md`](docs/decisions.md) |
+|                                |                                                                                                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Status**                     | Approved product & architecture specification                                                                                                            |
+| **Document version**           | 0.5                                                                                                                                                      |
+| **Target application release** | 1.0                                                                                                                                                      |
+| **Project type**               | Self-hosted documentation manager / technical knowledge base                                                                                             |
+| **Primary use case**           | Documentation of IT infrastructure, homelabs, applications, procedures and configuration                                                                 |
+| **Deployment model**           | Docker, single self-hosted instance                                                                                                                      |
+| **Core principle**             | **The filesystem is the source of truth**                                                                                                                |
+| **Related documents**          | [`UI_SPEC.md`](UI_SPEC.md), [`AGENTS.md`](../AGENTS.md), [`.ai/PROJECT.md`](../.ai/PROJECT.md), [`docs/adr/`](adr/), [`docs/decisions.md`](decisions.md) |
 
 ### Revision history
 
@@ -862,11 +862,9 @@ Docker deleted       → documents still work
 │   └── server/
 ├── packages/
 │   └── shared/
-├── docs/
+├── docs/                     (PROJECT_SPEC.md, UI_SPEC.md, BRAND_SPEC.md, guides, ADRs)
 ├── docker/
 ├── AGENTS.md
-├── PROJECT_SPEC.md
-├── UI_SPEC.md
 ├── README.md
 ├── package.json
 ├── pnpm-workspace.yaml
@@ -1221,15 +1219,15 @@ README.md
 AGENTS.md                      (shared instructions for all AI coding agents)
 CLAUDE.md                      (imports AGENTS.md)
 .ai/                           (project profile, security baseline, UI and README guidelines, plans)
-PROJECT_SPEC.md
-UI_SPEC.md
-BRAND_SPEC.md
 CONTRIBUTING.md
 CHANGELOG.md
 SECURITY.md
 LICENSE                        (MIT)
 
 docs/
+├── PROJECT_SPEC.md            (what the application does)
+├── UI_SPEC.md                 (how it looks and behaves)
+├── BRAND_SPEC.md              (mark, wordmark, colours, icons)
 ├── adr/                       (architecture decision records)
 ├── decisions.md               (minor decisions, open owner questions, known issues)
 ├── architecture.md            (how the code is organised)
@@ -1245,7 +1243,7 @@ docs/
 
 ## 96. Agent workflow and project records
 
-AI agents follow the shared rules in [`AGENTS.md`](AGENTS.md) and the LeanDocs profile in [`.ai/PROJECT.md`](.ai/PROJECT.md). There is no task board: Git history, code, tests and plans in `.ai/plans/` (only when work must survive a session) hold the evidence. A short handoff note for unfinished work may live in the local, ignored `.ai/STATE.md`. Minor decisions, open owner questions and accepted known issues are kept in [`docs/decisions.md`](docs/decisions.md). The former task board `docs/implementation-status.md` is retired; its last version is in Git history.
+AI agents follow the shared rules in [`AGENTS.md`](../AGENTS.md) and the LeanDocs profile in [`.ai/PROJECT.md`](../.ai/PROJECT.md). There is no task board: Git history, code, tests and plans in `.ai/plans/` (only when work must survive a session) hold the evidence. A short handoff note for unfinished work may live in the local, ignored `.ai/STATE.md`. Minor decisions, open owner questions and accepted known issues are kept in [`docs/decisions.md`](decisions.md). The former task board `docs/implementation-status.md` is retired; its last version is in Git history.
 
 ## 97. Architecture Decision Records
 
@@ -1267,7 +1265,7 @@ The absence of these features is a deliberate product decision, not a gap.
 
 ## 100. Implementation roadmap
 
-The project is built in phases. Each phase has scope, deliverables, acceptance criteria and a gate. AI agents must not implement several large phases at once. Phases 0–16 are complete; release state is in [`CHANGELOG.md`](CHANGELOG.md).
+The project is built in phases. Each phase has scope, deliverables, acceptance criteria and a gate. AI agents must not implement several large phases at once. Phases 0–16 are complete; release state is in [`CHANGELOG.md`](../CHANGELOG.md).
 
 ### PHASE 0 — Repository bootstrap
 
@@ -1436,7 +1434,7 @@ If the answers do not justify the complexity, do not add it.
 
 ## 105. Rules for AI coding assistants
 
-Mandatory for Codex, Claude Code and any other agent working on the project. The operational workflow (verification, handoff, external actions) is in [`AGENTS.md`](AGENTS.md) and [`.ai/PROJECT.md`](.ai/PROJECT.md).
+Mandatory for Codex, Claude Code and any other agent working on the project. The operational workflow (verification, handoff, external actions) is in [`AGENTS.md`](../AGENTS.md) and [`.ai/PROJECT.md`](../.ai/PROJECT.md).
 
 - **RULE 1** — Before starting, read `AGENTS.md`, `.ai/PROJECT.md` and the relevant parts of `PROJECT_SPEC.md` (and `UI_SPEC.md` for any frontend work).
 - **RULE 2** — Do not change the fundamental architecture without an explicit decision. In particular never switch: filesystem → database content storage; Markdown → proprietary format; single container → distributed services; SQLite → external database.

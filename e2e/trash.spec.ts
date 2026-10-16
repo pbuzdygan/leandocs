@@ -2,10 +2,9 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { csrfRequest } from './csrf-request';
 import { createTrashedDocument, expect, test } from './document-fixture';
+import { CONTENT as content } from './paths';
 
 /** P16-04 (UI_SPEC §136): restore and permanent deletion from the Trash page. */
-
-const content = path.resolve(import.meta.dirname, '../.e2e-data/content');
 
 test('restores a document and deletes another one permanently', async ({ page }) => {
   await createTrashedDocument(page, 'Trash Keep', '# Trash Keep\n\nStill here.\n');
