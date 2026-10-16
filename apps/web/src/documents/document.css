@@ -236,6 +236,32 @@
   font-size: var(--font-size-meta);
 }
 
+/* Broken targets in the Links tab look like broken links in the text (UI_SPEC §76). */
+.links-panel .broken-link {
+  color: var(--text-muted);
+  font-size: var(--font-size-sidebar);
+  text-decoration: underline dashed;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.links-panel__missing {
+  align-self: flex-start;
+  text-align: left;
+}
+
+.links-panel__missing:hover {
+  color: var(--text-primary);
+}
+
+/* A missing file's place in the text, briefly marked after choosing it in the Links tab. */
+.attachment-highlight {
+  border-radius: var(--radius-sm);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  background: var(--accent-soft);
+}
+
 .doc__tags li {
   list-style: none;
 }

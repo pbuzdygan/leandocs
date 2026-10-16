@@ -4,7 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from '../components/icon
 import { IconButton } from '../components/ui/IconButton';
 import { Tab, TabPanel, Tabs, TabsList } from '../components/ui/Tabs';
 import { useResizablePanel } from '../utils/resizable-panel';
-import type { TocHeading } from '../markdown/pipeline';
+import type { AttachmentRef, TocHeading } from '../markdown/pipeline';
 import { readPreference, writePreference } from '../utils/storage';
 import { InfoPanel } from './InfoPanel';
 import { LinksPanel } from './LinksPanel';
@@ -20,6 +20,7 @@ const TABS: { value: ContextTab; label: string }[] = [
 
 interface ContextProps {
   headings: TocHeading[];
+  attachmentRefs: AttachmentRef[];
   document: DocumentDto;
   editing: boolean;
 }
@@ -71,7 +72,7 @@ export function ContextSidebar(props: ContextProps) {
 /**
  * The same panel as a drawer from the right on tablets and phones (UI_SPEC §100–101). Modal:
  * focus stays inside, Esc or the backdrop closes it, and focus returns to the opening button.
- * Choosing a heading closes it and moves focus to that heading.
+ * Choosing a heading or a missing file closes it and moves focus to that place in the text.
  */
 export function ContextDrawer({
   open,
@@ -95,12 +96,13 @@ export function ContextDrawer({
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
-            const heading = target.current;
+            const place = target.current;
             target.current = null;
-            if (heading?.isConnected) {
+            if (place?.isConnected) {
               // Focusing the opener would scroll back up to the document header.
-              if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
-              heading.focus({ preventScroll: true });
+              if (place.tabIndex < 0 && !place.hasAttribute('tabindex'))
+                place.setAttribute('tabindex', '-1');
+              place.focus({ preventScroll: true });
             } else if (opener.current?.isConnected) {
               opener.current.focus();
             }
@@ -109,8 +111,8 @@ export function ContextDrawer({
           <RadixDialog.Title className="visually-hidden">Document context</RadixDialog.Title>
           <ContextPanel
             {...props}
-            onNavigate={(heading) => {
-              target.current = heading;
+            onNavigate={(place) => {
+              target.current = place;
               onOpenChange(false);
             }}
             close={
@@ -128,14 +130,15 @@ export function ContextDrawer({
 /** "Contents", "Links" and "Info" tabs, one at a time; the chosen tab is remembered. */
 function ContextPanel({
   headings,
+  attachmentRefs,
   document: current,
   editing,
   close,
   onNavigate,
 }: ContextProps & {
   close: ReactNode;
-  /** After a heading in "Contents" was scrolled into view. */
-  onNavigate?: (heading: HTMLElement) => void;
+  /** After a heading in "Contents" or a missing file in "Links" was scrolled into view. */
+  onNavigate?: (place: HTMLElement) => void;
 }) {
   const documentId = current.id;
   const [tab, setTab] = useState<ContextTab>(() => {
@@ -198,7 +201,12 @@ function ContextPanel({
         <InfoPanel key={documentId} document={current} editing={editing} />
       </TabPanel>
       <TabPanel value="links">
-        <LinksPanel documentId={documentId} />
+        <LinksPanel
+          documentId={documentId}
+          attachmentRefs={attachmentRefs}
+          editing={editing}
+          onNavigate={onNavigate}
+        />
       </TabPanel>
     </Tabs>
   );

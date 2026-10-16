@@ -58,7 +58,12 @@ export function ViewDocument({ document }: { document: DocumentDto }) {
 
   return (
     <Tabs className="tabs-root" value={mode} onValueChange={(value) => setMode(value as ViewMode)}>
-      <DocumentLayout document={document} headings={rendered.headings} actions={actions}>
+      <DocumentLayout
+        document={document}
+        headings={rendered.headings}
+        attachmentRefs={rendered.attachmentRefs}
+        actions={actions}
+      >
         {draft && (
           <DraftNotice
             draft={draft}

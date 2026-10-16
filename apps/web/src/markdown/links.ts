@@ -1,4 +1,5 @@
 import {
+  API_BASE_PATH,
   createLinkResolver,
   encodePathSegment,
   parseMarkdownHref,
@@ -36,6 +37,26 @@ function headingSlug(heading: string): string {
 
 function documentUrl(id: string, fragment?: string): string {
   return `/doc/${encodeURIComponent(id)}${fragment ? `#${fragment}` : ''}`;
+}
+
+const ATTACHMENT_URL = new RegExp(
+  `^${API_BASE_PATH.replace(/[/.]/g, '\\$&')}/documents/([^/?#]+)/attachments/([^/?#]+)`,
+);
+
+/** Owner and file name of an attachment URL (`…/documents/<id>/attachments/My%20file.pdf`). */
+export function attachmentTarget(
+  href: string | undefined,
+): { documentId: string; name: string } | null {
+  const match = href ? ATTACHMENT_URL.exec(href) : null;
+  if (!match) return null;
+  const decode = (value: string) => {
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  };
+  return { documentId: decode(match[1]!), name: decode(match[2]!) };
 }
 
 /** Resolve portable Markdown asset paths only; other URLs retain their existing policy. */

@@ -8,7 +8,7 @@ import {
 } from '../components/icons';
 import { IconButton } from '../components/ui/IconButton';
 import { AttachmentPanel } from '../attachments/AttachmentPanel';
-import type { TocHeading } from '../markdown/pipeline';
+import type { AttachmentRef, TocHeading } from '../markdown/pipeline';
 import { useNavigationState } from '../navigation/NavigationContext';
 import { useSearchControls } from '../search/SearchContext';
 import { folderSegments, formatDate, formatRelativeTime, readingMinutes } from '../utils/format';
@@ -20,6 +20,7 @@ import './document.css';
 export function DocumentLayout({
   document,
   headings,
+  attachmentRefs,
   actions,
   editBar,
   titleInContent = false,
@@ -27,6 +28,7 @@ export function DocumentLayout({
 }: {
   document: DocumentDto;
   headings: TocHeading[];
+  attachmentRefs: AttachmentRef[];
   actions?: ReactNode;
   /** Editing controls kept visible while scrolling (owner feedback, UI_SPEC §150). */
   editBar?: ReactNode;
@@ -180,12 +182,18 @@ export function DocumentLayout({
         <AttachmentPanel id={document.id} />
       </article>
       {contextInline ? (
-        <ContextSidebar headings={headings} document={document} editing={Boolean(editBar)} />
+        <ContextSidebar
+          headings={headings}
+          attachmentRefs={attachmentRefs}
+          document={document}
+          editing={Boolean(editBar)}
+        />
       ) : (
         <ContextDrawer
           open={contextOpen}
           onOpenChange={setContextOpen}
           headings={headings}
+          attachmentRefs={attachmentRefs}
           document={document}
           editing={Boolean(editBar)}
         />

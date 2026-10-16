@@ -175,6 +175,7 @@ function DocumentEditor({
       <DocumentLayout
         document={document}
         headings={rendered.headings}
+        attachmentRefs={rendered.attachmentRefs}
         editBar={actions}
         titleInContent={editorMode === 'visual' && rendered.titleHeading}
       >

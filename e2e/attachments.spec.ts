@@ -277,6 +277,13 @@ test('a link to an attachment deleted on disk keeps the app and explains it', as
   await expect(page).toHaveURL(new RegExp(`/doc/${id}$`));
   await expect(page.getByRole('heading', { level: 1, name: 'Missing Attachment' })).toBeVisible();
 
+  // The Links tab lists the missing file only and leads to where it is linked.
+  await page.getByRole('tab', { name: 'Links' }).click();
+  const missing = page.getByRole('region', { name: 'Missing files' });
+  await expect(missing.getByRole('button')).toHaveText(['manual.txt']);
+  await missing.getByRole('button', { name: 'manual.txt' }).click();
+  await expect(page.getByRole('link', { name: 'the manual' })).toBeFocused();
+
   // An existing file still opens (a download here, so the page stays).
   const download = page.waitForEvent('download');
   await page.getByRole('link', { name: 'the notes' }).click();

@@ -432,6 +432,8 @@ Tags      server  docker  incus
 
 _Referenced by_ (backlinks, with a count when a document links more than once) and _Links to_ (outgoing links; broken ones in the broken-link style with "Not found"). The context sidebar remembers the chosen tab.
 
+_Missing files_ follows when the document links to its own attachments: files it links to (links and images) that are not attached, in the broken-link style with "Not found" and how they are used (`2 links · image`); "All linked files are attached." when none are missing. Choosing one scrolls to its first place in the rendered text, highlights it briefly and focuses it; while editing, the names are shown without that action. Only the current document's attachments are checked, and links written as raw HTML are not.
+
 ## 48. Collapsing the context sidebar
 
 Button `›`. When closed, the centre expands. State is remembered.

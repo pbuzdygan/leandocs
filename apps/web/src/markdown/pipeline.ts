@@ -12,7 +12,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
-import { applyRenderContext, type RenderContext } from './links';
+import { applyRenderContext, attachmentTarget, type RenderContext } from './links';
 import { sanitizeSchema } from './schema';
 
 export interface TocHeading {
@@ -24,8 +24,16 @@ export interface TocHeading {
 export interface RenderedMarkdown {
   tree: HastRoot;
   headings: TocHeading[];
+  /** Links and images to attachments, in document order (the Links tab checks they exist). */
+  attachmentRefs: AttachmentRef[];
   /** The Markdown starts with an `# H1` that repeats the title; View leaves it out (P4-09). */
   titleHeading: boolean;
+}
+
+export interface AttachmentRef {
+  documentId: string;
+  name: string;
+  kind: 'link' | 'image';
 }
 
 export const highlightLanguages = { ...common, dockerfile, nginx, powershell };
@@ -72,6 +80,22 @@ function rehypeFixFragments() {
   };
 }
 
+/** Collects attachment links and images as rendered, after sanitisation (UI_SPEC §47). */
+function rehypeAttachmentRefs(refs: AttachmentRef[]) {
+  return (tree: HastRoot) => {
+    visit(tree, 'element', (node: Element) => {
+      const url =
+        node.tagName === 'a'
+          ? node.properties.href
+          : node.tagName === 'img'
+            ? node.properties.src
+            : undefined;
+      const target = typeof url === 'string' ? attachmentTarget(url) : null;
+      if (target) refs.push({ ...target, kind: node.tagName === 'img' ? 'image' : 'link' });
+    });
+  };
+}
+
 /**
  * Task-list checkboxes have no label of their own; name each one after its item's text
  * (nested lists excluded) so screen readers announce what is done (WCAG 4.1.2, P15-08).
@@ -109,6 +133,7 @@ export function renderMarkdown(markdown: string, context: RenderContext): Render
   const mdast = parseMarkdown(markdown);
   const titleHeading = applyRenderContext(mdast, context);
   const headings: TocHeading[] = [];
+  const attachmentRefs: AttachmentRef[] = [];
   const processor = unified()
     .use(remarkRehype, { allowDangerousHtml: true, clobberPrefix: '' })
     .use(rehypeRaw)
@@ -120,7 +145,8 @@ export function renderMarkdown(markdown: string, context: RenderContext): Render
     })
     .use(rehypeHeadingIds, headings)
     .use(rehypeFixFragments)
-    .use(rehypeTaskListLabels);
+    .use(rehypeTaskListLabels)
+    .use(rehypeAttachmentRefs, attachmentRefs);
   const tree = processor.runSync(mdast) as HastRoot;
-  return { tree, headings, titleHeading };
+  return { tree, headings, attachmentRefs, titleHeading };
 }

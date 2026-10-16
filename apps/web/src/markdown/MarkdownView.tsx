@@ -4,27 +4,17 @@ import { toString as hastToString } from 'hast-util-to-string';
 import { toJsxRuntime, type Components } from 'hast-util-to-jsx-runtime';
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 import { Link } from 'react-router';
-import { API_BASE_PATH } from '@leandocs/shared';
 import { useNotify } from '../components/ui/Toast';
 import { CodeBlock } from './CodeBlock';
+import { attachmentTarget } from './links';
 import { MermaidDiagram } from './MermaidDiagram';
 import './markdown.css';
 
 type WithNode<T extends keyof React.JSX.IntrinsicElements> = ComponentProps<T> & { node?: Element };
 
-const ATTACHMENT_URL = new RegExp(
-  `^${API_BASE_PATH.replace(/[/.]/g, '\\$&')}/documents/[^/]+/attachments/([^/?#]+)`,
-);
-
-/** File name of an attachment URL (`…/attachments/My%20file.pdf` → `My file.pdf`), else null. */
-function attachmentName(href: string | undefined): string | null {
-  const encoded = href ? ATTACHMENT_URL.exec(href)?.[1] : undefined;
-  if (!encoded) return null;
-  try {
-    return decodeURIComponent(encoded);
-  } catch {
-    return encoded;
-  }
+/** `data-attachment` value; the Links tab finds an attachment's place in the text by it. */
+export function attachmentRefKey(documentId: string, name: string): string {
+  return `${documentId}/${name}`;
 }
 
 /**
@@ -34,10 +24,11 @@ function attachmentName(href: string | undefined): string | null {
  */
 function AttachmentAnchor({
   href,
+  documentId,
   name,
   children,
   ...props
-}: Omit<WithNode<'a'>, 'node'> & { href: string; name: string }) {
+}: Omit<WithNode<'a'>, 'node'> & { href: string; documentId: string; name: string }) {
   const notify = useNotify();
   const open = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
@@ -48,7 +39,7 @@ function AttachmentAnchor({
         if (response.ok) window.location.assign(href);
         else if (response.status === 404)
           notify.error(
-            `"${name}" is no longer attached to this document. It may have been deleted or renamed; Attachments in the side panel lists the files it has now.`,
+            `"${name}" is no longer attached to this document. It may have been deleted or renamed; Attachments below the document lists the files attached now.`,
           );
         else
           notify.error(
@@ -60,17 +51,17 @@ function AttachmentAnchor({
       );
   };
   return (
-    <a href={href} {...props} onClick={open}>
+    <a href={href} {...props} data-attachment={attachmentRefKey(documentId, name)} onClick={open}>
       {children}
     </a>
   );
 }
 
 function Anchor({ href, children, node: _node, ...props }: WithNode<'a'>) {
-  const attachment = attachmentName(href);
+  const attachment = attachmentTarget(href);
   if (href && attachment !== null)
     return (
-      <AttachmentAnchor href={href} name={attachment} {...props}>
+      <AttachmentAnchor href={href} {...attachment} {...props}>
         {children}
       </AttachmentAnchor>
     );
@@ -120,12 +111,13 @@ function Table({ node: _node, ...props }: WithNode<'table'>) {
 
 function Image({ node: _node, alt = '', ...props }: WithNode<'img'>) {
   const [missing, setMissing] = useState(false);
-  const attachment = attachmentName(props.src);
+  const attachment = attachmentTarget(props.src);
+  const key = attachment ? attachmentRefKey(attachment.documentId, attachment.name) : undefined;
   // A missing attached image says so instead of the browser's broken-image icon.
   if (missing && attachment !== null)
     return (
-      <span className="broken-link" title="Image not found">
-        Image not found: {alt || attachment}
+      <span className="broken-link" title="Image not found" data-attachment={key}>
+        Image not found: {alt || attachment.name}
       </span>
     );
   return (
@@ -134,6 +126,7 @@ function Image({ node: _node, alt = '', ...props }: WithNode<'img'>) {
       loading="lazy"
       decoding="async"
       {...props}
+      data-attachment={key}
       onError={attachment !== null ? () => setMissing(true) : undefined}
     />
   );
