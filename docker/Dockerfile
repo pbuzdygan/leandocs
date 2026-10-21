@@ -43,7 +43,7 @@ RUN set -eu; \
 RUN cd /out/server && node -e "new (require('better-sqlite3'))(':memory:').prepare('select 1').get()"
 
 # ---- runtime: Node.js only — no shell, no package manager ---------------------------------------
-FROM gcr.io/distroless/nodejs26-debian13:nonroot@sha256:044d090d0c3ccfd30722126ebe46704885698970c8a303419dc0d704d628f0da AS runtime
+FROM gcr.io/distroless/nodejs26-debian13:nonroot@sha256:3a6f4e6fd37efe00042667d06fd52240f2589ed09b0694fbb3b1bf860030a839 AS runtime
 ENV NODE_ENV=production \
     PORT=8080 \
     HOST=0.0.0.0 \
