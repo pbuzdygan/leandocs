@@ -7,7 +7,7 @@
 # updates for it. Update both images together and run the full verification, including Docker.
 
 # ---- build: install, compile and assemble a production server folder -------------------------
-FROM node:26-trixie-slim@sha256:0d1e33586362bb9e608c4e751e7a9e7edb55c9ac11461ed5666af696cc461dd4 AS build
+FROM node:26-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS build
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 # Node.js 25+ no longer bundles corepack; the pinned release provides package.json › packageManager.
 RUN npm install --global corepack@0.36.0 && corepack enable
@@ -43,7 +43,7 @@ RUN set -eu; \
 RUN cd /out/server && node -e "new (require('better-sqlite3'))(':memory:').prepare('select 1').get()"
 
 # ---- runtime: Node.js only — no shell, no package manager ---------------------------------------
-FROM gcr.io/distroless/nodejs26-debian13:nonroot@sha256:044d090d0c3ccfd30722126ebe46704885698970c8a303419dc0d704d628f0da AS runtime
+FROM gcr.io/distroless/nodejs26-debian13:nonroot@sha256:1d736cf8b5716c07a245301f92717143215d248fd55771ee1936ef4b3302e531 AS runtime
 ENV NODE_ENV=production \
     PORT=8080 \
     HOST=0.0.0.0 \
